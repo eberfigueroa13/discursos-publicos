@@ -2973,27 +2973,36 @@ function fbProcesarInvitacion(token){
     if(inv.email&&inv.email.toLowerCase()!==(_usr.email||'').toLowerCase()){
       setTimeout(function(){toast('Esta invitacion es para '+inv.email,'e');},500);return;
     }
-    // Guardar invitacion pendiente y mostrar pantalla de bienvenida
     _invPendiente={token:token,inv:inv};
+    var rolLabel={superadmin:'Super Administrador',admin:'Administrador',coordinador:'Coordinador',lector:'Lector',visor:'Visor'}[inv.rol]||inv.rol;
     // Cargar nombre de la congregacion
     _db.collection('congregaciones').doc(inv.congId).get().then(function(cdoc){
       var congNombre=cdoc.exists?(cdoc.data().nombre||inv.congId):inv.congId;
-      var rolLabel={superadmin:'Super Administrador',admin:'Administrador',coordinador:'Coordinador',lector:'Lector',visor:'Visor'}[inv.rol]||inv.rol;
+      var circuito=cdoc.exists?(cdoc.data().circuito||''):'';
+      var ciudad=cdoc.exists?(cdoc.data().ciudad||''):'';
       var elN=document.getElementById('inv-congr-nombre');
       var elR=document.getElementById('inv-rol-label');
+      var elDatos=document.getElementById('inv-datos-admin');
       if(elN)elN.textContent=congNombre;
       if(elR)elR.textContent='Tu rol: '+rolLabel;
-      // Mostrar formulario de datos solo si es admin
-      var datosAdmin=document.getElementById('inv-datos-admin');
-      if(datosAdmin)datosAdmin.style.display=(inv.rol==='admin'||inv.rol==='superadmin')?'block':'none';
-      // Precargar nombre de congregacion en el formulario
-      var elCN=document.getElementById('inv-cong-nombre');
-      if(elCN)elCN.value=congNombre;
-      // Mostrar pantalla
+      // Mostrar info de la congregacion (solo lectura)
+      if(elDatos){
+        elDatos.style.display='block';
+        elDatos.innerHTML='<div style="background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:14px;text-align:left;font-size:13px">'
+          +'<div style="font-weight:700;margin-bottom:8px;color:var(--tx)">Datos de la congregacion:</div>'
+          +(congNombre?'<div><strong>Nombre:</strong> '+esc(congNombre)+'</div>':'')
+          +(circuito?'<div><strong>Circuito:</strong> '+esc(circuito)+'</div>':'')
+          +(ciudad?'<div><strong>Ciudad:</strong> '+esc(ciudad)+'</div>':'')
+          +'</div>';
+      }
       var invScreen=document.getElementById('inv-screen');
       if(invScreen)invScreen.classList.add('show');
-    }).catch(function(){
-      // Si no puede cargar la congr, igual mostrar bienvenida
+    }).catch(function(e){
+      console.error('Error cargando congr:',e);
+      var elN=document.getElementById('inv-congr-nombre');
+      var elR=document.getElementById('inv-rol-label');
+      if(elN)elN.textContent=inv.congId;
+      if(elR)elR.textContent='Tu rol: '+rolLabel;
       var invScreen=document.getElementById('inv-screen');
       if(invScreen)invScreen.classList.add('show');
     });
@@ -3417,36 +3426,16 @@ function invAceptar(){
   if(!_invPendiente){toast('Error: invitacion no encontrada','e');return;}
   var inv=_invPendiente.inv;
   var token=_invPendiente.token;
-  var esAdmin=inv.rol==='admin'||inv.rol==='superadmin';
-  // Validar datos de congregacion si es admin
-  if(esAdmin){
-    var cnombre=document.getElementById('inv-cong-nombre').value.trim();
-    var ccircuito=document.getElementById('inv-cong-circuito').value.trim();
-    if(!cnombre||!ccircuito){toast('Nombre y circuito de la congregacion son obligatorios','e');return;}
-  }
   var btn=document.getElementById('inv-aceptar-btn');
   if(btn){btn.disabled=true;btn.textContent='Procesando...';}
-  // Actualizar datos de la congregacion si es admin
-  var promCong=Promise.resolve();
-  if(esAdmin){
-    var datosConge={
-      nombre:document.getElementById('inv-cong-nombre').value.trim(),
-      circuito:document.getElementById('inv-cong-circuito').value.trim(),
-      ciudad:(document.getElementById('inv-cong-ciudad').value||'').trim(),
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    };
-    // Guardar datos basicos en miCongr del D object para esta congregacion
-    promCong=_db.collection('congregaciones').doc(inv.congId).update(datosConge);
-  }
-  promCong.then(function(){
-    return _db.collection('usuarios').doc(_usr.email).set({
-      email:_usr.email,
-      nombre:_usr.nombre||inv.nombreInvitado||'',
-      rol:inv.rol||'lector',
-      congId:inv.congId||'',
-      activo:true,
-      creadoEn:firebase.firestore.FieldValue.serverTimestamp()
-    });
+  // Solo crear el usuario vinculado a la congregacion
+  _db.collection('usuarios').doc(_usr.email).set({
+    email:_usr.email,
+    nombre:_usr.nombre||inv.nombreInvitado||'',
+    rol:inv.rol||'lector',
+    congId:inv.congId||'',
+    activo:true,
+    creadoEn:firebase.firestore.FieldValue.serverTimestamp()
   }).then(function(){
     return _db.collection('invitaciones').doc(token).update({
       usada:true,
