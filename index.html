@@ -170,42 +170,56 @@ tbody tr:last-child td{border-bottom:none;}
 }
 
 
-/* ── Login Screen ── */
+/* ── Login ── */
 #login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;}
 #login-screen.hidden{display:none;}
-.login-card{background:var(--sf);border-radius:16px;padding:48px 40px;max-width:380px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.12);}
-.login-logo{font-size:48px;margin-bottom:16px;}
-.login-title{font-size:20px;font-weight:700;color:var(--tx);margin-bottom:8px;}
-.login-sub{font-size:14px;color:var(--tx2);margin-bottom:32px;line-height:1.5;}
-.login-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px 20px;background:#fff;border:2px solid var(--bd);border-radius:10px;font-size:15px;font-weight:600;color:var(--tx);cursor:pointer;transition:.2s;}
-.login-btn:hover{border-color:var(--pr);background:var(--prl);}
-.login-btn svg{flex-shrink:0;}
-.login-err{margin-top:16px;font-size:13px;color:var(--rd);display:none;}
-.login-err.show{display:block;}
-.sync-bar{position:fixed;top:0;left:0;right:0;background:var(--pr);color:#fff;font-size:13px;text-align:center;padding:6px;z-index:8888;display:none;}
-.sync-bar.show{display:block;}
-.user-chip{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--prl);border-radius:20px;font-size:13px;cursor:pointer;}
-.user-chip img{width:24px;height:24px;border-radius:50%;}
+.login-card{background:var(--sf);border-radius:16px;padding:48px 40px;max-width:400px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.12);}
+.login-logo{font-size:52px;margin-bottom:12px;}
+.login-title{font-size:20px;font-weight:700;color:var(--tx);margin-bottom:6px;}
+.login-sub{font-size:14px;color:var(--tx2);margin-bottom:28px;line-height:1.5;}
+.login-btn-g{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 20px;background:#fff;border:2px solid var(--bd);border-radius:10px;font-size:15px;font-weight:600;color:var(--tx);cursor:pointer;transition:.2s;}
+.login-btn-g:hover{border-color:var(--pr);background:var(--prl);}
+.login-err{margin-top:14px;font-size:13px;color:var(--rd);min-height:20px;}
+/* ── Sync bar ── */
+#sync-bar{position:fixed;top:0;left:0;right:0;background:var(--pr);color:#fff;font-size:12px;text-align:center;padding:5px;z-index:8888;display:none;transition:.3s;}
+#sync-bar.show{display:block;}
+/* ── User chip en topbar ── */
+.user-chip{display:flex;align-items:center;gap:7px;padding:5px 12px;background:var(--prl);border-radius:20px;font-size:13px;cursor:pointer;border:1px solid var(--pr);color:var(--pr);font-weight:600;margin-left:auto;margin-right:4px;}
+.user-chip img{width:22px;height:22px;border-radius:50%;}
+/* ── Panel SuperAdmin ── */
+#s-superadmin .sa-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+@media(max-width:700px){#s-superadmin .sa-grid{grid-template-columns:1fr;}}
+.sa-cong-card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:16px;}
+.sa-cong-nombre{font-weight:700;font-size:15px;color:var(--tx);margin-bottom:4px;}
+.sa-cong-meta{font-size:12px;color:var(--tx3);margin-bottom:10px;}
+.inv-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px;}
+.inv-row:last-child{border-bottom:none;}
+.inv-email{flex:1;font-weight:600;}
+.inv-meta{font-size:11px;color:var(--tx3);}
+.badge-inv-pend{background:var(--yel);color:var(--ye);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.badge-inv-usada{background:var(--gnl);color:var(--gn);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.badge-inv-exp{background:var(--rdl);color:var(--rd);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+/* ── Panel Usuarios congregacion ── */
+#s-usuarios .usr-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);font-size:13px;}
+#s-usuarios .usr-row:last-child{border-bottom:none;}
+.usr-nombre{flex:1;font-weight:600;}
+.usr-email{font-size:12px;color:var(--tx3);}
 </style>
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head><body>
-<!-- Sync bar -->
-<div class="sync-bar" id="sync-bar">Sincronizando con la nube...</div>
-
-<!-- Login Screen -->
+<div id="sync-bar">Sincronizando con la nube...</div>
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">&#128218;</div>
-    <div class="login-title">Coordinacion de Discursos</div>
-    <div class="login-sub">Inicia sesion para acceder a la coordinacion de tu congregacion</div>
-    <button class="login-btn" onclick="loginConGoogle()">
+    <div class="login-title">Coordinador de Discursos</div>
+    <div class="login-sub">Accede con tu cuenta Google para coordinar los discursos publicos de tu congregacion</div>
+    <button class="login-btn-g" onclick="fbLoginGoogle()">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Continuar con Google
     </button>
-    <div class="login-err" id="login-err">No tienes acceso. Contacta al administrador de tu congregacion.</div>
+    <div class="login-err" id="login-err"></div>
   </div>
 </div>
 
@@ -229,11 +243,13 @@ tbody tr:last-child td{border-bottom:none;}
     <div class="ni" data-s="salidas"><span class="ic">&#128663;</span><span class="lb">Salidas realizadas</span></div>
     <div class="ni" data-s="respaldo"><span class="ic">&#128190;</span><span class="lb">Respaldo</span></div>
     <div class="ni" data-s="guia"><span class="ic">&#128214;</span><span class="lb">Guia rapida</span></div>
+    <div class="ni sa-only" data-s="superadmin" style="display:none"><span class="ic">&#9757;</span><span class="lb">Super Admin</span></div>
+    <div class="ni admin-only" data-s="usuarios" style="display:none"><span class="ic">&#128100;</span><span class="lb">Usuarios</span></div>
   </nav>
 </aside>
 <div id="sidebarBackdrop" aria-hidden="true"></div>
 <main id="main">
-  <div id="topbar"><div id="user-chip" class="user-chip" style="margin-left:auto;margin-right:8px"></div><button id="mobileMenu" type="button" aria-label="Abrir menu">&#9776;</button><div class="tb-left"><div id="tbt">Dashboard</div><div id="tbm"></div></div></div>
+  <div id="topbar"><button id="mobileMenu" type="button" aria-label="Abrir menu">&#9776;</button><div class="tb-left"><div id="tbt">Dashboard</div><div id="tbm"></div></div><div id="user-chip" class="user-chip" style="display:none" onclick="fbMostrarMenuUsuario()"></div></div>
   <div id="content">
 <div class="sec active" id="s-dashboard"><div class="stit">Panel principal</div><div class="sdesc">Resumen del estado de coordinacion.</div><div class="sgrid" id="dstats"></div><div class="card" id="dinfo"></div></div>
 <div class="sec" id="s-micongr"><div class="stit">Mi Congregacion</div><div class="sdesc">Datos de tu congregacion local.</div><div class="card"><div class="ctit">Datos de la congregacion</div><div class="fgrid"><div class="fg"><label>Nombre</label><input id="mc-n" type="text" placeholder="Ej: Congregacion Norte" ></div><div class="fg"><label>Direccion del Salon</label><input id="mc-d" type="text" placeholder="Calle, numero, ciudad" ></div><div class="fg"><label>Dia de reunion (discurso publico)</label><select id="mc-dia" ><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miercoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sabado</option></select></div><div class="fg"><label>Horario</label><input id="mc-h" type="text" placeholder="Ej: 19:00 hrs" ></div></div><div class="sep"></div><div class="ctit">Datos adicionales</div><div class="fgrid"><div class="fg"><label>Circuito</label><input id="mc-cir" type="text" placeholder="Ej: Circuito RM-13"></div><div class="fg"><label>Enlace Google Maps del Salón</label><input id="mc-maps" type="url" placeholder="https://maps.app.goo.gl/..." ></div></div><div class="sep"></div><div class="ctit">Coordinador de Discursos Publicos</div><div class="fgrid"><div class="fg"><label>Nombre coordinador</label><input id="mc-cn" type="text" placeholder="Nombre completo" ></div><div class="fg"><label>Telefono</label><input id="mc-ct" type="text" placeholder="+56 9 ..." ></div><div class="fg"><label>Correo</label><input id="mc-ce" type="email" placeholder="correo@ejemplo.com" ></div><div class="fg"><label>Obs.</label><input id="mc-o" type="text" placeholder="Opcional" ></div></div><div class="sep"></div><div class="ctit">Contacto Audio y Video</div><div class="fgrid"><div class="fg"><label>Nombre responsable A&V</label><input id="mc-avn" type="text" placeholder="Nombre completo"></div><div class="fg"><label>Telefono A&V</label><input id="mc-avt" type="text" placeholder="+56 9 ..."></div><div class="fg"><label>Email A&V</label><input id="mc-ave" type="email" placeholder="correo@ejemplo.com"></div></div><div class="fa"><button class="btn bp" onclick="guardarMC()">Guardar</button></div></div></div>
@@ -279,7 +295,68 @@ Juan Perez	12	+56912345678"></textarea><div class="fa"><button class="btn bs" on
 </main>
 </div>
 <div class="mo" id="modal"><div class="mb"><div class="mt" id="mt"></div><div id="mb"></div><div class="ma" id="ma"></div></div></div>
-<div id="tc"></div>
+<div id="tc">
+<div class="sec" id="s-superadmin">
+  <div class="stit">Panel Super Administrador</div>
+  <div class="sdesc">Gestion global de congregaciones e invitaciones.</div>
+  <div class="card">
+    <div class="ctit">Nueva Congregacion</div>
+    <div class="fgrid">
+      <div class="fg"><label>Nombre de la congregacion</label><input id="sa-cong-nombre" type="text" placeholder="Ej: Congregacion Los Arcos"></div>
+      <div class="fg"><label>Circuito</label><input id="sa-cong-circuito" type="text" placeholder="Ej: RM-13"></div>
+      <div class="fg"><label>Ciudad</label><input id="sa-cong-ciudad" type="text" placeholder="Ej: Santiago"></div>
+      <div class="fg"><label>Email del Admin principal</label><input id="sa-cong-admin" type="email" placeholder="admin@gmail.com"></div>
+      <div class="fg"><label>Nombre del Admin</label><input id="sa-cong-admin-nombre" type="text" placeholder="Nombre completo"></div>
+    </div>
+    <div class="fa"><button class="btn bp" onclick="saCrearCongregacion()">Crear Congregacion e Invitar Admin</button></div>
+  </div>
+  <div class="card">
+    <div class="ctit">Congregaciones registradas</div>
+    <div id="sa-lista-congs"><div class="es"><p>Cargando...</p></div></div>
+  </div>
+  <div class="card">
+    <div class="ctit">Todas las invitaciones</div>
+    <div id="sa-lista-invs"><div class="es"><p>Cargando...</p></div></div>
+  </div>
+</div>
+
+<div class="sec" id="s-usuarios">
+  <div class="stit">Usuarios de mi Congregacion</div>
+  <div class="sdesc">Invita y gestiona los usuarios que acceden a tu congregacion.</div>
+  <div class="card">
+    <div class="ctit">Invitar usuario</div>
+    <div class="fgrid">
+      <div class="fg"><label>Email</label><input id="usr-inv-email" type="email" placeholder="correo@gmail.com"></div>
+      <div class="fg"><label>Nombre</label><input id="usr-inv-nombre" type="text" placeholder="Nombre completo"></div>
+      <div class="fg"><label>Rol</label>
+        <select id="usr-inv-rol">
+          <option value="coordinador">Coordinador</option>
+          <option value="lector">Lector</option>
+          <option value="visor">Visor</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="fa"><button class="btn bp" onclick="usrInvitar()">Enviar Invitacion</button></div>
+    <div id="usr-inv-link" style="display:none;margin-top:12px" class="al ali">
+      <strong>Link de invitacion:</strong><br>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
+        <input id="usr-inv-link-txt" type="text" readonly style="flex:1;font-size:12px;background:var(--sf2)">
+        <button class="btn bg bsm" onclick="usrCopiarLink()">Copiar</button>
+        <button class="btn bg bsm" onclick="usrCompartirWhatsApp()">WhatsApp</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ctit">Usuarios activos</div>
+    <div id="usr-lista"><div class="es"><p>Cargando...</p></div></div>
+  </div>
+  <div class="card">
+    <div class="ctit">Invitaciones pendientes</div>
+    <div id="usr-lista-inv"><div class="es"><p>Cargando...</p></div></div>
+  </div>
+</div>
+</div>
 <script>
 
 /* ============================================================
@@ -2601,13 +2678,13 @@ function exportarConfirmacionArreglo(tipo){
 
 
 (function(){
-  /* App se inicializa despues de autenticacion Firebase */
-  console.log('App cargada, esperando autenticacion...');
+  /* App inicializada por Firebase auth - ver fbIniciarApp() */
 })();
 
 
+
 /* ============================================================
-   FIREBASE — Configuracion e integracion
+   FIREBASE v21 — MultiCongreg + Auth + Firestore
 ============================================================ */
 var _fbConfig={
   apiKey:"AIzaSyDIx3N3aXVB6JamMw3_9CtGj_46fv2eTik",
@@ -2620,134 +2697,422 @@ var _fbConfig={
 firebase.initializeApp(_fbConfig);
 var _auth=firebase.auth();
 var _db=firebase.firestore();
-var _usuario=null; // usuario autenticado actual
+var _usr=null; // {email,nombre,rol,congId,foto}
+var _invLinkActual='';
 
-function loginConGoogle(){
-  var provider=new firebase.auth.GoogleAuthProvider();
-  _auth.signInWithPopup(provider).catch(function(e){
-    console.error('Login error:',e);
-    document.getElementById('login-err').classList.add('show');
-  });
-}
-
-function cerrarSesion(){
-  _auth.signOut();
-}
-
-function mostrarSyncBar(show){
+/* ── Helpers ── */
+function fbSyncBar(show,msg){
   var b=document.getElementById('sync-bar');
-  if(b)b.classList[show?'add':'remove']('show');
+  if(!b)return;
+  b.textContent=msg||'Sincronizando...';
+  b.style.display=show?'block':'none';
+}
+function fbLoginErr(msg){
+  var el=document.getElementById('login-err');
+  if(el)el.textContent=msg||'';
+}
+function fbLoginGoogle(){
+  fbLoginErr('');
+  var p=new firebase.auth.GoogleAuthProvider();
+  _auth.signInWithPopup(p).catch(function(e){fbLoginErr('Error al iniciar sesion. Intenta nuevamente.');});
+}
+function fbCerrarSesion(){
+  if(confirm('Cerrar sesion?')){_auth.signOut();location.reload();}
+}
+function fbMostrarMenuUsuario(){
+  var opts=['Cerrar sesion'];
+  var r=prompt('Hola '+(_usr?_usr.nombre:'')+'!\nRol: '+(_usr?_usr.rol:'')+'\n\nEscribe 1 para cerrar sesion:');
+  if(r==='1')fbCerrarSesion();
 }
 
-/* ── Guardar datos en Firestore ── */
-function saveCloud(){
-  if(!_usuario)return;
-  mostrarSyncBar(true);
-  _db.collection('congregacion').doc(_usuario.congregacionId||'default').set({
-    data:JSON.stringify(D),
-    updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-    updatedBy:_usuario.email
-  }).then(function(){
-    mostrarSyncBar(false);
-  }).catch(function(e){
-    console.error('Error guardando en nube:',e);
-    mostrarSyncBar(false);
-  });
+/* ── Chip de usuario en topbar ── */
+function fbActualizarChip(){
+  var chip=document.getElementById('user-chip');
+  if(!chip||!_usr)return;
+  chip.style.display='flex';
+  chip.innerHTML=(_usr.foto?'<img src="'+_usr.foto+'" alt="">':'&#128100;')
+    +' <span>'+_usr.nombre+'</span>';
 }
 
-/* ── Cargar datos desde Firestore ── */
-function loadCloud(callback){
-  if(!_usuario)return;
-  mostrarSyncBar(true);
-  _db.collection('congregacion').doc(_usuario.congregacionId||'default').get().then(function(doc){
-    mostrarSyncBar(false);
-    if(doc.exists&&doc.data().data){
-      try{
-        var d=JSON.parse(doc.data().data);
-        // Merge: Firestore tiene prioridad sobre localStorage
-        Object.assign(D,d);
-        localStorage.setItem('dp_v3',JSON.stringify(D));
-      }catch(e){console.error('Error parseando datos nube:',e);}
-    }
-    if(callback)callback();
-  }).catch(function(e){
-    console.error('Error cargando desde nube:',e);
-    mostrarSyncBar(false);
-    if(callback)callback();
-  });
+/* ── Mostrar/ocultar nav segun rol ── */
+function fbAplicarRol(){
+  if(!_usr)return;
+  var esSA=_usr.rol==='superadmin';
+  var esAdmin=_usr.rol==='admin'||esSA;
+  document.querySelectorAll('.sa-only').forEach(function(el){el.style.display=esSA?'':'none';});
+  document.querySelectorAll('.admin-only').forEach(function(el){el.style.display=esAdmin?'':'none';});
+  // Ocultar modulos segun rol
+  var soloVisor=_usr.rol==='visor';
+  var soloLector=_usr.rol==='lector'||soloVisor;
+  if(soloLector){
+    ['config','micongr','hermanos','privilegios','repertorio','congregaciones','arreglos','carga','respaldo'].forEach(function(s){
+      var ni=document.querySelector('.ni[data-s="'+s+'"]');
+      if(ni)ni.style.display='none';
+    });
+  }
+  if(soloVisor){
+    ['historial','salidas','reporte'].forEach(function(s){
+      var ni=document.querySelector('.ni[data-s="'+s+'"]');
+      if(ni)ni.style.display='none';
+    });
+  }
 }
 
-/* ── Override save() para tambien guardar en nube ── */
-var _saveOriginal=null;
-function initSaveCloud(){
-  _saveOriginal=save;
+/* ── Guardar en Firestore ── */
+function fbSave(){
+  if(!_usr||!_usr.congId)return;
+  fbSyncBar(true,'Guardando en la nube...');
+  _db.collection('congregaciones').doc(_usr.congId)
+    .collection('datos').doc('principal').set({
+      data:JSON.stringify(D),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy:_usr.email
+    }).then(function(){fbSyncBar(false);})
+    .catch(function(e){console.error('fbSave error:',e);fbSyncBar(false);});
+}
+
+/* ── Cargar desde Firestore ── */
+function fbLoad(cb){
+  if(!_usr||!_usr.congId){if(cb)cb();return;}
+  fbSyncBar(true,'Cargando datos...');
+  _db.collection('congregaciones').doc(_usr.congId)
+    .collection('datos').doc('principal').get()
+    .then(function(doc){
+      fbSyncBar(false);
+      if(doc.exists&&doc.data().data){
+        try{
+          var d=JSON.parse(doc.data().data);
+          Object.assign(D,d);
+          localStorage.setItem('dp_v3',JSON.stringify(D));
+        }catch(e){console.error('fbLoad parse error:',e);}
+      }
+      if(cb)cb();
+    }).catch(function(e){
+      console.error('fbLoad error:',e);
+      fbSyncBar(false);
+      if(cb)cb();
+    });
+}
+
+/* ── Override save() ── */
+function fbHookSave(){
+  var _orig=save;
   save=function(){
     localStorage.setItem('dp_v3',JSON.stringify(D));
-    saveCloud();
+    fbSave();
   };
 }
 
-/* ── Listener de autenticacion ── */
+/* ── Iniciar app despues de auth ── */
+function fbIniciarApp(){
+  fbLoad(function(){
+    load();
+    if(!D.privilegios||!D.privilegios.length)
+      D.privilegios=_privilegiosDefault.map(function(n){return{id:uid(),nombre:n};});
+    if(typeof sincronizarDiscursosInactivos==='function')sincronizarDiscursosInactivos(false);
+    if(typeof setupArregloConfigAuto==='function')setupArregloConfigAuto();
+    if(typeof aplicarArregloAConfig==='function')aplicarArregloAConfig(true);
+    loadConfig();loadMC();poblarSelCE();topMeta();renderDash();
+    setupResponsive();
+    fbHookSave();
+    fbActualizarChip();
+    fbAplicarRol();
+    // Verificar si viene de invitacion
+    var params=new URLSearchParams(window.location.search);
+    var token=params.get('inv');
+    if(token)fbProcesarInvitacion(token);
+  });
+}
+
+/* ── Verificar invitacion pendiente ── */
+function fbProcesarInvitacion(token){
+  _db.collection('invitaciones').doc(token).get().then(function(doc){
+    if(!doc.exists){toast('Invitacion no encontrada','e');return;}
+    var inv=doc.data();
+    if(inv.usada){toast('Esta invitacion ya fue usada','e');return;}
+    var ahora=new Date();
+    var expira=inv.expiraEn?inv.expiraEn.toDate():null;
+    if(expira&&ahora>expira){toast('Esta invitacion ha expirado','e');return;}
+    if(inv.email&&inv.email.toLowerCase()!==(_usr.email||'').toLowerCase()){
+      toast('Esta invitacion es para '+inv.email,'e');return;
+    }
+    // Vincular usuario a la congregacion
+    _db.collection('usuarios').doc(_usr.email).set({
+      email:_usr.email,
+      nombre:_usr.nombre||inv.nombreInvitado||'',
+      rol:inv.rol||'lector',
+      congId:inv.congId,
+      activo:true,
+      creadoEn:firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){
+      // Marcar invitacion como usada
+      return _db.collection('invitaciones').doc(token).update({
+        usada:true,usadaEn:firebase.firestore.FieldValue.serverTimestamp(),usadaPor:_usr.email
+      });
+    }).then(function(){
+      toast('Acceso activado. Bienvenido!','s');
+      // Actualizar rol local y recargar
+      _usr.rol=inv.rol||'lector';
+      _usr.congId=inv.congId;
+      fbAplicarRol();
+      fbIniciarApp();
+      // Limpiar URL
+      window.history.replaceState({},'',window.location.pathname);
+    }).catch(function(e){console.error('Error procesando invitacion:',e);toast('Error al activar acceso','e');});
+  });
+}
+
+/* ── Auth state listener ── */
 _auth.onAuthStateChanged(function(user){
   if(!user){
-    // No autenticado - mostrar login
     document.getElementById('login-screen').classList.remove('hidden');
     return;
   }
-  // Verificar si el usuario tiene acceso
+  // Verificar en Firestore
   _db.collection('usuarios').doc(user.email).get().then(function(doc){
+    // Verificar si viene de invitacion aunque no tenga usuario
+    var params=new URLSearchParams(window.location.search);
+    var token=params.get('inv');
     if(!doc.exists||!doc.data().activo){
-      // Sin acceso
-      document.getElementById('login-err').classList.add('show');
-      document.getElementById('login-screen').classList.remove('hidden');
+      if(token){
+        // Tiene invitacion - crear usuario basico y procesar
+        _usr={email:user.email,nombre:user.displayName||'',rol:'pendiente',congId:'',foto:user.photoURL||''};
+        document.getElementById('login-screen').classList.add('hidden');
+        fbProcesarInvitacion(token);
+        return;
+      }
+      fbLoginErr('No tienes acceso. Solicita una invitacion al administrador.');
       _auth.signOut();
       return;
     }
-    // Acceso concedido
-    _usuario={
+    var data=doc.data();
+    _usr={
       email:user.email,
-      nombre:doc.data().nombre||user.displayName,
-      rol:doc.data().rol||'visor',
-      foto:user.photoURL,
-      congregacionId:doc.data().congregacionId||'default'
+      nombre:data.nombre||user.displayName||'',
+      rol:data.rol||'visor',
+      congId:data.congId||'',
+      foto:user.photoURL||''
     };
-    // Ocultar login
     document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('login-err').classList.remove('show');
-    // Cargar datos desde nube y luego inicializar app
-    loadCloud(function(){
-      iniciarApp();
-    });
-    // Override save para sincronizar con nube
-    initSaveCloud();
-    // Actualizar chip de usuario en topbar si existe
-    var chip=document.getElementById('user-chip');
-    if(chip){
-      chip.innerHTML=(_usuario.foto?'<img src="'+_usuario.foto+'" alt="">':'')
-        +'<span>'+_usuario.nombre+'</span>';
-      chip.onclick=function(){
-        if(confirm('Cerrar sesion?'))cerrarSesion();
-      };
-    }
+    fbLoginErr('');
+    fbIniciarApp();
   }).catch(function(e){
     console.error('Error verificando usuario:',e);
-    _auth.signOut();
+    fbLoginErr('Error de conexion. Intenta nuevamente.');
   });
 });
 
-/* ── Inicializacion de la app (separada del Firebase) ── */
-function iniciarApp(){
-  load();
-  if(!D.privilegios||!D.privilegios.length)
-    D.privilegios=_privilegiosDefault.map(function(n){return{id:uid(),nombre:n};});
-  sincronizarDiscursosInactivos(false);
-  loadConfig();loadMC();poblarSelCE();
-  if(typeof setupArregloConfigAuto==='function')setupArregloConfigAuto();
-  if(typeof aplicarArregloAConfig==='function')aplicarArregloAConfig(true);
-  topMeta();renderDash();
-  setupResponsive();
+/* ============================================================
+   SUPER ADMIN — Gestion de congregaciones
+============================================================ */
+function saCrearCongregacion(){
+  if(!_usr||_usr.rol!=='superadmin'){toast('Sin permisos','e');return;}
+  var nombre=document.getElementById('sa-cong-nombre').value.trim();
+  var circuito=document.getElementById('sa-cong-circuito').value.trim();
+  var ciudad=document.getElementById('sa-cong-ciudad').value.trim();
+  var adminEmail=document.getElementById('sa-cong-admin').value.trim().toLowerCase();
+  var adminNombre=document.getElementById('sa-cong-admin-nombre').value.trim();
+  if(!nombre||!adminEmail){toast('Nombre y email del admin son obligatorios','e');return;}
+  var congId='cong_'+uid();
+  fbSyncBar(true,'Creando congregacion...');
+  _db.collection('congregaciones').doc(congId).set({
+    nombre:nombre,circuito:circuito,ciudad:ciudad,
+    creadoPor:_usr.email,activo:true,
+    creadoEn:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    return saCrearInvitacion(adminEmail,adminNombre,congId,'admin');
+  }).then(function(link){
+    fbSyncBar(false);
+    toast('Congregacion creada!','s');
+    ['sa-cong-nombre','sa-cong-circuito','sa-cong-ciudad','sa-cong-admin','sa-cong-admin-nombre'].forEach(function(id){
+      var el=document.getElementById(id);if(el)el.value='';
+    });
+    saCargarDatos();
+    // Mostrar link
+    alert('Congregacion "'+nombre+'" creada.\n\nLink de invitacion para el admin:\n'+link+'\n\n(Expira en 48 horas)');
+  }).catch(function(e){
+    console.error('saCrearCongregacion error:',e);
+    fbSyncBar(false);
+    toast('Error al crear congregacion','e');
+  });
 }
 
+function saCrearInvitacion(email,nombre,congId,rol){
+  var token=uid()+uid();
+  var expira=new Date(Date.now()+48*60*60*1000);
+  return _db.collection('invitaciones').doc(token).set({
+    email:email,nombreInvitado:nombre,congId:congId,rol:rol,
+    usada:false,
+    creadaEn:firebase.firestore.FieldValue.serverTimestamp(),
+    expiraEn:firebase.firestore.Timestamp.fromDate(expira),
+    creadaPor:_usr.email
+  }).then(function(){
+    return window.location.origin+window.location.pathname+'?inv='+token;
+  });
+}
+
+function saCargarDatos(){
+  // Cargar congregaciones
+  _db.collection('congregaciones').orderBy('creadoEn','desc').get().then(function(snap){
+    var el=document.getElementById('sa-lista-congs');
+    if(!el)return;
+    if(snap.empty){el.innerHTML='<div class="es"><p>Sin congregaciones registradas</p></div>';return;}
+    el.innerHTML='<div class="sa-grid">'+snap.docs.map(function(doc){
+      var d=doc.data();
+      return '<div class="sa-cong-card">'
+        +'<div class="sa-cong-nombre">'+esc(d.nombre||'Sin nombre')+'</div>'
+        +'<div class="sa-cong-meta">'+(d.circuito?'Circuito: '+d.circuito+' | ':'')+''+(d.ciudad||'')+'</div>'
+        +'<div class="sa-cong-meta">ID: '+doc.id+'</div>'
+        +'<span class="badge '+(d.activo?'bgn':'bgr')+'">'+(d.activo?'Activa':'Inactiva')+'</span>'
+        +'</div>';
+    }).join('')+'</div>';
+  });
+  // Cargar todas las invitaciones
+  _db.collection('invitaciones').orderBy('creadaEn','desc').limit(50).get().then(function(snap){
+    var el=document.getElementById('sa-lista-invs');
+    if(!el)return;
+    if(snap.empty){el.innerHTML='<div class="es"><p>Sin invitaciones</p></div>';return;}
+    var ahora=new Date();
+    el.innerHTML=snap.docs.map(function(doc){
+      var d=doc.data();
+      var expira=d.expiraEn?d.expiraEn.toDate():null;
+      var estado=d.usada?'usada':(expira&&ahora>expira?'expirada':'pendiente');
+      var cls=estado==='usada'?'badge-inv-usada':estado==='expirada'?'badge-inv-exp':'badge-inv-pend';
+      var label=estado==='usada'?'Usada':estado==='expirada'?'Expirada':'Pendiente';
+      return '<div class="inv-row">'
+        +'<div class="inv-email">'+esc(d.email||'---')+'</div>'
+        +'<div class="inv-meta">'+esc(d.rol||'')+'</div>'
+        +'<span class="'+cls+'">'+label+'</span>'
+        +'</div>';
+    }).join('');
+  });
+}
+
+/* ============================================================
+   USUARIOS — Gestion de usuarios de la congregacion
+============================================================ */
+function usrInvitar(){
+  if(!_usr||(_usr.rol!=='admin'&&_usr.rol!=='superadmin')){toast('Sin permisos','e');return;}
+  var email=document.getElementById('usr-inv-email').value.trim().toLowerCase();
+  var nombre=document.getElementById('usr-inv-nombre').value.trim();
+  var rol=document.getElementById('usr-inv-rol').value;
+  if(!email||!nombre){toast('Email y nombre son obligatorios','e');return;}
+  fbSyncBar(true,'Creando invitacion...');
+  saCrearInvitacion(email,nombre,_usr.congId,rol).then(function(link){
+    fbSyncBar(false);
+    _invLinkActual=link;
+    var linkEl=document.getElementById('usr-inv-link');
+    var linkTxt=document.getElementById('usr-inv-link-txt');
+    if(linkEl)linkEl.style.display='block';
+    if(linkTxt)linkTxt.value=link;
+    toast('Invitacion creada!','s');
+    usrCargarDatos();
+    // Intentar enviar email via EmailJS si está configurado
+    usrEnviarEmailInvitacion(email,nombre,link,rol);
+  }).catch(function(e){
+    console.error('usrInvitar error:',e);
+    fbSyncBar(false);
+    toast('Error al crear invitacion','e');
+  });
+}
+
+function usrCopiarLink(){
+  var txt=document.getElementById('usr-inv-link-txt');
+  if(!txt)return;
+  navigator.clipboard.writeText(txt.value).then(function(){toast('Link copiado!','s');}).catch(function(){txt.select();document.execCommand('copy');toast('Link copiado!','s');});
+}
+
+function usrCompartirWhatsApp(){
+  if(!_invLinkActual)return;
+  var msg='Hola! Te invito a unirte al Coordinador de Discursos de nuestra congregacion. Accede con tu cuenta Google usando este link (expira en 48 horas):\n'+_invLinkActual;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function usrEnviarEmailInvitacion(email,nombre,link,rol){
+  // Placeholder para integracion con servicio de email
+  // Se implementara con Zoho Mail o EmailJS cuando este configurado
+  console.log('Email invitacion pendiente de configurar para:',email);
+}
+
+function usrCargarDatos(){
+  if(!_usr||!_usr.congId)return;
+  // Usuarios activos
+  _db.collection('usuarios').where('congId','==',_usr.congId).get().then(function(snap){
+    var el=document.getElementById('usr-lista');
+    if(!el)return;
+    if(snap.empty){el.innerHTML='<div class="es"><p>Sin usuarios registrados</p></div>';return;}
+    el.innerHTML=snap.docs.map(function(doc){
+      var d=doc.data();
+      return '<div class="usr-row">'
+        +'<div><div class="usr-nombre">'+esc(d.nombre||'---')+'</div><div class="usr-email">'+esc(d.email)+'</div></div>'
+        +'<span class="badge '+(d.activo?'bgn':'bgr')+'">'+esc(d.rol||'')+'</span>'
+        +'<button class="btn '+(d.activo?'bd2':'bp')+' bsm" onclick="usrToggleActivo(\''+doc.id+'\','+d.activo+')">'+(d.activo?'Desactivar':'Activar')+'</button>'
+        +'</div>';
+    }).join('');
+  });
+  // Invitaciones pendientes de esta congregacion
+  _db.collection('invitaciones').where('congId','==',_usr.congId).orderBy('creadaEn','desc').get().then(function(snap){
+    var el=document.getElementById('usr-lista-inv');
+    if(!el)return;
+    var ahora=new Date();
+    var pend=snap.docs.filter(function(doc){
+      var d=doc.data();
+      var expira=d.expiraEn?d.expiraEn.toDate():null;
+      return !d.usada&&(!expira||ahora<=expira);
+    });
+    if(!pend.length){el.innerHTML='<div class="es"><p>Sin invitaciones pendientes</p></div>';return;}
+    el.innerHTML=pend.map(function(doc){
+      var d=doc.data();
+      return '<div class="inv-row">'
+        +'<div class="inv-email">'+esc(d.email||'---')+'</div>'
+        +'<div class="inv-meta">'+esc(d.rol||'')+'</div>'
+        +'<span class="badge-inv-pend">Pendiente</span>'
+        +'<button class="btn bd2 bsm" onclick="usrCancelarInv(\''+doc.id+'\')">Cancelar</button>'
+        +'</div>';
+    }).join('');
+  });
+}
+
+function usrToggleActivo(email,activo){
+  _db.collection('usuarios').doc(email).update({activo:!activo}).then(function(){
+    toast('Usuario '+(activo?'desactivado':'activado'),'s');
+    usrCargarDatos();
+  });
+}
+
+function usrCancelarInv(token){
+  confirmar('Cancelar esta invitacion?',function(){
+    _db.collection('invitaciones').doc(token).update({usada:true}).then(function(){
+      toast('Invitacion cancelada','s');usrCargarDatos();
+    });
+  });
+}
+
+/* ── Nav hooks para cargar datos de paneles ── */
+var _navOriginal=null;
+function fbHookNav(){
+  // Interceptar navegacion para cargar datos de superadmin/usuarios
+  document.querySelectorAll('.ni').forEach(function(ni){
+    ni.addEventListener('click',function(){
+      var s=ni.dataset.s;
+      if(s==='superadmin')saCargarDatos();
+      if(s==='usuarios')usrCargarDatos();
+    });
+  });
+}
+
+/* ── Inicializacion ── */
+(function(){
+  // App se inicializa despues de autenticacion Firebase
+  // Ver _auth.onAuthStateChanged arriba
+  // Agregar hook de navegacion despues que el DOM este listo
+  document.addEventListener('DOMContentLoaded',function(){
+    fbHookNav();
+  });
+  if(document.readyState==='complete'||document.readyState==='interactive'){
+    fbHookNav();
+  }
+})();
 </script>
 </body>
 </html>
