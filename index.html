@@ -2881,22 +2881,21 @@ function fbLoad(cb){
 /* ── Listener en tiempo real ── */
 var _fbUnsubscribe=null;
 function fbIniciarListener(){
-  if(!_usr||!_usr.congId)return;
-  if(_fbUnsubscribe)_fbUnsubscribe(); // cancelar listener anterior
-  var _ultimoUpdateBy=_usr.email; // para no recargar cambios propios
+  if(!_usr||!_usr.congId){
+    console.log('fbIniciarListener: sin congId, listener no iniciado');
+    return;
+  }
+  if(_fbUnsubscribe)_fbUnsubscribe();
   _fbUnsubscribe=fbDatosRef().onSnapshot(function(doc){
     if(!doc.exists)return;
     var data=doc.data();
-    // Ignorar si el cambio lo hice yo mismo
     if(data.updatedBy===_usr.email)return;
-    // Otro dispositivo/usuario guardó — recargar datos
-    console.log('Cambio detectado de:',data.updatedBy,', recargando...');
-    fbSyncBar(true,'Sincronizando cambios de otro dispositivo...');
+    console.log('Cambio detectado de:',data.updatedBy);
+    fbSyncBar(true,'Sincronizando...');
     try{
       var d=JSON.parse(data.data);
       Object.keys(d).forEach(function(k){if(D.hasOwnProperty(k))D[k]=d[k];});
       localStorage.setItem('dp_v3',JSON.stringify(D));
-      // Re-renderizar la seccion activa
       var secActiva=document.querySelector('.sec.active');
       if(secActiva){
         var sid=secActiva.id.replace('s-','');
@@ -2908,7 +2907,7 @@ function fbIniciarListener(){
           planif:function(){renderPlan();},
           historial:function(){renderHist();},
           salidas:function(){renderSalidas();},
-          carga:function(){renderMC();},
+          carga:function(){renderCM();},
           congregaciones:function(){renderCE();},
           config:function(){loadConfig();},
           micongr:function(){loadMC();}
@@ -2916,13 +2915,13 @@ function fbIniciarListener(){
         if(RENDERS[sid])RENDERS[sid]();
       }
       fbSyncBar(false);
-      toast('Datos actualizados desde otro dispositivo','s');
+      toast('Datos actualizados','s');
     }catch(e){
       console.error('Error procesando snapshot:',e);
       fbSyncBar(false);
     }
   },function(e){
-    console.error('fbListener error:',e);
+    console.error('fbListener error:',e.code, e.message);
   });
 }
 
@@ -2948,10 +2947,11 @@ function fbIniciarApp(){
     fbHookSave();
     fbActualizarChip();
     fbAplicarRol();
-    fbIniciarListener(); // ← tiempo real
+    // Solo iniciar listener si tiene congId valido
+    if(_usr&&_usr.congId)fbIniciarListener();
     var params=new URLSearchParams(window.location.search);
     var token=params.get('inv');
-    if(token)fbProcesarInvitacion(token);
+    if(token)setTimeout(function(){fbProcesarInvitacion(token);},800);
   });
 }
 
