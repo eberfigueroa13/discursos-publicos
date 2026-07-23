@@ -2759,44 +2759,122 @@ function fbAplicarRol(){
 }
 
 /* ── Guardar en Firestore ── */
-function fbSave(){
-  if(!_usr||!_usr.congId)return;
-  fbSyncBar(true,'Guardando en la nube...');
-  _db.collection('congregaciones').doc(_usr.congId)
-    .collection('datos').doc('principal').set({
-      data:JSON.stringify(D),
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-      updatedBy:_usr.email
-    }).then(function(){fbSyncBar(false);})
-    .catch(function(e){console.error('fbSave error:',e);fbSyncBar(false);});
+
+/* ============================================================
+   ADAPTADOR DE DATOS — Fase 1 (blob) + base para Fase 2
+============================================================ */
+var _fbMode={
+  /* 'blob' = JSON unico en Firestore (actual)
+     'col'  = coleccion separada en Firestore (futuro) */
+  discursos:'blob',
+  locales:'blob',
+  repertorioLocal:'blob',
+  congregaciones:'blob',
+  cargaMensual:'blob',
+  planificacion:'blob',
+  historial:'blob',
+  salidasRealizadas:'blob',
+  privilegios:'blob',
+  arreglos:'blob',
+  miCongr:'blob',
+  config:'blob'
+};
+
+/* Ruta base de datos de la congregacion */
+function fbDatosRef(){
+  return _db.collection('congregaciones').doc(_usr.congId).collection('datos').doc('principal');
 }
 
-/* ── Cargar desde Firestore ── */
+/* ── Guardar: siempre blob por ahora ── */
+function fbSave(){
+  if(!_usr||!_usr.congId)return;
+  fbSyncBar(true,'Guardando...');
+  fbDatosRef().set({
+    data:JSON.stringify(D),
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+    updatedBy:_usr.email
+  }).then(function(){
+    fbSyncBar(false);
+  }).catch(function(e){
+    console.error('fbSave error:',e);
+    fbSyncBar(false);
+    toast('Error al guardar en la nube','e');
+  });
+}
+
+/* ── Cargar inicial desde Firestore ── */
 function fbLoad(cb){
   if(!_usr||!_usr.congId){if(cb)cb();return;}
   fbSyncBar(true,'Cargando datos...');
-  _db.collection('congregaciones').doc(_usr.congId)
-    .collection('datos').doc('principal').get()
-    .then(function(doc){
-      fbSyncBar(false);
-      if(doc.exists&&doc.data().data){
-        try{
-          var d=JSON.parse(doc.data().data);
-          Object.assign(D,d);
-          localStorage.setItem('dp_v3',JSON.stringify(D));
-        }catch(e){console.error('fbLoad parse error:',e);}
-      }
-      if(cb)cb();
-    }).catch(function(e){
-      console.error('fbLoad error:',e);
-      fbSyncBar(false);
-      if(cb)cb();
-    });
+  fbDatosRef().get().then(function(doc){
+    fbSyncBar(false);
+    if(doc.exists&&doc.data().data){
+      try{
+        var d=JSON.parse(doc.data().data);
+        Object.keys(d).forEach(function(k){if(D.hasOwnProperty(k))D[k]=d[k];});
+        localStorage.setItem('dp_v3',JSON.stringify(D));
+      }catch(e){console.error('fbLoad parse error:',e);}
+    }
+    if(cb)cb();
+  }).catch(function(e){
+    console.error('fbLoad error:',e);
+    fbSyncBar(false);
+    // Fallback a localStorage
+    load();
+    if(cb)cb();
+  });
 }
 
-/* ── Override save() ── */
+/* ── Listener en tiempo real ── */
+var _fbUnsubscribe=null;
+function fbIniciarListener(){
+  if(!_usr||!_usr.congId)return;
+  if(_fbUnsubscribe)_fbUnsubscribe(); // cancelar listener anterior
+  var _ultimoUpdateBy=_usr.email; // para no recargar cambios propios
+  _fbUnsubscribe=fbDatosRef().onSnapshot(function(doc){
+    if(!doc.exists)return;
+    var data=doc.data();
+    // Ignorar si el cambio lo hice yo mismo
+    if(data.updatedBy===_usr.email)return;
+    // Otro dispositivo/usuario guardó — recargar datos
+    console.log('Cambio detectado de:',data.updatedBy,', recargando...');
+    fbSyncBar(true,'Sincronizando cambios de otro dispositivo...');
+    try{
+      var d=JSON.parse(data.data);
+      Object.keys(d).forEach(function(k){if(D.hasOwnProperty(k))D[k]=d[k];});
+      localStorage.setItem('dp_v3',JSON.stringify(D));
+      // Re-renderizar la seccion activa
+      var secActiva=document.querySelector('.sec.active');
+      if(secActiva){
+        var sid=secActiva.id.replace('s-','');
+        var RENDERS={
+          dashboard:function(){renderDash();},
+          hermanos:function(){fillSelH();renderH();},
+          discursos:function(){renderD();},
+          repertorio:function(){renderRep();},
+          planif:function(){renderPlan();},
+          historial:function(){renderHist();},
+          salidas:function(){renderSalidas();},
+          carga:function(){renderMC();},
+          congregaciones:function(){renderCE();},
+          config:function(){loadConfig();},
+          micongr:function(){loadMC();}
+        };
+        if(RENDERS[sid])RENDERS[sid]();
+      }
+      fbSyncBar(false);
+      toast('Datos actualizados desde otro dispositivo','s');
+    }catch(e){
+      console.error('Error procesando snapshot:',e);
+      fbSyncBar(false);
+    }
+  },function(e){
+    console.error('fbListener error:',e);
+  });
+}
+
+/* ── Override save() para sincronizar con Firestore ── */
 function fbHookSave(){
-  var _orig=save;
   save=function(){
     localStorage.setItem('dp_v3',JSON.stringify(D));
     fbSave();
@@ -2817,12 +2895,18 @@ function fbIniciarApp(){
     fbHookSave();
     fbActualizarChip();
     fbAplicarRol();
-    // Verificar si viene de invitacion
+    fbIniciarListener(); // ← tiempo real
     var params=new URLSearchParams(window.location.search);
     var token=params.get('inv');
     if(token)fbProcesarInvitacion(token);
   });
 }
+
+/* ── Detener listener al cerrar sesion ── */
+function fbDetenerListener(){
+  if(_fbUnsubscribe){_fbUnsubscribe();_fbUnsubscribe=null;}
+}
+
 
 /* ── Verificar invitacion pendiente ── */
 function fbProcesarInvitacion(token){
