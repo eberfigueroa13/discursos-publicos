@@ -204,12 +204,63 @@ tbody tr:last-child td{border-bottom:none;}
 #s-usuarios .usr-row:last-child{border-bottom:none;}
 .usr-nombre{flex:1;font-weight:600;}
 .usr-email{font-size:12px;color:var(--tx3);}
+
+/* ── Pantalla bienvenida invitacion ── */
+#inv-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9998;display:none;}
+#inv-screen.show{display:flex;}
+.inv-card{background:var(--sf);border-radius:16px;padding:40px;max-width:480px;width:92%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.12);}
+.inv-card h2{font-size:20px;font-weight:700;color:var(--tx);margin:12px 0 6px;}
+.inv-card .inv-congr{font-size:16px;color:var(--pr);font-weight:700;margin-bottom:4px;}
+.inv-card .inv-rol{font-size:13px;color:var(--tx2);margin-bottom:24px;}
+.inv-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;margin-bottom:20px;}
+@media(max-width:500px){.inv-form-grid{grid-template-columns:1fr;}}
+.inv-form-grid .fg{display:flex;flex-direction:column;gap:4px;}
+.inv-form-grid label{font-size:12px;color:var(--tx2);font-weight:600;}
+.inv-form-grid input,.inv-form-grid select{padding:8px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;background:var(--sf2);}
+.inv-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head><body>
 <div id="sync-bar">Sincronizando con la nube...</div>
+
+<div id="inv-screen">
+  <div class="inv-card">
+    <div style="font-size:48px">&#127881;</div>
+    <h2>Fuiste invitado a unirte</h2>
+    <div class="inv-congr" id="inv-congr-nombre">---</div>
+    <div class="inv-rol" id="inv-rol-label">---</div>
+    <div id="inv-datos-admin" style="display:none">
+      <div style="font-size:13px;color:var(--tx2);margin-bottom:12px;text-align:left">
+        Como administrador, completa los datos basicos de tu congregacion:
+      </div>
+      <div class="inv-form-grid">
+        <div class="fg" style="grid-column:1/-1"><label>Nombre de la congregacion *</label><input id="inv-cong-nombre" type="text" placeholder="Ej: Los Arcos"></div>
+        <div class="fg"><label>Circuito *</label><input id="inv-cong-circuito" type="text" placeholder="Ej: RM-13"></div>
+        <div class="fg"><label>Ciudad</label><input id="inv-cong-ciudad" type="text" placeholder="Ej: Santiago"></div>
+        <div class="fg"><label>Direccion del salon</label><input id="inv-cong-dir" type="text" placeholder="Direccion"></div>
+        <div class="fg"><label>Dia de reunion</label>
+          <select id="inv-cong-dia">
+            <option value="0">Domingo</option>
+            <option value="1">Lunes</option>
+            <option value="2">Martes</option>
+            <option value="3">Miercoles</option>
+            <option value="4">Jueves</option>
+            <option value="5">Viernes</option>
+            <option value="6" selected>Sabado</option>
+          </select>
+        </div>
+        <div class="fg"><label>Horario</label><input id="inv-cong-horario" type="text" placeholder="Ej: 16:30 hrs"></div>
+      </div>
+    </div>
+    <div class="inv-btns">
+      <button class="btn bg" onclick="invRechazar()">Cancelar</button>
+      <button class="btn bp" id="inv-aceptar-btn" onclick="invAceptar()">Aceptar e ingresar</button>
+    </div>
+  </div>
+</div>
+
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">&#128218;</div>
@@ -2700,6 +2751,7 @@ var _auth=firebase.auth();
 var _db=firebase.firestore();
 var _usr=null; // {email,nombre,rol,congId,foto}
 var _invLinkActual='';
+var _invPendiente=null; // datos de invitacion pendiente de confirmar
 
 /* ── Helpers ── */
 function fbSyncBar(show,msg){
@@ -2912,51 +2964,38 @@ function fbDetenerListener(){
 /* ── Verificar invitacion pendiente ── */
 function fbProcesarInvitacion(token){
   _db.collection('invitaciones').doc(token).get().then(function(doc){
-    if(!doc.exists){
-      setTimeout(function(){toast('Invitacion no encontrada','e');},500);
-      return;
-    }
+    if(!doc.exists){setTimeout(function(){toast('Invitacion no encontrada','e');},500);return;}
     var inv=doc.data();
-    if(inv.usada){
-      setTimeout(function(){toast('Esta invitacion ya fue usada','e');},500);
-      return;
-    }
+    if(inv.usada){setTimeout(function(){toast('Esta invitacion ya fue usada','e');},500);return;}
     var ahora=new Date();
     var expira=inv.expiraEn?inv.expiraEn.toDate():null;
-    if(expira&&ahora>expira){
-      setTimeout(function(){toast('Esta invitacion ha expirado','e');},500);
-      return;
-    }
+    if(expira&&ahora>expira){setTimeout(function(){toast('Esta invitacion ha expirado','e');},500);return;}
     if(inv.email&&inv.email.toLowerCase()!==(_usr.email||'').toLowerCase()){
-      setTimeout(function(){toast('Esta invitacion es para '+inv.email,'e');},500);
-      return;
+      setTimeout(function(){toast('Esta invitacion es para '+inv.email,'e');},500);return;
     }
-    // Vincular usuario a la congregacion
-    var datosUsuario={
-      email:_usr.email,
-      nombre:_usr.nombre||inv.nombreInvitado||'',
-      rol:inv.rol||'lector',
-      congId:inv.congId||'',
-      activo:true,
-      creadoEn:firebase.firestore.FieldValue.serverTimestamp()
-    };
-    _db.collection('usuarios').doc(_usr.email).set(datosUsuario)
-    .then(function(){
-      return _db.collection('invitaciones').doc(token).update({
-        usada:true,
-        usadaEn:firebase.firestore.FieldValue.serverTimestamp(),
-        usadaPor:_usr.email
-      });
-    }).then(function(){
-      // Actualizar _usr local
-      _usr.rol=inv.rol||'lector';
-      _usr.congId=inv.congId||'';
-      // Limpiar URL y recargar para aplicar cambios
-      window.history.replaceState({},'',window.location.pathname);
-      location.reload();
-    }).catch(function(e){
-      console.error('Error procesando invitacion:',e);
-      setTimeout(function(){toast('Error al activar acceso: '+e.message,'e');},500);
+    // Guardar invitacion pendiente y mostrar pantalla de bienvenida
+    _invPendiente={token:token,inv:inv};
+    // Cargar nombre de la congregacion
+    _db.collection('congregaciones').doc(inv.congId).get().then(function(cdoc){
+      var congNombre=cdoc.exists?(cdoc.data().nombre||inv.congId):inv.congId;
+      var rolLabel={superadmin:'Super Administrador',admin:'Administrador',coordinador:'Coordinador',lector:'Lector',visor:'Visor'}[inv.rol]||inv.rol;
+      var elN=document.getElementById('inv-congr-nombre');
+      var elR=document.getElementById('inv-rol-label');
+      if(elN)elN.textContent=congNombre;
+      if(elR)elR.textContent='Tu rol: '+rolLabel;
+      // Mostrar formulario de datos solo si es admin
+      var datosAdmin=document.getElementById('inv-datos-admin');
+      if(datosAdmin)datosAdmin.style.display=(inv.rol==='admin'||inv.rol==='superadmin')?'block':'none';
+      // Precargar nombre de congregacion en el formulario
+      var elCN=document.getElementById('inv-cong-nombre');
+      if(elCN)elCN.value=congNombre;
+      // Mostrar pantalla
+      var invScreen=document.getElementById('inv-screen');
+      if(invScreen)invScreen.classList.add('show');
+    }).catch(function(){
+      // Si no puede cargar la congr, igual mostrar bienvenida
+      var invScreen=document.getElementById('inv-screen');
+      if(invScreen)invScreen.classList.add('show');
     });
   }).catch(function(e){
     console.error('Error leyendo invitacion:',e);
@@ -3017,28 +3056,51 @@ function saCrearCongregacion(){
   var ciudad=document.getElementById('sa-cong-ciudad').value.trim();
   var adminEmail=document.getElementById('sa-cong-admin').value.trim().toLowerCase();
   var adminNombre=document.getElementById('sa-cong-admin-nombre').value.trim();
-  if(!nombre||!adminEmail){toast('Nombre y email del admin son obligatorios','e');return;}
-  var congId='cong_'+uid();
+  if(!nombre||!circuito||!adminEmail){toast('Nombre, circuito y email del admin son obligatorios','e');return;}
+  var iniciales=nombre.split(' ').map(function(w){return w[0]||'';}).join('').toLowerCase().replace(/[^a-z]/g,'').substring(0,4);
+  var circ=circuito.toLowerCase().replace(/[^a-z0-9]/g,'');
+  var baseId='cong'+iniciales+circ;
   fbSyncBar(true,'Creando congregacion...');
-  _db.collection('congregaciones').doc(congId).set({
-    nombre:nombre,circuito:circuito,ciudad:ciudad,
-    creadoPor:_usr.email,activo:true,
-    creadoEn:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(){
-    return saCrearInvitacion(adminEmail,adminNombre,congId,'admin');
-  }).then(function(link){
+  _db.collection('congregaciones').where('baseId','==',baseId).get().then(function(snap){
+    var correlativo=String(snap.size+1).padStart(3,'0');
+    var congId=baseId+correlativo;
+    return _db.collection('congregaciones').doc(congId).set({
+      nombre:nombre,circuito:circuito,ciudad:ciudad,baseId:baseId,
+      creadoPor:_usr.email,activo:true,
+      creadoEn:firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){return congId;});
+  }).then(function(congId){
+    return saCrearInvitacion(adminEmail,adminNombre,congId,'admin').then(function(link){
+      return {congId:congId,link:link};
+    });
+  }).then(function(result){
     fbSyncBar(false);
-    toast('Congregacion creada!','s');
+    toast('Congregacion creada! ID: '+result.congId,'s');
     ['sa-cong-nombre','sa-cong-circuito','sa-cong-ciudad','sa-cong-admin','sa-cong-admin-nombre'].forEach(function(id){
       var el=document.getElementById(id);if(el)el.value='';
     });
     saCargarDatos();
-    // Mostrar link
-    alert('Congregacion "'+nombre+'" creada.\n\nLink de invitacion para el admin:\n'+link+'\n\n(Expira en 48 horas)');
+    _saCongInvLink=result.link;
+    _saCongInvId=result.congId;
+    openM('Congregacion creada',
+      '<div style="text-align:center">'
+      +'<div style="font-size:32px;margin-bottom:12px">&#127881;</div>'
+      +'<div style="font-weight:700;margin-bottom:4px">Congregacion creada exitosamente</div>'
+      +'<div style="font-size:13px;color:var(--tx2);margin-bottom:16px">ID: '+result.congId+'</div>'
+      +'<div style="font-size:13px;margin-bottom:8px">Link de invitacion para el admin (expira en 48 horas):</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">'
+      +'<input id="sa-link-txt" type="text" readonly style="flex:1;font-size:11px;background:var(--sf2);padding:6px" value="'+result.link+'">'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'
+      +'<button class="btn bg bsm" onclick="saCopiarLink()">Copiar link</button>'
+      +'<button class="btn bg bsm" onclick="saCompartirWA()">WhatsApp</button>'
+      +'</div></div>',
+      null
+    );
   }).catch(function(e){
     console.error('saCrearCongregacion error:',e);
     fbSyncBar(false);
-    toast('Error al crear congregacion','e');
+    toast('Error al crear congregacion: '+e.message,'e');
   });
 }
 
@@ -3350,6 +3412,82 @@ function fbHookNav(){
     fbHookNav();
   }
 })();
+
+function invAceptar(){
+  if(!_invPendiente){toast('Error: invitacion no encontrada','e');return;}
+  var inv=_invPendiente.inv;
+  var token=_invPendiente.token;
+  var esAdmin=inv.rol==='admin'||inv.rol==='superadmin';
+  // Validar datos de congregacion si es admin
+  if(esAdmin){
+    var cnombre=document.getElementById('inv-cong-nombre').value.trim();
+    var ccircuito=document.getElementById('inv-cong-circuito').value.trim();
+    if(!cnombre||!ccircuito){toast('Nombre y circuito de la congregacion son obligatorios','e');return;}
+  }
+  var btn=document.getElementById('inv-aceptar-btn');
+  if(btn){btn.disabled=true;btn.textContent='Procesando...';}
+  // Actualizar datos de la congregacion si es admin
+  var promCong=Promise.resolve();
+  if(esAdmin){
+    var datosConge={
+      nombre:document.getElementById('inv-cong-nombre').value.trim(),
+      circuito:document.getElementById('inv-cong-circuito').value.trim(),
+      ciudad:(document.getElementById('inv-cong-ciudad').value||'').trim(),
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    };
+    // Guardar datos basicos en miCongr del D object para esta congregacion
+    promCong=_db.collection('congregaciones').doc(inv.congId).update(datosConge);
+  }
+  promCong.then(function(){
+    return _db.collection('usuarios').doc(_usr.email).set({
+      email:_usr.email,
+      nombre:_usr.nombre||inv.nombreInvitado||'',
+      rol:inv.rol||'lector',
+      congId:inv.congId||'',
+      activo:true,
+      creadoEn:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }).then(function(){
+    return _db.collection('invitaciones').doc(token).update({
+      usada:true,
+      usadaEn:firebase.firestore.FieldValue.serverTimestamp(),
+      usadaPor:_usr.email
+    });
+  }).then(function(){
+    _usr.rol=inv.rol||'lector';
+    _usr.congId=inv.congId||'';
+    _invPendiente=null;
+    var invScreen=document.getElementById('inv-screen');
+    if(invScreen)invScreen.classList.remove('show');
+    window.history.replaceState({},'',window.location.pathname);
+    location.reload();
+  }).catch(function(e){
+    console.error('invAceptar error:',e);
+    if(btn){btn.disabled=false;btn.textContent='Aceptar e ingresar';}
+    toast('Error al activar acceso: '+e.message,'e');
+  });
+}
+function invRechazar(){
+  _invPendiente=null;
+  var invScreen=document.getElementById('inv-screen');
+  if(invScreen)invScreen.classList.remove('show');
+  window.history.replaceState({},'',window.location.pathname);
+  _auth.signOut();
+  location.reload();
+}
+function saCopiarLink(){
+  var el=document.getElementById('sa-link-txt');
+  if(!el)return;
+  navigator.clipboard.writeText(el.value).then(function(){toast('Link copiado!','s');}).catch(function(){
+    el.select();document.execCommand('copy');toast('Link copiado!','s');
+  });
+}
+function saCompartirWA(){
+  var el=document.getElementById('sa-link-txt');
+  if(!el)return;
+  var msg='Invitacion al Coordinador de Discursos Publicos:\n'+el.value;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
 </script>
 </body>
 </html>
