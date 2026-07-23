@@ -530,7 +530,7 @@ document.querySelectorAll('.ni').forEach(function(el){
       reporte:function(){loadReporteOpts();renderReporteMensual();},
       historial:function(){poblarFiltAnio();renderHist();},
       salidas:function(){poblarFiltAnioSal();renderSalidas();},
-      guia:function(){renderGuia();}};
+      guia:function(){renderGuia();},superadmin:function(){saCargarDatos();},usuarios:function(){usrCargarDatos();}};
     if(fn[s])fn[s]();
   });
 });
@@ -3119,43 +3119,175 @@ function usrEnviarEmailInvitacion(email,nombre,link,rol){
 
 function usrCargarDatos(){
   if(!_usr||!_usr.congId)return;
-  // Usuarios activos
-  _db.collection('usuarios').where('congId','==',_usr.congId).get().then(function(snap){
+  var esSA=_usr.rol==='superadmin';
+  var query=esSA
+    ?_db.collection('usuarios').orderBy('congId')
+    :_db.collection('usuarios').where('congId','==',_usr.congId);
+  query.get().then(function(snap){
     var el=document.getElementById('usr-lista');
     if(!el)return;
     if(snap.empty){el.innerHTML='<div class="es"><p>Sin usuarios registrados</p></div>';return;}
-    el.innerHTML=snap.docs.map(function(doc){
+    var rows=snap.docs.map(function(doc){
       var d=doc.data();
-      return '<div class="usr-row">'
-        +'<div><div class="usr-nombre">'+esc(d.nombre||'---')+'</div><div class="usr-email">'+esc(d.email)+'</div></div>'
-        +'<span class="badge '+(d.activo?'bgn':'bgr')+'">'+esc(d.rol||'')+'</span>'
-        +'<button class="btn '+(d.activo?'bd2':'bp')+' bsm" onclick="usrToggleActivo(\''+doc.id+'\','+d.activo+')">'+(d.activo?'Desactivar':'Activar')+'</button>'
-        +'</div>';
+      var rolBadge='<span class="badge '+(d.rol==='superadmin'||d.rol==='admin'?'bbl':d.rol==='coordinador'?'bgn':'bgy')+'">'+esc(d.rol||'')+'</span>';
+      var estadoBadge='<span class="badge '+(d.activo?'bgn':'bgr')+'">'+(d.activo?'Activo':'Inactivo')+'</span>';
+      return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-email="'+esc(doc.id)+'" data-nombre="'+esc(d.nombre||'')+'" data-rol="'+esc(d.rol||'')+'" data-activo="'+(d.activo?'1':'0')+'">'
+        +(esSA?'<td style="padding:8px;font-size:11px">'+esc(d.congId||'')+'</td>':'')
+        +'<td style="padding:8px"><strong>'+esc(d.nombre||'---')+'</strong></td>'
+        +'<td style="padding:8px">'+esc(d.email)+'</td>'
+        +'<td style="padding:8px">'+rolBadge+'</td>'
+        +'<td style="padding:8px">'+estadoBadge+'</td>'
+        +'<td style="padding:8px;white-space:nowrap">'
+        +'<button class="btn bg bsm usr-edit-btn">Editar</button> '
+        +'<button class="btn bsm usr-toggle-btn '+(d.activo?'bd2':'bp')+'">'+(d.activo?'Desactivar':'Activar')+'</button> '
+        +'<button class="btn bd2 bsm usr-del-btn">Eliminar</button>'
+        +'</td></tr>';
     }).join('');
+    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+      +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+      +(esSA?'<th style="padding:8px;text-align:left">Congr.</th>':'')
+      +'<th style="padding:8px;text-align:left">Nombre</th>'
+      +'<th style="padding:8px;text-align:left">Email</th>'
+      +'<th style="padding:8px;text-align:left">Rol</th>'
+      +'<th style="padding:8px;text-align:left">Estado</th>'
+      +'<th style="padding:8px;text-align:left">Acciones</th>'
+      +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+    // Event listeners via delegation
+    el.querySelectorAll('.usr-edit-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        usrEditar(tr.dataset.email,tr.dataset.nombre,tr.dataset.rol);
+      });
+    });
+    el.querySelectorAll('.usr-toggle-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        usrToggleActivo(tr.dataset.email,tr.dataset.activo==='1');
+      });
+    });
+    el.querySelectorAll('.usr-del-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        usrEliminar(tr.dataset.email);
+      });
+    });
   });
-  // Invitaciones pendientes de esta congregacion
-  _db.collection('invitaciones').where('congId','==',_usr.congId).orderBy('creadaEn','desc').get().then(function(snap){
+  // Invitaciones pendientes
+  var qInv=esSA
+    ?_db.collection('invitaciones').where('usada','==',false).orderBy('creadaEn','desc').limit(50)
+    :_db.collection('invitaciones').where('congId','==',_usr.congId).where('usada','==',false).orderBy('creadaEn','desc');
+  qInv.get().then(function(snap){
     var el=document.getElementById('usr-lista-inv');
     if(!el)return;
     var ahora=new Date();
     var pend=snap.docs.filter(function(doc){
-      var d=doc.data();
-      var expira=d.expiraEn?d.expiraEn.toDate():null;
-      return !d.usada&&(!expira||ahora<=expira);
+      var expira=doc.data().expiraEn?doc.data().expiraEn.toDate():null;
+      return !expira||ahora<=expira;
     });
     if(!pend.length){el.innerHTML='<div class="es"><p>Sin invitaciones pendientes</p></div>';return;}
-    el.innerHTML=pend.map(function(doc){
+    var rows2=pend.map(function(doc){
       var d=doc.data();
-      return '<div class="inv-row">'
-        +'<div class="inv-email">'+esc(d.email||'---')+'</div>'
-        +'<div class="inv-meta">'+esc(d.rol||'')+'</div>'
-        +'<span class="badge-inv-pend">Pendiente</span>'
-        +'<button class="btn bd2 bsm" onclick="usrCancelarInv(\''+doc.id+'\')">Cancelar</button>'
-        +'</div>';
+      var expira=d.expiraEn?d.expiraEn.toDate().toLocaleDateString('es-CL'):'---';
+      return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-token="'+doc.id+'" data-email="'+esc(d.email||'')+'" data-nombre="'+esc(d.nombreInvitado||'')+'" data-rol="'+esc(d.rol||'')+'" data-congid="'+esc(d.congId||'')+'">'
+        +(esSA?'<td style="padding:8px;font-size:11px">'+esc(d.congId||'')+'</td>':'')
+        +'<td style="padding:8px">'+esc(d.email||'---')+'</td>'
+        +'<td style="padding:8px">'+esc(d.nombreInvitado||'---')+'</td>'
+        +'<td style="padding:8px"><span class="badge bbl">'+esc(d.rol||'')+'</span></td>'
+        +'<td style="padding:8px">'+expira+'</td>'
+        +'<td style="padding:8px;white-space:nowrap">'
+        +'<button class="btn bg bsm inv-reinv-btn">Reinvitar</button> '
+        +'<button class="btn bg bsm inv-copy-btn">Copiar link</button> '
+        +'<button class="btn bd2 bsm inv-cancel-btn">Cancelar</button>'
+        +'</td></tr>';
     }).join('');
+    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+      +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+      +(esSA?'<th style="padding:8px;text-align:left">Congr.</th>':'')
+      +'<th style="padding:8px;text-align:left">Email</th>'
+      +'<th style="padding:8px;text-align:left">Nombre</th>'
+      +'<th style="padding:8px;text-align:left">Rol</th>'
+      +'<th style="padding:8px;text-align:left">Expira</th>'
+      +'<th style="padding:8px;text-align:left">Acciones</th>'
+      +'</tr></thead><tbody>'+rows2+'</tbody></table></div>';
+    el.querySelectorAll('.inv-reinv-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        usrReinvitar(tr.dataset.token,tr.dataset.email,tr.dataset.nombre,tr.dataset.rol,tr.dataset.congid);
+      });
+    });
+    el.querySelectorAll('.inv-copy-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        var link=window.location.origin+window.location.pathname+'?inv='+tr.dataset.token;
+        usrCopiarLinkDirecto(link);
+      });
+    });
+    el.querySelectorAll('.inv-cancel-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        usrCancelarInv(tr.dataset.token);
+      });
+    });
+  }).catch(function(e){
+    console.error('qInv error:',e);
+    var el=document.getElementById('usr-lista-inv');
+    if(el)el.innerHTML='<div class="al alw">Error cargando invitaciones. Verifica los indices de Firestore.</div>';
   });
 }
 
+function usrEditar(email,nombre,rol){
+  openM('Editar usuario','<div class="fgrid">'
+    +'<div class="fg"><label>Nombre</label><input id="ue-nombre" value="'+esc(nombre)+'" type="text"></div>'
+    +'<div class="fg"><label>Rol</label><select id="ue-rol">'
+    +'<option value="visor" '+(rol==='visor'?'selected':'')+'>Visor</option>'
+    +'<option value="lector" '+(rol==='lector'?'selected':'')+'>Lector</option>'
+    +'<option value="coordinador" '+(rol==='coordinador'?'selected':'')+'>Coordinador</option>'
+    +'<option value="admin" '+(rol==='admin'?'selected':'')+'>Admin</option>'
+    +(_usr&&_usr.rol==='superadmin'?'<option value="superadmin" '+(rol==='superadmin'?'selected':'')+'>Super Admin</option>':'')
+    +'</select></div>'
+    +'</div>',
+    function(){
+      var nuevoNombre=document.getElementById('ue-nombre').value.trim();
+      var nuevoRol=document.getElementById('ue-rol').value;
+      if(!nuevoNombre){toast('El nombre es obligatorio','e');return;}
+      _db.collection('usuarios').doc(email).update({nombre:nuevoNombre,rol:nuevoRol})
+        .then(function(){toast('Usuario actualizado','s');closeM();usrCargarDatos();})
+        .catch(function(e){console.error(e);toast('Error al actualizar','e');});
+    }
+  );
+}
+function usrEliminar(email){
+  confirmar('Eliminar definitivamente al usuario '+email+'?',function(){
+    _db.collection('usuarios').doc(email).delete()
+      .then(function(){toast('Usuario eliminado','s');usrCargarDatos();})
+      .catch(function(e){console.error(e);toast('Error al eliminar','e');});
+  });
+}
+function usrReinvitar(tokenViejo,email,nombre,rol,congId){
+  confirmar('Crear nueva invitacion para '+email+'?',function(){
+    _db.collection('invitaciones').doc(tokenViejo).update({usada:true});
+    var congIdFinal=congId||_usr.congId;
+    saCrearInvitacion(email,nombre,congIdFinal,rol).then(function(link){
+      _invLinkActual=link;
+      var linkEl=document.getElementById('usr-inv-link');
+      var linkTxt=document.getElementById('usr-inv-link-txt');
+      if(linkEl)linkEl.style.display='block';
+      if(linkTxt)linkTxt.value=link;
+      toast('Nueva invitacion creada','s');
+      usrCargarDatos();
+    });
+  });
+}
+function usrCopiarLinkDirecto(link){
+  navigator.clipboard.writeText(link).then(function(){
+    toast('Link copiado!','s');
+  }).catch(function(){
+    var ta=document.createElement('textarea');
+    ta.value=link;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    toast('Link copiado!','s');
+  });
+}
 function usrToggleActivo(email,activo){
   _db.collection('usuarios').doc(email).update({activo:!activo}).then(function(){
     toast('Usuario '+(activo?'desactivado':'activado'),'s');
