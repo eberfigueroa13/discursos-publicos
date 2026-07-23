@@ -405,8 +405,10 @@ function fmtF(f){if(!f)return '';var p=f.split('-');return p.length===3?p[2]+'/'
 function normFecha(f){f=(f||'').trim();if(!f)return '';if(/^\d{4}-\d{2}-\d{2}$/.test(f))return f;var m=f.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');return f;}
 
 function toast(msg,tipo){
+  var tc=document.getElementById('tc')||document.body;
+  if(!tc)return;
   var t=document.createElement('div');t.className='toast t'+(tipo||'i')[0];t.textContent=msg;
-  document.getElementById('tc').appendChild(t);setTimeout(function(){t.remove();},3500);
+  tc.appendChild(t);setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},3500);
 }
 function openM(tit,html,bots){
   document.getElementById('mt').textContent=tit;
@@ -2910,38 +2912,55 @@ function fbDetenerListener(){
 /* ── Verificar invitacion pendiente ── */
 function fbProcesarInvitacion(token){
   _db.collection('invitaciones').doc(token).get().then(function(doc){
-    if(!doc.exists){toast('Invitacion no encontrada','e');return;}
+    if(!doc.exists){
+      setTimeout(function(){toast('Invitacion no encontrada','e');},500);
+      return;
+    }
     var inv=doc.data();
-    if(inv.usada){toast('Esta invitacion ya fue usada','e');return;}
+    if(inv.usada){
+      setTimeout(function(){toast('Esta invitacion ya fue usada','e');},500);
+      return;
+    }
     var ahora=new Date();
     var expira=inv.expiraEn?inv.expiraEn.toDate():null;
-    if(expira&&ahora>expira){toast('Esta invitacion ha expirado','e');return;}
+    if(expira&&ahora>expira){
+      setTimeout(function(){toast('Esta invitacion ha expirado','e');},500);
+      return;
+    }
     if(inv.email&&inv.email.toLowerCase()!==(_usr.email||'').toLowerCase()){
-      toast('Esta invitacion es para '+inv.email,'e');return;
+      setTimeout(function(){toast('Esta invitacion es para '+inv.email,'e');},500);
+      return;
     }
     // Vincular usuario a la congregacion
-    _db.collection('usuarios').doc(_usr.email).set({
+    var datosUsuario={
       email:_usr.email,
       nombre:_usr.nombre||inv.nombreInvitado||'',
       rol:inv.rol||'lector',
-      congId:inv.congId,
+      congId:inv.congId||'',
       activo:true,
       creadoEn:firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function(){
-      // Marcar invitacion como usada
+    };
+    _db.collection('usuarios').doc(_usr.email).set(datosUsuario)
+    .then(function(){
       return _db.collection('invitaciones').doc(token).update({
-        usada:true,usadaEn:firebase.firestore.FieldValue.serverTimestamp(),usadaPor:_usr.email
+        usada:true,
+        usadaEn:firebase.firestore.FieldValue.serverTimestamp(),
+        usadaPor:_usr.email
       });
     }).then(function(){
-      toast('Acceso activado. Bienvenido!','s');
-      // Actualizar rol local y recargar
+      // Actualizar _usr local
       _usr.rol=inv.rol||'lector';
-      _usr.congId=inv.congId;
-      fbAplicarRol();
-      fbIniciarApp();
-      // Limpiar URL
+      _usr.congId=inv.congId||'';
+      // Limpiar URL y recargar para aplicar cambios
       window.history.replaceState({},'',window.location.pathname);
-    }).catch(function(e){console.error('Error procesando invitacion:',e);toast('Error al activar acceso','e');});
+      location.reload();
+    }).catch(function(e){
+      console.error('Error procesando invitacion:',e);
+      setTimeout(function(){toast('Error al activar acceso: '+e.message,'e');},500);
+    });
+  }).catch(function(e){
+    console.error('Error leyendo invitacion:',e);
+    setTimeout(function(){toast('Error de conexion','e');},500);
   });
 }
 
@@ -2958,13 +2977,16 @@ _auth.onAuthStateChanged(function(user){
     var token=params.get('inv');
     if(!doc.exists||!doc.data().activo){
       if(token){
-        // Tiene invitacion - crear usuario basico y procesar
+        // Tiene invitacion - ocultar login y procesar
         _usr={email:user.email,nombre:user.displayName||'',rol:'pendiente',congId:'',foto:user.photoURL||''};
         document.getElementById('login-screen').classList.add('hidden');
-        fbProcesarInvitacion(token);
+        // Esperar que el DOM esté listo antes de procesar
+        setTimeout(function(){fbProcesarInvitacion(token);},800);
         return;
       }
-      fbLoginErr('No tienes acceso. Solicita una invitacion al administrador.');
+      // Sin acceso y sin invitacion
+      document.getElementById('login-screen').classList.remove('hidden');
+      fbLoginErr('No tienes acceso. Solicita una invitacion al administrador de tu congregacion.');
       _auth.signOut();
       return;
     }
