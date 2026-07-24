@@ -2867,13 +2867,16 @@ function fbLoad(cb){
         Object.keys(d).forEach(function(k){if(D.hasOwnProperty(k))D[k]=d[k];});
         localStorage.setItem('dp_v3',JSON.stringify(D));
       }catch(e){console.error('fbLoad parse error:',e);}
+    } else {
+      // Sin datos en Firestore - NO cargar localStorage (podria ser de otra congr)
+      // Dejar D con valores por defecto
+      console.log('fbLoad: sin datos en Firestore para congId',_usr.congId,', iniciando limpio');
+      localStorage.removeItem('dp_v3');
     }
     if(cb)cb();
   }).catch(function(e){
     console.error('fbLoad error:',e);
     fbSyncBar(false);
-    // Fallback a localStorage
-    load();
     if(cb)cb();
   });
 }
@@ -3073,10 +3076,43 @@ function saCrearCongregacion(){
   _db.collection('congregaciones').where('baseId','==',baseId).get().then(function(snap){
     var correlativo=String(snap.size+1).padStart(3,'0');
     var congId=baseId+correlativo;
+    // Crear documento de metadata
     return _db.collection('congregaciones').doc(congId).set({
       nombre:nombre,circuito:circuito,ciudad:ciudad,baseId:baseId,
       creadoPor:_usr.email,activo:true,
       creadoEn:firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){
+      // Inicializar blob de datos con miCongr basico
+      var datosIniciales=JSON.parse(JSON.stringify(D)); // copia del modelo vacio
+      datosIniciales.miCongr={
+        nombre:nombre,direccion:'',dia:'6',horario:'',circuito:circuito,
+        mapsSalon:'',coordNombre:'',coordTel:'',coordEmail:'',
+        avNombre:'',avTel:'',avEmail:'',obs:''
+      };
+      datosIniciales.config={
+        mes:new Date().getMonth()+1,anio:new Date().getFullYear(),
+        congregacionExternaMes:'',diasBloqueo:365,discursosLocalesRequeridos:1,
+        habraSalidasMes:'no',habraSCMes:'no',
+        scNombre:'',scTel:'',scEmail:'',scObs:'',
+        plantillaCarta:'',plantillaWhatsApp:''
+      };
+      // Limpiar arrays para que sea una congregacion limpia
+      datosIniciales.discursos=D.discursos.slice(); // copiar catalogo de discursos
+      datosIniciales.locales=[];
+      datosIniciales.repertorioLocal=[];
+      datosIniciales.congregaciones=[];
+      datosIniciales.cargaMensual=[];
+      datosIniciales.planificacion=[];
+      datosIniciales.historial=[];
+      datosIniciales.salidasRealizadas=[];
+      datosIniciales.arreglos=[];
+      datosIniciales.privilegios=_privilegiosDefault.map(function(n){return{id:uid(),nombre:n};});
+      return _db.collection('congregaciones').doc(congId)
+        .collection('datos').doc('principal').set({
+          data:JSON.stringify(datosIniciales),
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+          updatedBy:'system'
+        });
     }).then(function(){return congId;});
   }).then(function(congId){
     return saCrearInvitacion(adminEmail,adminNombre,congId,'admin').then(function(link){
