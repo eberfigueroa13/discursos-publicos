@@ -2922,6 +2922,39 @@ function importarCompleto(){
   input.click();
 }
 
+
+function saEditarCong(id,nombre,circuito,ciudad){
+  openM('Editar congregacion','<div class="fgrid">'
+    +'<div class="fg" style="grid-column:1/-1"><label>Nombre</label><input id="sace-n" value="'+esc(nombre)+'" type="text"></div>'
+    +'<div class="fg"><label>Circuito</label><input id="sace-c" value="'+esc(circuito)+'" type="text"></div>'
+    +'<div class="fg"><label>Ciudad</label><input id="sace-ci" value="'+esc(ciudad)+'" type="text"></div>'
+    +'</div>',
+    function(){
+      var n=document.getElementById('sace-n').value.trim();
+      var c=document.getElementById('sace-c').value.trim();
+      var ci=document.getElementById('sace-ci').value.trim();
+      if(!n){toast('Nombre obligatorio','e');return;}
+      _db.collection('congregaciones').doc(id).update({nombre:n,circuito:c,ciudad:ci})
+        .then(function(){toast('Congregacion actualizada','s');closeM();saCargarDatos();})
+        .catch(function(e){toast('Error: '+e.message,'e');});
+    }
+  );
+}
+function saToggleCong(id,activo){
+  confirmar((activo?'Desactivar':'Activar')+' esta congregacion?',function(){
+    _db.collection('congregaciones').doc(id).update({activo:!activo})
+      .then(function(){toast('Congregacion '+(activo?'desactivada':'activada'),'s');saCargarDatos();})
+      .catch(function(e){toast('Error: '+e.message,'e');});
+  });
+}
+function saEliminarCong(id,nombre){
+  confirmar('Eliminar la congregacion "'+nombre+'"? Esta accion no se puede deshacer.',function(){
+    _db.collection('congregaciones').doc(id).delete()
+      .then(function(){toast('Congregacion eliminada','s');saCargarDatos();})
+      .catch(function(e){toast('Error: '+e.message,'e');});
+  });
+}
+
 (function(){
   /* App inicializada por Firebase auth - ver fbIniciarApp() */
 })();
@@ -3351,39 +3384,90 @@ function saCrearInvitacion(email,nombre,congId,rol){
 }
 
 function saCargarDatos(){
-  // Cargar congregaciones
+  // Cargar congregaciones con acciones
   _db.collection('congregaciones').orderBy('creadoEn','desc').get().then(function(snap){
     var el=document.getElementById('sa-lista-congs');
     if(!el)return;
     if(snap.empty){el.innerHTML='<div class="es"><p>Sin congregaciones registradas</p></div>';return;}
-    el.innerHTML='<div class="sa-grid">'+snap.docs.map(function(doc){
-      var d=doc.data();
-      return '<div class="sa-cong-card">'
-        +'<div class="sa-cong-nombre">'+esc(d.nombre||'Sin nombre')+'</div>'
-        +'<div class="sa-cong-meta">'+(d.circuito?'Circuito: '+d.circuito+' | ':'')+''+(d.ciudad||'')+'</div>'
-        +'<div class="sa-cong-meta">ID: '+doc.id+'</div>'
-        +'<span class="badge '+(d.activo?'bgn':'bgr')+'">'+(d.activo?'Activa':'Inactiva')+'</span>'
-        +'</div>';
-    }).join('')+'</div>';
+    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+      +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+      +'<th style="padding:8px;text-align:left">Nombre</th>'
+      +'<th style="padding:8px;text-align:left">Circuito</th>'
+      +'<th style="padding:8px;text-align:left">Ciudad</th>'
+      +'<th style="padding:8px;text-align:left">ID</th>'
+      +'<th style="padding:8px;text-align:left">Estado</th>'
+      +'<th style="padding:8px;text-align:left">Acciones</th>'
+      +'</tr></thead><tbody>'
+      +snap.docs.map(function(doc){
+        var d=doc.data();
+        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-id="'+doc.id+'" data-nombre="'+esc(d.nombre||'')+'" data-circuito="'+esc(d.circuito||'')+'" data-ciudad="'+esc(d.ciudad||'')+'" data-activo="'+(d.activo?'1':'0')+'">'
+          +'<td style="padding:8px"><strong>'+esc(d.nombre||'Sin nombre')+'</strong></td>'
+          +'<td style="padding:8px">'+esc(d.circuito||'---')+'</td>'
+          +'<td style="padding:8px">'+esc(d.ciudad||'---')+'</td>'
+          +'<td style="padding:8px;font-size:11px;color:var(--tx3)">'+doc.id+'</td>'
+          +'<td style="padding:8px"><span class="badge '+(d.activo?'bgn':'bgr')+'">'+(d.activo?'Activa':'Inactiva')+'</span></td>'
+          +'<td style="padding:8px;white-space:nowrap">'
+          +'<button class="btn bg bsm sa-edit-cong">Editar</button> '
+          +'<button class="btn bsm '+(d.activo?'bd2':'bp')+' sa-toggle-cong">'+(d.activo?'Desactivar':'Activar')+'</button> '
+          +'<button class="btn bd2 bsm sa-del-cong">Eliminar</button>'
+          +'</td></tr>';
+      }).join('')
+      +'</tbody></table></div>';
+    // Event listeners
+    el.querySelectorAll('.sa-edit-cong').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        saEditarCong(tr.dataset.id,tr.dataset.nombre,tr.dataset.circuito,tr.dataset.ciudad);
+      });
+    });
+    el.querySelectorAll('.sa-toggle-cong').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        saToggleCong(tr.dataset.id, tr.dataset.activo==='1');
+      });
+    });
+    el.querySelectorAll('.sa-del-cong').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        saEliminarCong(tr.dataset.id,tr.dataset.nombre);
+      });
+    });
+  }).catch(function(e){
+    var el=document.getElementById('sa-lista-congs');
+    if(el)el.innerHTML='<div class="al alw">Error: '+e.message+'</div>';
   });
-  // Cargar todas las invitaciones
+  // Cargar invitaciones
   _db.collection('invitaciones').orderBy('creadaEn','desc').limit(50).get().then(function(snap){
     var el=document.getElementById('sa-lista-invs');
     if(!el)return;
     if(snap.empty){el.innerHTML='<div class="es"><p>Sin invitaciones</p></div>';return;}
     var ahora=new Date();
-    el.innerHTML=snap.docs.map(function(doc){
-      var d=doc.data();
-      var expira=d.expiraEn?d.expiraEn.toDate():null;
-      var estado=d.usada?'usada':(expira&&ahora>expira?'expirada':'pendiente');
-      var cls=estado==='usada'?'badge-inv-usada':estado==='expirada'?'badge-inv-exp':'badge-inv-pend';
-      var label=estado==='usada'?'Usada':estado==='expirada'?'Expirada':'Pendiente';
-      return '<div class="inv-row">'
-        +'<div class="inv-email">'+esc(d.email||'---')+'</div>'
-        +'<div class="inv-meta">'+esc(d.rol||'')+'</div>'
-        +'<span class="'+cls+'">'+label+'</span>'
-        +'</div>';
-    }).join('');
+    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+      +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+      +'<th style="padding:8px;text-align:left">Email</th>'
+      +'<th style="padding:8px;text-align:left">Nombre</th>'
+      +'<th style="padding:8px;text-align:left">Congregacion</th>'
+      +'<th style="padding:8px;text-align:left">Rol</th>'
+      +'<th style="padding:8px;text-align:left">Estado</th>'
+      +'</tr></thead><tbody>'
+      +snap.docs.map(function(doc){
+        var d=doc.data();
+        var expira=d.expiraEn?d.expiraEn.toDate():null;
+        var estado=d.usada?'usada':(expira&&ahora>expira?'expirada':'pendiente');
+        var cls=estado==='usada'?'badge-inv-usada':estado==='expirada'?'badge-inv-exp':'badge-inv-pend';
+        var label=estado==='usada'?'Usada':estado==='expirada'?'Expirada':'Pendiente';
+        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px">'
+          +'<td style="padding:8px">'+esc(d.email||'---')+'</td>'
+          +'<td style="padding:8px">'+esc(d.nombreInvitado||'---')+'</td>'
+          +'<td style="padding:8px;font-size:11px">'+esc(d.congId||'---')+'</td>'
+          +'<td style="padding:8px"><span class="badge bbl">'+esc(d.rol||'')+'</span></td>'
+          +'<td style="padding:8px"><span class="'+cls+'">'+label+'</span></td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>';
+  }).catch(function(e){
+    var el=document.getElementById('sa-lista-invs');
+    if(el)el.innerHTML='<div class="al alw">Error cargando invitaciones: '+e.message+'</div>';
   });
 }
 
@@ -3436,62 +3520,72 @@ function usrEnviarEmailInvitacion(email,nombre,link,rol){
 function usrCargarDatos(){
   if(!_usr||!_usr.congId)return;
   var esSA=_usr.rol==='superadmin';
-  var query=esSA
-    ?_db.collection('usuarios').orderBy('congId')
-    :_db.collection('usuarios').where('congId','==',_usr.congId);
-  query.get().then(function(snap){
+  // Primero cargar mapa de congregaciones para resolver nombres
+  _db.collection('congregaciones').get().then(function(congSnap){
+    var congMap={};
+    congSnap.docs.forEach(function(doc){congMap[doc.id]=doc.data();});
+    var query=esSA
+      ?_db.collection('usuarios').orderBy('email')
+      :_db.collection('usuarios').where('congId','==',_usr.congId);
+    return query.get().then(function(snap){
+      var el=document.getElementById('usr-lista');
+      if(!el)return;
+      if(snap.empty){el.innerHTML='<div class="es"><p>Sin usuarios registrados</p></div>';return;}
+      var rows=snap.docs.map(function(doc){
+        var d=doc.data();
+        var cong=congMap[d.congId]||{};
+        var rolBadge='<span class="badge '+(d.rol==='superadmin'||d.rol==='admin'?'bbl':d.rol==='coordinador'?'bgn':'bgy')+'">'+esc(d.rol||'')+'</span>';
+        var estadoBadge='<span class="badge '+(d.activo?'bgn':'bgr')+'">'+(d.activo?'Activo':'Inactivo')+'</span>';
+        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-email="'+esc(doc.id)+'" data-nombre="'+esc(d.nombre||'')+'" data-rol="'+esc(d.rol||'')+'" data-activo="'+(d.activo?'1':'0')+'">'
+          +(esSA?'<td style="padding:8px"><div style="font-weight:600">'+esc(cong.nombre||d.congId||'---')+'</div><div style="font-size:11px;color:var(--tx3)">'+esc(cong.circuito||'')+'</div></td>':'')
+          +'<td style="padding:8px"><strong>'+esc(d.nombre||'---')+'</strong></td>'
+          +'<td style="padding:8px;font-size:12px">'+esc(d.email)+'</td>'
+          +'<td style="padding:8px;font-size:12px">'+esc(d.telefono||'---')+'</td>'
+          +'<td style="padding:8px">'+rolBadge+'</td>'
+          +'<td style="padding:8px">'+estadoBadge+'</td>'
+          +'<td style="padding:8px;white-space:nowrap">'
+          +'<button class="btn bg bsm usr-edit-btn">Editar</button> '
+          +'<button class="btn bsm '+(d.activo?'bd2':'bp')+' usr-toggle-btn">'+(d.activo?'Desactivar':'Activar')+'</button> '
+          +'<button class="btn bd2 bsm usr-del-btn">Eliminar</button>'
+          +'</td></tr>';
+      }).join('');
+      el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+        +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+        +(esSA?'<th style="padding:8px;text-align:left">Congregacion</th>':'')
+        +'<th style="padding:8px;text-align:left">Nombre</th>'
+        +'<th style="padding:8px;text-align:left">Email</th>'
+        +'<th style="padding:8px;text-align:left">Telefono</th>'
+        +'<th style="padding:8px;text-align:left">Rol</th>'
+        +'<th style="padding:8px;text-align:left">Estado</th>'
+        +'<th style="padding:8px;text-align:left">Acciones</th>'
+        +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+      el.querySelectorAll('.usr-edit-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var tr=btn.closest('tr');
+          usrEditar(tr.dataset.email,tr.dataset.nombre,tr.dataset.rol);
+        });
+      });
+      el.querySelectorAll('.usr-toggle-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var tr=btn.closest('tr');
+          usrToggleActivo(tr.dataset.email,tr.dataset.activo==='1');
+        });
+      });
+      el.querySelectorAll('.usr-del-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var tr=btn.closest('tr');
+          usrEliminar(tr.dataset.email);
+        });
+      });
+    });
+  }).catch(function(e){
     var el=document.getElementById('usr-lista');
-    if(!el)return;
-    if(snap.empty){el.innerHTML='<div class="es"><p>Sin usuarios registrados</p></div>';return;}
-    var rows=snap.docs.map(function(doc){
-      var d=doc.data();
-      var rolBadge='<span class="badge '+(d.rol==='superadmin'||d.rol==='admin'?'bbl':d.rol==='coordinador'?'bgn':'bgy')+'">'+esc(d.rol||'')+'</span>';
-      var estadoBadge='<span class="badge '+(d.activo?'bgn':'bgr')+'">'+(d.activo?'Activo':'Inactivo')+'</span>';
-      return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-email="'+esc(doc.id)+'" data-nombre="'+esc(d.nombre||'')+'" data-rol="'+esc(d.rol||'')+'" data-activo="'+(d.activo?'1':'0')+'">'
-        +(esSA?'<td style="padding:8px;font-size:11px">'+esc(d.congId||'')+'</td>':'')
-        +'<td style="padding:8px"><strong>'+esc(d.nombre||'---')+'</strong></td>'
-        +'<td style="padding:8px">'+esc(d.email)+'</td>'
-        +'<td style="padding:8px">'+rolBadge+'</td>'
-        +'<td style="padding:8px">'+estadoBadge+'</td>'
-        +'<td style="padding:8px;white-space:nowrap">'
-        +'<button class="btn bg bsm usr-edit-btn">Editar</button> '
-        +'<button class="btn bsm usr-toggle-btn '+(d.activo?'bd2':'bp')+'">'+(d.activo?'Desactivar':'Activar')+'</button> '
-        +'<button class="btn bd2 bsm usr-del-btn">Eliminar</button>'
-        +'</td></tr>';
-    }).join('');
-    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
-      +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
-      +(esSA?'<th style="padding:8px;text-align:left">Congr.</th>':'')
-      +'<th style="padding:8px;text-align:left">Nombre</th>'
-      +'<th style="padding:8px;text-align:left">Email</th>'
-      +'<th style="padding:8px;text-align:left">Rol</th>'
-      +'<th style="padding:8px;text-align:left">Estado</th>'
-      +'<th style="padding:8px;text-align:left">Acciones</th>'
-      +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
-    // Event listeners via delegation
-    el.querySelectorAll('.usr-edit-btn').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        var tr=btn.closest('tr');
-        usrEditar(tr.dataset.email,tr.dataset.nombre,tr.dataset.rol);
-      });
-    });
-    el.querySelectorAll('.usr-toggle-btn').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        var tr=btn.closest('tr');
-        usrToggleActivo(tr.dataset.email,tr.dataset.activo==='1');
-      });
-    });
-    el.querySelectorAll('.usr-del-btn').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        var tr=btn.closest('tr');
-        usrEliminar(tr.dataset.email);
-      });
-    });
+    if(el)el.innerHTML='<div class="al alw">Error: '+e.message+'</div>';
   });
-  // Invitaciones pendientes
+  // Invitaciones — sin orderBy para evitar indice compuesto
   var qInv=esSA
-    ?_db.collection('invitaciones').where('usada','==',false).orderBy('creadaEn','desc').limit(50)
-    :_db.collection('invitaciones').where('congId','==',_usr.congId).where('usada','==',false).orderBy('creadaEn','desc');
+    ?_db.collection('invitaciones').where('usada','==',false)
+    :_db.collection('invitaciones').where('congId','==',_usr.congId).where('usada','==',false);
   qInv.get().then(function(snap){
     var el=document.getElementById('usr-lista-inv');
     if(!el)return;
@@ -3512,7 +3606,7 @@ function usrCargarDatos(){
         +'<td style="padding:8px">'+expira+'</td>'
         +'<td style="padding:8px;white-space:nowrap">'
         +'<button class="btn bg bsm inv-reinv-btn">Reinvitar</button> '
-        +'<button class="btn bg bsm inv-copy-btn">Copiar link</button> '
+        +'<button class="btn bg bsm inv-copy-btn">Copiar</button> '
         +'<button class="btn bd2 bsm inv-cancel-btn">Cancelar</button>'
         +'</td></tr>';
     }).join('');
@@ -3534,8 +3628,7 @@ function usrCargarDatos(){
     el.querySelectorAll('.inv-copy-btn').forEach(function(btn){
       btn.addEventListener('click',function(){
         var tr=btn.closest('tr');
-        var link=window.location.origin+window.location.pathname+'?inv='+tr.dataset.token;
-        usrCopiarLinkDirecto(link);
+        usrCopiarLinkDirecto(window.location.origin+window.location.pathname+'?inv='+tr.dataset.token);
       });
     });
     el.querySelectorAll('.inv-cancel-btn').forEach(function(btn){
@@ -3545,9 +3638,8 @@ function usrCargarDatos(){
       });
     });
   }).catch(function(e){
-    console.error('qInv error:',e);
     var el=document.getElementById('usr-lista-inv');
-    if(el)el.innerHTML='<div class="al alw">Error cargando invitaciones. Verifica los indices de Firestore.</div>';
+    if(el)el.innerHTML='<div class="al alw">Error: '+e.message+'</div>';
   });
 }
 
