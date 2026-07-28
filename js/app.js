@@ -129,7 +129,11 @@ function fechasMes(mes,anio,diaSem){
   return res;
 }
 
-function topMeta(){var mc=D.miCongr,c=D.config;document.getElementById('tbm').textContent=mc.nombre?(mc.nombre+' \u2022 '+nMes(c.mes)+' '+c.anio+' \u2022 '+nomDia(mc.dia)):'';  }
+function topMeta(){
+  var mc=D.miCongr,c=D.config;
+  var el=document.getElementById('tbm');
+  if(el)el.textContent=mc.nombre?(mc.nombre+' • '+nMes(c.mes)+' '+c.anio+' • '+nomDia(mc.dia)):'';
+}
 
 function chkBox(t,id){
   return '<input type="checkbox" data-t="'+t+'" data-id="'+id+'" onchange="onChk(this)">';

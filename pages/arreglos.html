@@ -62,13 +62,13 @@
     </div>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../js/app.js"></script>
 <script>
 function initPagina(){
   initSidebar();
   setNavActivo('arreglos');
-  setPageTitle("Arreglos");poblarAnioArreglos();loadArreglosUI();
+  setPageTitle("Arreglos");poblarSelArreglos();poblarAnioArreglos();loadArreglosUI();
 }
 </script>
 </body>
