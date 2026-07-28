@@ -5,186 +5,85 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Privilegios — Coordinador de Discursos</title>
 <link rel="stylesheet" href="../css/styles.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="../js/supabase-init.js"></script>
 </head>
 <body>
-
-<!-- Login overlay -->
 <div id="login-overlay">
   <div class="login-card">
     <div class="login-logo">&#128218;</div>
     <div class="login-title">Coordinador de Discursos</div>
-    <div class="login-sub">Accede con tu email y contraseña</div>
+    <div class="login-sub">Accede con tu email y contrasena</div>
     <input class="login-field" id="login-email" type="email" placeholder="tu@email.com" autocomplete="email">
-    <input class="login-field" id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar</button>
-    <span class="login-forgot" onclick="doResetPassword()">Olvidé mi contraseña</span>
+    <input class="login-field" id="login-pass" type="password" placeholder="Contrasena" onkeydown="if(event.key===&apos;Enter&apos;)doLogin()">
+    <button class="login-btn-main" id="login-btn" onclick="doLogin()">Ingresar</button>
+    <span class="login-forgot" onclick="doResetPassword()">Olvide mi contrasena</span>
     <div class="login-err" id="login-err"></div>
   </div>
 </div>
-
-<!-- Invitacion overlay -->
-<div id="inv-overlay">
-  <div class="inv-card">
-    <div style="font-size:40px;margin-bottom:12px">&#127881;</div>
-    <h2 style="font-size:18px;font-weight:700;color:var(--tx);margin-bottom:4px">Fuiste invitado</h2>
-    <div class="inv-congr-name" id="inv-congr-nombre">---</div>
-    <div class="inv-rol-label" id="inv-rol-label">---</div>
-    <div id="inv-datos"></div>
-    <div style="display:flex;gap:10px;justify-content:center">
-      <button class="btn btn-ghost" onclick="invRechazar()">Cancelar</button>
-      <button class="btn btn-primary" id="inv-aceptar-btn" onclick="invAceptar()">Aceptar e ingresar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal -->
-<div id="modal-overlay">
-  <div id="modal">
-    <div id="modal-header">
-      <span id="modal-title"></span>
-      <button id="modal-close" onclick="closeM()">&#10005;</button>
-    </div>
-    <div id="modal-body"></div>
-    <div id="modal-footer"></div>
-  </div>
-</div>
-
-<!-- Toast container -->
-<div id="toast-container"></div>
-
-<!-- Sidebar overlay mobile -->
+<div id="modal-overlay" class="mo"><div class="mb"><div class="mt" id="mt"></div><div id="mb"></div><div class="ma" id="ma"></div></div></div>
+<div id="tc"></div>
 <div id="sidebar-overlay"></div>
-
-<!-- Layout -->
 <div id="layout">
-  <!-- Sidebar -->
   <aside id="sidebar">
-    <div id="sbh">
-      <div class="logo-icon">&#128218;</div>
-      <div class="logo-text">Discursos Pub.</div>
-    </div>
+    <div id="sbh"><div class="logo-icon">&#128218;</div><div class="logo-text">Discursos Pub.</div></div>
     <nav>
 <div class="nav-section">General</div>
-<div class="nav-item " data-page="dashboard" data-label="Dashboard" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='../app.html'">&#128202;<span class="ni-label">Dashboard</span></div>
+<div class="nav-item" data-page="dashboard" data-label="Dashboard" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='../app.html'">&#128202;<span class="ni-label">Dashboard</span></div>
 <div class="nav-section">Coordinacion</div>
-<div class="nav-item " data-page="planificacion" data-label="Planificacion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='planificacion.html'">&#128197;<span class="ni-label">Planificacion</span></div>
-<div class="nav-item " data-page="historial" data-label="Historial" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='historial.html'">&#128336;<span class="ni-label">Historial</span></div>
-<div class="nav-item " data-page="salidas" data-label="Salidas realizadas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas realizadas</span></div>
-<div class="nav-item " data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
-<div class="nav-item " data-page="reportes" data-label="Reportes" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='reportes.html'">&#128196;<span class="ni-label">Reportes</span></div>
+<div class="nav-item" data-page="planif" data-label="Planificacion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='planificacion.html'">&#128197;<span class="ni-label">Planificacion</span></div>
+<div class="nav-item" data-page="historial" data-label="Historial" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='historial.html'">&#128336;<span class="ni-label">Historial</span></div>
+<div class="nav-item" data-page="salidas" data-label="Salidas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas</span></div>
+<div class="nav-item" data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
+<div class="nav-item" data-page="reporte" data-label="Reportes" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='reportes.html'">&#128196;<span class="ni-label">Reportes</span></div>
 <div class="nav-section">Datos</div>
-<div class="nav-item " data-page="hermanos" data-label="Hermanos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='hermanos.html'">&#128101;<span class="ni-label">Hermanos</span></div>
-<div class="nav-item " data-page="repertorio" data-label="Repertorio" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='repertorio.html'">&#127897;<span class="ni-label">Repertorio</span></div>
-<div class="nav-item " data-page="discursos" data-label="Discursos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='discursos.html'">&#128218;<span class="ni-label">Discursos</span></div>
-<div class="nav-item " data-page="congregaciones" data-label="Congregaciones" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='congregaciones.html'">&#127968;<span class="ni-label">Congregaciones</span></div>
-<div class="nav-item " data-page="carga" data-label="Carga mensual" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='carga.html'">&#128203;<span class="ni-label">Carga mensual</span></div>
+<div class="nav-item" data-page="hermanos" data-label="Hermanos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='hermanos.html'">&#128101;<span class="ni-label">Hermanos</span></div>
+<div class="nav-item" data-page="repertorio" data-label="Repertorio" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='repertorio.html'">&#127897;<span class="ni-label">Repertorio</span></div>
+<div class="nav-item" data-page="discursos" data-label="Discursos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='discursos.html'">&#128218;<span class="ni-label">Discursos</span></div>
+<div class="nav-item" data-page="congregaciones" data-label="Congregaciones" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='congregaciones.html'">&#127968;<span class="ni-label">Congregaciones</span></div>
+<div class="nav-item" data-page="carga" data-label="Carga mensual" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='carga.html'">&#128203;<span class="ni-label">Carga mensual</span></div>
 <div class="nav-item active" data-page="privilegios" data-label="Privilegios" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='privilegios.html'">&#127894;<span class="ni-label">Privilegios</span></div>
 <div class="nav-section">Sistema</div>
-<div class="nav-item " data-page="configuracion" data-label="Configuracion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='configuracion.html'">&#9881;<span class="ni-label">Configuracion</span></div>
-<div class="nav-item " data-page="respaldo" data-label="Respaldo" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='respaldo.html'">&#128190;<span class="ni-label">Respaldo</span></div>
+<div class="nav-item" data-page="config" data-label="Configuracion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='configuracion.html'">&#9881;<span class="ni-label">Configuracion</span></div>
+<div class="nav-item" data-page="respaldo" data-label="Respaldo" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='respaldo.html'">&#128190;<span class="ni-label">Respaldo</span></div>
 <div class="nav-section">Admin</div>
-<div class="nav-item " data-page="admin" data-label="Usuarios" data-roles="superadmin,admin" onclick="window.location='admin.html'">&#128737;<span class="ni-label">Usuarios</span></div>
+<div class="nav-item" data-page="superadmin" data-label="Usuarios" data-roles="superadmin,admin" onclick="window.location='admin.html'">&#128737;<span class="ni-label">Usuarios</span></div>
 
     </nav>
     <div id="sb-user" onclick="doLogout()"></div>
   </aside>
-
-  <!-- Main -->
   <div id="main">
-    <!-- Topbar -->
     <div id="topbar">
-      <button id="topbar-toggle" aria-label="Toggle sidebar">
-        <span></span><span></span><span></span>
-      </button>
+      <button id="topbar-toggle"><span></span><span></span><span></span></button>
       <div id="page-title">Privilegios</div>
-      <div id="sync-indicator" class="sync-indicator">
-        <div class="sync-dot"></div>
-        <span class="sync-label">Sincronizando...</span>
-      </div>
+      <div id="sync-indicator" class="sync-indicator"><div class="sync-dot"></div><span class="sync-label">Sincronizando...</span></div>
       <div id="page-meta"></div>
     </div>
-
-    <!-- Content -->
     <div id="content">
-
-<div class="page-header"><h1>Privilegios</h1><p>Administra los privilegios adicionales de los hermanos</p></div>
-<div class="card">
-  <div class="card-title">Agregar privilegio</div>
-  <div style="display:flex;gap:8px">
-    <input id="priv-n" type="text" placeholder="Ej: Precursor Regular" style="flex:1;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px">
-    <button class="btn btn-primary" onclick="agregarPriv()">+ Agregar</button>
+<div class="stit">Mantenedor de Privilegios</div>
+  <div class="sdesc">Administra los privilegios adicionales disponibles para asignar a los hermanos locales.</div>
+  <div class="card">
+    <div class="ctit">Agregar privilegio</div>
+    <div class="fgrid">
+      <div class="fg"><label>Nombre del privilegio</label><input id="priv-n" type="text" placeholder="Ej: Precursor Regular"></div>
+    </div>
+    <div class="fa"><button class="btn bp" onclick="agregarPriv()">Agregar</button></div>
   </div>
-</div>
-<div class="card">
-  <div class="card-title">Privilegios registrados</div>
-  <div class="table-wrap"><table>
-    <thead><tr><th>N°</th><th>Nombre</th><th></th></tr></thead>
-    <tbody id="tb-priv"></tbody>
-  </table></div>
-</div>
-
+  <div class="card">
+    <div class="bbar" id="bbar-priv"><span class="bbar-cnt" id="bcnt-priv"></span><button class="btn bd2 bsm" onclick="bulkDel('priv')">Eliminar</button><button class="btn bg bsm" onclick="bulkClear('priv')">Cancelar</button></div>
+    <div class="tw"><table><thead><tr>
+      <th class="chk"><input type="checkbox" onchange="selAll('priv',this)"></th>
+      <th>Privilegio</th><th>Acciones</th>
+    </tr></thead><tbody id="tb-priv"></tbody></table></div>
+  </div>
     </div>
   </div>
 </div>
-
-<!-- Scripts globales -->
-<script src="../js/utils.js"></script>
-
-<script src="../js/ui.js"></script>
-
-
-<!-- Script de pagina -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/app.js"></script>
 <script>
-
 function initPagina(){
   initSidebar();
   setNavActivo('privilegios');
-  setPageTitle('Privilegios');
-  renderPrivilegios();
-}
-function renderPrivilegios(){
-  var tb=document.getElementById('tb-priv');if(!tb)return;
-  if(!D.privilegios.length){
-    tb.innerHTML='<tr><td colspan="3"><div class="es"><div class="ic2">&#127894;</div><p>Sin privilegios. Agrega uno arriba.</p></div></td></tr>';
-    return;
-  }
-  tb.innerHTML=D.privilegios.map(function(p){
-    var sel=_sel.priv.indexOf(p.id)>=0;
-    return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk"><input type="checkbox" data-t="priv" data-id="'+p.id+'" onchange="onChk(this)"></td>'
-      +'<td>'+esc(p.nombre)+'</td>'
-      +'<td class="ac"><button class="btn bd2 bsm" data-fn="delPriv" data-id="'+p.id+'" onclick="dsp(this)">x</button></td></tr>';
-  }).join('');
-}
-function agregarPriv(){
-  var n=document.getElementById('priv-n').value.trim();
-  if(!n){toast('Escribe el nombre del privilegio','e');return;}
-  if(D.privilegios.find(function(p){return p.nombre.toLowerCase()===n.toLowerCase();})){toast('Ya existe','e');return;}
-  D.privilegios.push({id:uid(),nombre:n});
-  var np=D.privilegios[D.privilegios.length-1];dbUpsertItem('privilegios',np);renderPrivilegios();toast('Privilegio agregado','s');
-  document.getElementById('priv-n').value='';
-}
-function delPriv(id){
-  confirmar('Eliminar este privilegio?',function(){
-    D.privilegios=D.privilegios.filter(function(p){return p.id!==id;});
-    dbDeleteItem('privilegios',id);
-    renderPrivilegios();toast('Eliminado','s');
-  });
-}
-function nomPrivilegios(h){
-  if(!h.privilegios||!h.privilegios.length)return '';
-  return h.privilegios.map(function(pid){
-    var p=D.privilegios.find(function(x){return x.id===pid;});
-    return p?p.nombre:'';
-  }).filter(Boolean).join(' & ');
-}
-function poblarPrivChksAdd(){
-  var c=document.getElementById('priv-chks-add');if(!c)return;
-  c.innerHTML=D.privilegios.map(function(p){
-    return '<label style="display:inline-flex;align-items:center;gap:6px;margin-right:14px;font-size:13px;cursor:pointer">'
-      +'<input type="checkbox" class="priv-chk-add" data-id="'+p.id+'"> '+esc(p.nombre)+'</label>';
-  }).join('');
+  setPageTitle("Privilegios");renderPrivilegios();
 }
 </script>
 </body>

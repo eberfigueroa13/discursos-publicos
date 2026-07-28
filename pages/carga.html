@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Arreglos — Coordinador de Discursos</title>
+<title>Carga Mensual — Coordinador de Discursos</title>
 <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
@@ -32,14 +32,14 @@
 <div class="nav-item" data-page="planif" data-label="Planificacion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='planificacion.html'">&#128197;<span class="ni-label">Planificacion</span></div>
 <div class="nav-item" data-page="historial" data-label="Historial" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='historial.html'">&#128336;<span class="ni-label">Historial</span></div>
 <div class="nav-item" data-page="salidas" data-label="Salidas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas</span></div>
-<div class="nav-item active" data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
+<div class="nav-item" data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
 <div class="nav-item" data-page="reporte" data-label="Reportes" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='reportes.html'">&#128196;<span class="ni-label">Reportes</span></div>
 <div class="nav-section">Datos</div>
 <div class="nav-item" data-page="hermanos" data-label="Hermanos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='hermanos.html'">&#128101;<span class="ni-label">Hermanos</span></div>
 <div class="nav-item" data-page="repertorio" data-label="Repertorio" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='repertorio.html'">&#127897;<span class="ni-label">Repertorio</span></div>
 <div class="nav-item" data-page="discursos" data-label="Discursos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='discursos.html'">&#128218;<span class="ni-label">Discursos</span></div>
 <div class="nav-item" data-page="congregaciones" data-label="Congregaciones" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='congregaciones.html'">&#127968;<span class="ni-label">Congregaciones</span></div>
-<div class="nav-item" data-page="carga" data-label="Carga mensual" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='carga.html'">&#128203;<span class="ni-label">Carga mensual</span></div>
+<div class="nav-item active" data-page="carga" data-label="Carga mensual" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='carga.html'">&#128203;<span class="ni-label">Carga mensual</span></div>
 <div class="nav-item" data-page="privilegios" data-label="Privilegios" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='privilegios.html'">&#127894;<span class="ni-label">Privilegios</span></div>
 <div class="nav-section">Sistema</div>
 <div class="nav-item" data-page="config" data-label="Configuracion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='configuracion.html'">&#9881;<span class="ni-label">Configuracion</span></div>
@@ -53,12 +53,16 @@
   <div id="main">
     <div id="topbar">
       <button id="topbar-toggle"><span></span><span></span><span></span></button>
-      <div id="page-title">Arreglos</div>
+      <div id="page-title">Carga Mensual</div>
       <div id="sync-indicator" class="sync-indicator"><div class="sync-dot"></div><span class="sync-label">Sincronizando...</span></div>
       <div id="page-meta"></div>
     </div>
     <div id="content">
-<div class="stit">Arreglos de conferencias</div><div class="sdesc">Mantiene el calendario de arreglos conversados con otras congregaciones por mes y año.</div><div class="card"><div class="ctit">Agregar arreglo</div><div class="al ali">Al seleccionar o escribir una congregación existente, se autocompletan sus datos. Al guardar, los datos del coordinador y de la congregación quedan actualizados también en el registro permanente de congregaciones externas.</div><div class="fgrid"><div class="fg"><label>Mes</label><select id="ar-m"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></div><div class="fg"><label>Año</label><input id="ar-a" type="number" placeholder="2026"></div><div class="fg"><label>Congregación</label><input id="ar-c" type="text" list="ar-congs" onchange="autocompletarArregloCong()" onblur="autocompletarArregloCong()" placeholder="Nombre de congregación"><datalist id="ar-congs"></datalist></div><div class="fg"><label>Estado</label><select id="ar-e"><option>Conversado</option><option>Confirmado</option><option>Pendiente datos</option><option>Cancelado</option><option>Cerrado</option></select></div><div class="fg"><label>Dirección del Salón</label><input id="ar-d" type="text" placeholder="Dirección"></div><div class="fg"><label>Día discurso público</label><select id="ar-dia"><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div><div class="fg"><label>Horario</label><input id="ar-h" type="text" placeholder="Ej: 10:00 hrs"></div><div class="fg"><label>Coordinador de conferencias</label><input id="ar-cn" type="text" placeholder="Nombre coordinador"></div><div class="fg"><label>Teléfono coordinador</label><input id="ar-ct" type="text" placeholder="+56 9 ..."></div><div class="fg"><label>Correo coordinador</label><input id="ar-ce" type="email" placeholder="correo@ejemplo.com"></div><div class="fg"><label>Observaciones</label><input id="ar-o" type="text" placeholder="Opcional"></div></div><div class="fa"><button class="btn bp" onclick="agregarArreglo()">Agregar arreglo</button><button class="btn bg" onclick="limpiarFormArreglo()">Limpiar</button></div></div><div class="card"><div class="ctit">Vista por año</div><div class="sr"><select id="ar-y" onchange="renderArreglos()"></select><button class="btn bg bsm" onclick="exportarArreglosCSV()">Exportar CSV</button></div><div class="bbar" id="bbar-ar"><span class="bbar-cnt" id="bcnt-ar"></span><button class="btn bd2 bsm" onclick="bulkDel('ar')">Eliminar</button><button class="btn bg bsm" onclick="bulkClear('ar')">Cancelar</button></div><div class="tw"><table><thead><tr><th class="chk"><input type="checkbox" onchange="selAll('ar',this)"></th><th class="sort" data-t="ar" data-c="mes" onclick="sortT(this)">Mes &#8645;</th><th class="sort" data-t="ar" data-c="anio" onclick="sortT(this)">Año &#8645;</th><th class="sort" data-t="ar" data-c="congregacion" onclick="sortT(this)">Congregación &#8645;</th><th class="sort" data-t="ar" data-c="estado" onclick="sortT(this)">Estado &#8645;</th><th>Coordinador</th><th>Teléfono</th><th>Correo</th><th>WhatsApp</th><th>Obs.</th><th>Acciones</th></tr></thead><tbody id="tb-ar"></tbody></table></div></div>
+<div class="stit">Carga mensual externa</div><div class="sdesc"></div><div class="card"><div class="ctit">Forma A — Ingreso manual</div><div class="fgrid"><div class="fg"><label>Congregacion</label><select id="cm-c"><option value="">-- Seleccionar --</option></select></div><div class="fg"><label>Hermano externo</label><input id="cm-h" type="text" placeholder="Nombre del hermano" ></div><div class="fg"><label>N discurso</label><input id="cm-n" type="number" oninput="autoTitCM()"></div><div class="fg"><label>Titulo</label><input id="cm-t" type="text" placeholder="Se autocompleta..." ></div><div class="fg"><label>Telefono</label><input id="cm-tel" type="text" placeholder="+56 9 ..." ></div><div class="fg"><label>Obs.</label><input id="cm-o" type="text" placeholder="Opcional" ></div></div><div class="fa"><button class="btn bp" onclick="agregarCM()">Agregar</button></div></div><div class="card"><div class="ctit">Forma B — Pegado masivo</div><div class="al ali">Selecciona una congregacion y pega <strong>Nombre | N discurso | Telefono</strong>. Tambien puedes dejar la congregacion sin seleccionar y pegar <strong>Congregacion | Nombre | N discurso | Telefono</strong> para cargar varias congregaciones a la vez.</div><div class="fg" style="margin-bottom:10px"><label>Congregacion</label><select id="cm-pc"><option value="">-- Seleccionar --</option></select></div><textarea id="cm-paste" placeholder="Los Arcos	Juan Perez	12	+56912345678
+Las Brisas	Pedro Soto	45	+56987654321
+
+O, si seleccionas una congregacion arriba:
+Juan Perez	12	+56912345678"></textarea><div class="fa"><button class="btn bs" onclick="importarCMMasivo()">Importar</button><button class="btn bg" onclick="limpiarCM()">Limpiar carga</button></div></div><div class="card"><div class="sr"><input id="bq-cm" placeholder="Buscar..." oninput="renderCM()" style="flex:1"></div><div class="bbar" id="bbar-cm"><span class="bbar-cnt" id="bcnt-cm"></span><button class="btn bd2 bsm" onclick="bulkDel('cm')">Eliminar</button><button class="btn bg bsm" onclick="bulkClear('cm')">Cancelar</button></div><div class="tw"><table><thead><tr><th class="chk"><input type="checkbox" onchange="selAll('cm',this)"></th><th class="sort" data-t="cm" data-c="congregacion" onclick="sortT(this)">Congregacion &#8645;</th><th class="sort" data-t="cm" data-c="hermano" onclick="sortT(this)">Hermano &#8645;</th><th>Tel</th><th class="sort" data-t="cm" data-c="numDiscurso" onclick="sortT(this)">N &#8645;</th><th>Titulo</th><th>En catalogo</th><th>Obs.</th><th>Acciones</th></tr></thead><tbody id="tb-cm"></tbody></table></div></div>
     </div>
   </div>
 </div>
@@ -67,8 +71,8 @@
 <script>
 function initPagina(){
   initSidebar();
-  setNavActivo('arreglos');
-  setPageTitle("Arreglos");poblarSelArreglos();poblarAnioArreglos();loadArreglosUI();
+  setNavActivo('carga');
+  setPageTitle("Carga Mensual");loadMC();poblarSelCMCong();renderMC();
 }
 </script>
 </body>
