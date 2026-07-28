@@ -3122,7 +3122,22 @@ async function dbLoadAll(cb){
     D.historial = (res[8].data||[]).map(function(h){ return {id:h.id,fecha:h.fecha||'',tipo:h.tipo||'',congregacion:h.congregacion||'',hermano:h.hermano||'',hermanoId:h.hermano_id||'',telefono:h.telefono||'',numDiscurso:h.num_discurso||'',titulo:h.titulo||'',obs:h.obs||''}; });
     D.salidasRealizadas = (res[9].data||[]).map(function(s){ return {id:s.id,fecha:s.fecha||'',congregacion:s.congregacion||'',hermano:s.hermano||'',hermanoId:s.hermano_id||'',numDiscurso:s.num_discurso||'',titulo:s.titulo||'',obs:s.obs||''}; });
     D.cargaMensual = (res[10].data||[]).map(function(c){ return {id:c.id,congregacion:c.congregacion||'',hermano:c.hermano||'',numDiscurso:c.num_discurso||'',telefono:c.telefono||'',mes:c.mes,anio:c.anio}; });
-    D.arreglos = (res[11].data||[]).map(function(a){ return {id:a.id,mes:a.mes,anio:a.anio,congregacion:a.congregacion_nombre||'',tipo:a.tipo||'entrada',estado:a.estado||'pendiente',obs:a.obs||''}; });
+    D.arreglos = (res[11].data||[]).map(function(a){
+      // Buscar datos de la congregacion externa correspondiente
+      var ce=D.congregaciones.find(function(c){return c.nombre&&a.congregacion_nombre&&c.nombre.toLowerCase()===a.congregacion_nombre.toLowerCase();});
+      return {
+        id:a.id,mes:a.mes,anio:a.anio,
+        congregacion:a.congregacion_nombre||'',
+        tipo:a.tipo||'entrada',estado:a.estado||'pendiente',obs:a.obs||'',
+        congregacionId:a.congregacion_id||'',
+        coordNombre:ce?ce.coordNombre||'':'',
+        coordTel:ce?ce.coordTel||'':'',
+        coordEmail:ce?ce.coordEmail||'':'',
+        direccion:ce?ce.direccion||'':'',
+        dia:ce?ce.dia||'0':'0',
+        horario:ce?ce.horario||'':''
+      };
+    });
     if(!D.privilegios.length) D.privilegios = _privilegiosDefault.map(function(n){ return {id:uid(),nombre:n}; });
     syncBar(false);
     if(cb) cb();
