@@ -13,7 +13,7 @@
     <div class="login-title">Coordinador de Discursos</div>
     <div class="login-sub">Accede con tu email y contrasena</div>
     <input class="login-field" id="login-email" type="email" placeholder="tu@email.com" autocomplete="email">
-    <input class="login-field" id="login-pass" type="password" placeholder="Contrasena" onkeydown="if(event.key===&apos;Enter&apos;)doLogin()">
+    <input class="login-field" id="login-pass" type="password" placeholder="Contrasena" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn-main" id="login-btn" onclick="doLogin()">Ingresar</button>
     <span class="login-forgot" onclick="doResetPassword()">Olvide mi contrasena</span>
     <div class="login-err" id="login-err"></div>
@@ -59,6 +59,64 @@
     </div>
     <div id="content">
 
+<!-- Panel SuperAdmin -->
+<div data-roles="superadmin">
+  <div class="card">
+    <div class="ctit">&#9757; Nueva Congregacion</div>
+    <div class="fgrid">
+      <div class="fg" style="grid-column:1/-1"><label>Nombre *</label><input id="sa-cong-nombre" type="text" placeholder="Nombre de la congregacion"></div>
+      <div class="fg"><label>Circuito *</label><input id="sa-cong-circuito" type="text" placeholder="Ej: RM-13"></div>
+      <div class="fg"><label>Ciudad</label><input id="sa-cong-ciudad" type="text" placeholder="Santiago"></div>
+      <div class="fg" style="grid-column:1/-1"><label>Email del Admin *</label><input id="sa-cong-admin" type="email" placeholder="admin@gmail.com"></div>
+      <div class="fg" style="grid-column:1/-1"><label>Nombre del Admin</label><input id="sa-cong-admin-nombre" type="text"></div>
+    </div>
+    <div class="fa"><button class="btn bp" onclick="saCrearCongregacion()">Crear e Invitar Admin</button></div>
+  </div>
+  <div class="card">
+    <div class="ctit">Congregaciones registradas</div>
+    <div id="sa-lista-congs"><div class="es"><p>Cargando...</p></div></div>
+  </div>
+  <div class="card">
+    <div class="ctit">Todas las invitaciones</div>
+    <div id="sa-lista-invs"><div class="es"><p>Cargando...</p></div></div>
+  </div>
+</div>
+
+<!-- Panel Usuarios -->
+<div class="card">
+  <div class="ctit">Invitar usuario</div>
+  <div class="fgrid">
+    <div class="fg"><label>Email *</label><input id="usr-inv-email" type="email" placeholder="correo@email.com"></div>
+    <div class="fg"><label>Nombre *</label><input id="usr-inv-nombre" type="text"></div>
+    <div class="fg"><label>Rol</label>
+      <select id="usr-inv-rol">
+        <option value="coordinador">Coordinador</option>
+        <option value="lector">Lector</option>
+        <option value="visor">Visor</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+  </div>
+  <div class="fa"><button class="btn bp" onclick="usrInvitar()">Crear invitacion</button></div>
+  <div id="usr-inv-link" style="display:none;margin-top:12px" class="al ali">
+    <strong>Link de invitacion:</strong>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
+      <input id="usr-inv-link-txt" type="text" readonly style="flex:1;font-size:12px;background:var(--sf2);padding:6px;border:1px solid var(--bd);border-radius:6px">
+      <button class="btn bg bsm" onclick="navigator.clipboard.writeText(document.getElementById('usr-inv-link-txt').value).then(function(){toast('Copiado!','s')})">Copiar</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ctit">Usuarios activos</div>
+  <div id="usr-lista"><div class="es"><p>Cargando...</p></div></div>
+</div>
+
+<div class="card">
+  <div class="ctit">Invitaciones pendientes</div>
+  <div id="usr-lista-inv"><div class="es"><p>Cargando...</p></div></div>
+</div>
+
     </div>
   </div>
 </div>
@@ -68,7 +126,9 @@
 function initPagina(){
   initSidebar();
   setNavActivo('superadmin');
-  setPageTitle("Usuarios"); usrCargarDatos(); if(_usr&&_usr.rol==="superadmin")saCargarDatos();
+  setPageTitle('Usuarios');
+  usrCargarDatos();
+  if(_usr&&_usr.rol==='superadmin') saCargarDatos();
 }
 </script>
 </body>
