@@ -12,7 +12,7 @@ var _sb = supabase.createClient(
 var _usr = null;
 var _privilegiosDefault = ['Precursor Regular','Precursor Auxiliar','Precursor Especial','Pre-Grupo Romane'];
 var _st = {};
-var _sel = {d:[],h:[],r:[],ce:[],ar:[],cm:[],hi:[],sx:[],pe:[],ps:[]};
+var _sel = {d:[],h:[],r:[],ce:[],ar:[],cm:[],hi:[],sx:[],pe:[],ps:[],priv:[]};
 
 /* ── Modelo de datos ── */
 var D = {
