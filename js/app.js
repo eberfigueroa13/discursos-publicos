@@ -259,8 +259,11 @@ function renderDash(){
   var hermActivos=D.locales.filter(function(h){return h.estado==='Activo'&&h.puedeAfuera==='si';});
   var hermSinSalir=hermActivos.map(function(h){
     var ult=ultimaSalidaHermano(h.id);
-    return {nombre:h.nombre,dias:ult?diasDesde(ult,refMes()):9999,ultima:ult};
-  }).sort(function(a,b){return b.dias-a.dias;}).slice(0,5);
+    var esAnciano=h.nombramiento==='Anciano';
+    var minDias=esAnciano?60:120; // 2 meses ancianos, 4 meses siervos
+    var dias=ult?diasDesde(ult,refMes()):9999;
+    return {nombre:h.nombre,nombramiento:h.nombramiento||'',dias:dias,ultima:ult,minDias:minDias,listo:dias>=minDias};
+  }).filter(function(h){return h.listo;}).sort(function(a,b){return b.dias-a.dias;}).slice(0,5);
 
   // Discursos que hace mas tiempo no se dan
   var discActivos=D.discursos.filter(function(d){return d.estado==='Activo';});
@@ -320,10 +323,11 @@ function renderDash(){
       +'<div class="ctit" style="margin-bottom:10px">&#128652; Sugerencias de salida</div>'
       +(hermSinSalir.length?hermSinSalir.map(function(h){
         return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">'
-          +'<div style="flex:1;font-weight:500">'+esc(h.nombre)+'</div>'
+          +'<div style="flex:1"><div style="font-weight:500">'+esc(h.nombre)+'</div>'
+          +'<div style="font-size:11px;color:var(--tx3)">'+esc(h.nombramiento||'')+'</div></div>'
           +'<div style="font-size:11px;color:var(--tx3)">'+(h.ultima?'Hace '+h.dias+' dias':'Nunca ha salido')+'</div>'
           +'</div>';
-      }).join(''):'<div style="text-align:center;padding:20px;color:var(--tx3)">Sin datos</div>')
+      }).join(''):'<div style="text-align:center;padding:20px;color:var(--tx3)">Todos al dia</div>')
       +'</div>'
       +'</div>'
 
