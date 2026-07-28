@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Dashboard — Coordinador de Discursos</title>
-<link rel="stylesheet" href="css/styles.css">
+<title>Salidas Realizadas — Coordinador de Discursos</title>
+<link rel="stylesheet" href="../css/styles.css">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -68,11 +68,11 @@
     </div>
     <nav>
 <div class="nav-section">General</div>
-<div class="nav-item active" data-page="dashboard" data-label="Dashboard" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='app.html'">&#128202;<span class="ni-label">Dashboard</span></div>
+<div class="nav-item " data-page="dashboard" data-label="Dashboard" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='app.html'">&#128202;<span class="ni-label">Dashboard</span></div>
 <div class="nav-section">Coordinacion</div>
 <div class="nav-item " data-page="planificacion" data-label="Planificacion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='planificacion.html'">&#128197;<span class="ni-label">Planificacion</span></div>
 <div class="nav-item " data-page="historial" data-label="Historial" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='historial.html'">&#128336;<span class="ni-label">Historial</span></div>
-<div class="nav-item " data-page="salidas" data-label="Salidas realizadas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas realizadas</span></div>
+<div class="nav-item active" data-page="salidas" data-label="Salidas realizadas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas realizadas</span></div>
 <div class="nav-item " data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
 <div class="nav-item " data-page="reportes" data-label="Reportes" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='reportes.html'">&#128196;<span class="ni-label">Reportes</span></div>
 <div class="nav-section">Datos</div>
@@ -99,7 +99,7 @@
       <button id="topbar-toggle" aria-label="Toggle sidebar">
         <span></span><span></span><span></span>
       </button>
-      <div id="page-title">Dashboard</div>
+      <div id="page-title">Salidas Realizadas</div>
       <div id="sync-indicator" class="sync-indicator">
         <div class="sync-dot"></div>
         <span class="sync-label">Sincronizando...</span>
@@ -110,20 +110,32 @@
     <!-- Content -->
     <div id="content">
 
-<div class="page-header">
-  <h1>Dashboard</h1>
-  <p>Resumen del estado de coordinacion del mes</p>
+<div class="page-header"><h1>Salidas Realizadas</h1><p>Registro de hermanos que salieron a otras congregaciones</p></div>
+<div class="card" data-roles="coordinador,admin,superadmin">
+  <div class="card-title">Agregar salida</div>
+  <div class="form-grid">
+    <div class="form-group"><label>Fecha *</label><input id="sx-f" type="date"></div>
+    <div class="form-group"><label>Congregacion destino</label><input id="sx-c" type="text"></div>
+    <div class="form-group"><label>Hermano *</label><input id="sx-h" type="text"></div>
+    <div class="form-group"><label>N°</label><input id="sx-n" type="number"></div>
+    <div class="form-group form-span-full"><label>Titulo</label><input id="sx-t" type="text"></div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="agregarSalidaHist()">+ Agregar</button>
+    <button class="btn btn-ghost" onclick="exportarSalidasCSV()">CSV</button>
+  </div>
 </div>
-<div class="stats-grid" id="dash-stats"></div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-  <div class="card">
-    <div class="card-title">Proximas fechas</div>
-    <div id="dash-proximas"></div>
+<div class="card">
+  <div class="table-toolbar">
+    <input class="search-input" id="bq-sx" placeholder="Buscar..." oninput="renderSalidas()">
   </div>
-  <div class="card">
-    <div class="card-title">Sugerencias de salida</div>
-    <div id="dash-sugerencias"></div>
-  </div>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th class="chk-col"><input type="checkbox" onchange="selAll('sx',this)"></th>
+      <th>Fecha</th><th>Congregacion</th><th>Hermano</th><th>N°</th><th>Titulo</th><th></th>
+    </tr></thead>
+    <tbody id="tb-sx"></tbody>
+  </table></div>
 </div>
 
     </div>
@@ -131,54 +143,50 @@
 </div>
 
 <!-- Scripts globales -->
-<script src="js/utils.js"></script>
-<script src="js/firebase.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/firebase.js"></script>
+<script src="../js/ui.js"></script>
+<script src="../js/auth.js"></script>
 
 <!-- Script de pagina -->
 <script>
 
 function initPagina(){
   initSidebar();
-  setNavActivo('dashboard');
-  setPageTitle('Dashboard');
-  renderDashboard();
+  setNavActivo('salidas');
+  setPageTitle('Salidas Realizadas');
+  renderSalidas();
 }
-function renderDashboard(){
-  var c=D.config,mc=D.miCongr;
-  var ext=D.planificacion.filter(function(p){return p.tipo==='Externo';});
-  var conf=ext.filter(function(p){return p.confirmado==='Si';}).length;
-  var sinAsig=ext.filter(function(p){return !p.hermano||!p.numDiscurso;}).length;
-  var ym=c.anio+'-'+String(c.mes).padStart(2,'0');
-  var histMes=D.historial.filter(function(h){return h.fecha&&h.fecha.slice(0,7)===ym;}).length;
-
-  document.getElementById('dash-stats').innerHTML=[
-    {l:'Mes coordinado',v:nMes(c.mes)+' '+c.anio,cls:'accent'},
-    {l:'Fechas del mes',v:ext.length,cls:''},
-    {l:'Confirmadas',v:conf,cls:'success'},
-    {l:'Sin asignar',v:sinAsig,cls:sinAsig>0?'warning':''},
-    {l:'Hermanos activos',v:D.locales.filter(function(h){return h.estado==='Activo';}).length,cls:''},
-    {l:'Discursos activos',v:D.discursos.filter(function(d){return d.estado==='Activo';}).length,cls:''},
-  ].map(function(s){
-    return '<div class="stat-card '+s.cls+'"><div class="stat-val">'+s.v+'</div><div class="stat-lbl">'+s.l+'</div></div>';
+function renderSalidas(){
+  var q=(document.getElementById('bq-sx')?document.getElementById('bq-sx').value.toLowerCase():'');var anio=(document.getElementById('fsx-a')?document.getElementById('fsx-a').value:'');
+  var lista=D.salidasRealizadas.filter(function(s){return(!q||(s.numDiscurso||'').toString().includes(q)||(s.hermano||'').toLowerCase().includes(q)||(s.congregacion||'').toLowerCase().includes(q)||(s.titulo||'').toLowerCase().includes(q))&&(!anio||(s.fecha||'').startsWith(anio));});
+  var c=getSC('sx');
+  if(c)lista=ordenar(lista,'sx',c,1);else lista=lista.slice().sort(function(a,b){return new Date(b.fecha)-new Date(a.fecha);});
+  var tb=document.getElementById('tb-sx');if(!tb)return;
+  if(!lista.length){tb.innerHTML='<tr><td colspan="8"><div class="es"><div class="ic2">&#128663;</div><p>Sin salidas realizadas</p></div></td></tr>';return;}
+  tb.innerHTML=lista.map(function(s){
+    var sel=_sel.sx.indexOf(s.id)>=0;
+    return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('sx',s.id)+'</td>'
+      +'<td>'+esc(s.fecha||'---')+'</td><td>'+esc(s.congregacion||'---')+'</td><td>'+esc(s.hermano||'---')+'</td>'
+      +'<td><strong>'+esc(s.numDiscurso||'')+'</strong></td><td>'+esc(s.titulo||'---')+'</td><td>'+esc(s.obs||'---')+'</td>'
+      +'<td class="ac">'+btnAc('bd2','x','delSalidaHist',s.id)+'</td></tr>';
   }).join('');
-
-  var proximas=D.planificacion.filter(function(p){
-    return p.tipo==='Externo'&&p.fecha>=new Date().toISOString().slice(0,10);
-  }).sort(function(a,b){return a.fecha.localeCompare(b.fecha);}).slice(0,5);
-  document.getElementById('dash-proximas').innerHTML=proximas.length
-    ?proximas.map(function(p){
-      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)">'
-        +'<div style="font-size:12px;font-weight:600;color:var(--pr);width:60px">'+fmtF(p.fecha)+'</div>'
-        +'<div style="flex:1"><div style="font-size:13px">'+esc(p.hermano||'Sin asignar')+'</div>'
-        +'<div style="font-size:11px;color:var(--tx3)">'+esc(p.congregacion||'---')+'</div></div>'
-        +'<span class="badge '+(p.confirmado==='Si'?'badge-success':p.confirmado==='No'?'badge-danger':'badge-warning')+'">'+esc(p.confirmado||'Pend.')+'</span>'
-        +'</div>';
-    }).join('')
-    :'<div class="empty-state"><div class="es-icon">&#128197;</div><p>Sin fechas proximas</p></div>';
+  tb.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=_sel.sx.indexOf(c.dataset.id)>=0;});
 }
-
+function agregarSalidaHist(){
+  var f=document.getElementById('sx-f').value,num=parseInt(document.getElementById('sx-n').value),h=document.getElementById('sx-h').value.trim();
+  if(!f||!num||!h){toast('Fecha, N y hermano obligatorios','e');return;}
+  D.salidasRealizadas.push({id:uid(),fecha:f,congregacion:document.getElementById('sx-c').value.trim(),hermano:h,numDiscurso:num,titulo:document.getElementById('sx-t').value.trim(),obs:document.getElementById('sx-o').value.trim()});
+  dbSaveArray('salidasRealizadas');renderSalidas();poblarFiltAnioSal();toast('Salida agregada','s');
+  ['sx-f','sx-c','sx-h','sx-n','sx-t','sx-o'].forEach(function(i){document.getElementById(i).value='';});
+}
+function delSalidaHist(id){confirmar('Eliminar esta salida?',function(){D.salidasRealizadas=D.salidasRealizadas.filter(function(s){return s.id!==id;});dbSaveArray('salidasRealizadas');renderSalidas();poblarFiltAnioSal();toast('Eliminada','s');});}
+function exportarSalidasCSV(){
+  var cols=['Fecha','Congregacion destino','Hermano local','N','Titulo','Obs.'];
+  var filas=D.salidasRealizadas.filter(function(s){return esDiscursoActivo(s.numDiscurso);}).slice().sort(function(a,b){return new Date(b.fecha)-new Date(a.fecha);}).map(function(s){return [s.fecha,s.congregacion,s.hermano,s.numDiscurso,s.titulo,s.obs].map(function(v){return '"'+(v||'').toString().replace(/"/g,'""')+'"';}).join(';');});
+  var csv=[cols.join(';')].concat(filas).join('\r\n');
+  var b=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='salidas_realizadas_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV de salidas exportado','s');
+}
 </script>
 </body>
 </html>
