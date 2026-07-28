@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Discursos — Coordinador de Discursos</title>
+<link rel="stylesheet" href="../css/styles.css">
+<script type="module" src="../js/supabase.js"></script>
+</head>
+<body>
+
+<!-- Login overlay -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">&#128218;</div>
+    <div class="login-title">Coordinador de Discursos</div>
+    <div class="login-sub">Inicia sesion para acceder</div>
+    <button class="login-btn" onclick="fbLoginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continuar con Google
+    </button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- Invitacion overlay -->
+<div id="inv-overlay">
+  <div class="inv-card">
+    <div style="font-size:40px;margin-bottom:12px">&#127881;</div>
+    <h2 style="font-size:18px;font-weight:700;color:var(--tx);margin-bottom:4px">Fuiste invitado</h2>
+    <div class="inv-congr-name" id="inv-congr-nombre">---</div>
+    <div class="inv-rol-label" id="inv-rol-label">---</div>
+    <div id="inv-datos"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost" onclick="invRechazar()">Cancelar</button>
+      <button class="btn btn-primary" id="inv-aceptar-btn" onclick="invAceptar()">Aceptar e ingresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <span id="modal-title"></span>
+      <button id="modal-close" onclick="closeM()">&#10005;</button>
+    </div>
+    <div id="modal-body"></div>
+    <div id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Sidebar overlay mobile -->
+<div id="sidebar-overlay"></div>
+
+<!-- Layout -->
+<div id="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div id="sbh">
+      <div class="logo-icon">&#128218;</div>
+      <div class="logo-text">Discursos Pub.</div>
+    </div>
+    <nav>
+<div class="nav-section">General</div>
+<div class="nav-item " data-page="dashboard" data-label="Dashboard" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='app.html'">&#128202;<span class="ni-label">Dashboard</span></div>
+<div class="nav-section">Coordinacion</div>
+<div class="nav-item " data-page="planificacion" data-label="Planificacion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='planificacion.html'">&#128197;<span class="ni-label">Planificacion</span></div>
+<div class="nav-item " data-page="historial" data-label="Historial" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='historial.html'">&#128336;<span class="ni-label">Historial</span></div>
+<div class="nav-item " data-page="salidas" data-label="Salidas realizadas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas realizadas</span></div>
+<div class="nav-item " data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
+<div class="nav-item " data-page="reportes" data-label="Reportes" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='reportes.html'">&#128196;<span class="ni-label">Reportes</span></div>
+<div class="nav-section">Datos</div>
+<div class="nav-item " data-page="hermanos" data-label="Hermanos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='hermanos.html'">&#128101;<span class="ni-label">Hermanos</span></div>
+<div class="nav-item " data-page="repertorio" data-label="Repertorio" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='repertorio.html'">&#127897;<span class="ni-label">Repertorio</span></div>
+<div class="nav-item active" data-page="discursos" data-label="Discursos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='discursos.html'">&#128218;<span class="ni-label">Discursos</span></div>
+<div class="nav-item " data-page="congregaciones" data-label="Congregaciones" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='congregaciones.html'">&#127968;<span class="ni-label">Congregaciones</span></div>
+<div class="nav-item " data-page="carga" data-label="Carga mensual" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='carga.html'">&#128203;<span class="ni-label">Carga mensual</span></div>
+<div class="nav-item " data-page="privilegios" data-label="Privilegios" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='privilegios.html'">&#127894;<span class="ni-label">Privilegios</span></div>
+<div class="nav-section">Sistema</div>
+<div class="nav-item " data-page="configuracion" data-label="Configuracion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='configuracion.html'">&#9881;<span class="ni-label">Configuracion</span></div>
+<div class="nav-item " data-page="respaldo" data-label="Respaldo" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='respaldo.html'">&#128190;<span class="ni-label">Respaldo</span></div>
+<div class="nav-section">Admin</div>
+<div class="nav-item " data-page="admin" data-label="Usuarios" data-roles="superadmin,admin" onclick="window.location='admin.html'">&#128737;<span class="ni-label">Usuarios</span></div>
+
+    </nav>
+    <div id="sb-user" onclick="fbCerrarSesion()"></div>
+  </aside>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Topbar -->
+    <div id="topbar">
+      <button id="topbar-toggle" aria-label="Toggle sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <div id="page-title">Discursos</div>
+      <div id="sync-indicator" class="sync-indicator">
+        <div class="sync-dot"></div>
+        <span class="sync-label">Sincronizando...</span>
+      </div>
+      <div id="page-meta"></div>
+    </div>
+
+    <!-- Content -->
+    <div id="content">
+
+<div class="page-header">
+  <h1>Catalogo de Discursos</h1>
+  <p>Administra los bosquejos de discursos publicos disponibles</p>
+</div>
+<div class="card">
+  <div class="card-title">Agregar discurso</div>
+  <div class="form-grid">
+    <div class="form-group"><label>N° Discurso</label><input id="d-n" type="number" placeholder="Ej: 42"></div>
+    <div class="form-group form-span-full"><label>Titulo</label><input id="d-t" type="text" placeholder="Titulo del bosquejo"></div>
+    <div class="form-group"><label>Estado</label><select id="d-e"><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select></div>
+    <div class="form-group form-span-full"><label>Observaciones</label><input id="d-o" type="text" placeholder="Opcional"></div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="agregarD()">+ Agregar</button>
+    <button class="btn btn-ghost" onclick="importarDMasivo()">Importar masivo</button>
+    <button class="btn btn-ghost" onclick="exportarDCSV()">Exportar CSV</button>
+  </div>
+</div>
+<div class="card">
+  <div class="table-toolbar">
+    <input class="search-input" id="bq-d" placeholder="Buscar por numero o titulo..." oninput="renderD()">
+    <div class="bulk-bar" id="bulk-bar-d">
+      <span class="bulk-count" id="bulk-cnt-d"></span>
+      <button class="btn btn-danger btn-sm" onclick="bulkDelD()">Eliminar</button>
+      <button class="btn btn-ghost btn-sm" onclick="bulkClear('d')">Cancelar</button>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="toggleInactivos()">Ver inactivos</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="chk-col"><input type="checkbox" onchange="selAll('d',this)"></th>
+        <th style="width:80px">N°</th>
+        <th>Titulo</th>
+        <th style="width:100px">Estado</th>
+        <th style="width:80px"></th>
+      </tr></thead>
+      <tbody id="tb-d"></tbody>
+    </table>
+  </div>
+</div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Scripts globales -->
+<script src="../js/utils.js"></script>
+
+<script src="../js/ui.js"></script>
+
+
+<!-- Script de pagina -->
+<script>
+
+var _mostrarInactivos = false;
+function toggleInactivos(){
+  _mostrarInactivos = !_mostrarInactivos;
+  renderD();
+}
+function bulkDelD(){
+  var ids=_sel['d']||[];
+  if(!ids.length)return;
+  confirmar('Eliminar '+ids.length+' discursos?',function(){
+    ids.forEach(function(id){
+      D.discursos=D.discursos.filter(function(d){return d.id!==id;});
+      dbDeleteItem('discursos',id);
+    });
+    bulkClear('d');renderD();toast(ids.length+' eliminados','s');
+  });
+}
+function initPagina(){
+  initSidebar();
+  setNavActivo('discursos');
+  setPageTitle('Discursos','Catalogo de bosquejos');
+  renderD();
+}
+function agregarD(){
+  var num=parseInt(document.getElementById('d-n').value);
+  var tit=document.getElementById('d-t').value.trim();
+  if(!num||!tit){toast('Numero y titulo obligatorios','e');return;}
+  if(D.discursos.find(function(d){return d.numero===num;})){toast('Numero ya existe','e');return;}
+  var item={id:uid(),numero:num,titulo:tit,estado:document.getElementById('d-e').value,obs:document.getElementById('d-o').value.trim()};
+  D.discursos.push(item);
+  dbUpsertItem('discursos',item);
+  renderD();toast('Discurso agregado','s');
+  document.getElementById('d-n').value='';document.getElementById('d-t').value='';
+}
+function renderD(){
+  var q=document.getElementById('bq-d').value.toLowerCase();
+  var est=document.getElementById('fe-d').value;
+  var lista=D.discursos.filter(function(d){return(!q||d.numero.toString().includes(q)||d.titulo.toLowerCase().includes(q))&&(!est||d.estado===est);});
+  lista=ordenar(lista,'d','numero',1);
+  var tb=document.getElementById('tb-d');
+  if(!lista.length){tb.innerHTML='<tr><td colspan="6"><div class="es"><div class="ic2">&#128218;</div><p>Sin discursos</p></div></td></tr>';return;}
+  tb.innerHTML=lista.map(function(d){
+    var sel=_sel.d.indexOf(d.id)>=0;
+    return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('d',d.id)+'</td>'
+      +'<td><strong>'+d.numero+'</strong></td><td>'+esc(d.titulo)+'</td>'
+      +'<td><span class="badge '+(d.estado==='Activo'?'bgn':'bgr')+'">'+d.estado+'</span></td>'
+      +'<td>'+(d.obs?esc(d.obs):'---')+'</td>'
+      +'<td class="ac">'+btnAc('bg','editar','editD',d.id)+btnAc('bd2','x','delD',d.id)+'</td></tr>';
+  }).join('');
+  // restaurar estado checkboxes
+  tb.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=_sel.d.indexOf(c.dataset.id)>=0;});
+}
+function editD(id){
+  var d=D.discursos.find(function(x){return x.id===id;});if(!d)return;
+  openM('Editar discurso','<div class="fgrid">'
+    +'<div class="fg"><label>N</label><input id="ed-n" type="number" value="'+d.numero+'"></div>'
+    +'<div class="fg"><label>Titulo</label><input id="ed-t" value="'+esc(d.titulo)+'"></div>'
+    +'<div class="fg"><label>Estado</label><select id="ed-e"><option '+(d.estado==='Activo'?'selected':'')+'>Activo</option><option '+(d.estado==='Inactivo'?'selected':'')+'>Inactivo</option></select></div>'
+    +'<div class="fg"><label>Obs.</label><input id="ed-o" value="'+esc(d.obs||'')+'"></div></div>',
+    [{l:'Cancelar',c:'bg',fn:closeM},{l:'Guardar',c:'bp',fn:function(){
+      var num=parseInt(document.getElementById('ed-n').value);
+      if(!num){toast('N invalido','e');return;}
+      if(D.discursos.find(function(x){return x.numero===num&&x.id!==id;})){toast('Duplicado','e');return;}
+      d.numero=num;d.titulo=document.getElementById('ed-t').value.trim();
+      d.estado=document.getElementById('ed-e').value;d.obs=document.getElementById('ed-o').value.trim();
+      sincronizarDiscursosInactivos(true);
+      dbSaveArray('discursos');
+      sincronizarTitulosDiscursos();renderD();renderRep();renderCM();renderPlan();closeM();toast('Actualizado','s');
+    }}]);
+}
+function delD(id){
+  confirmar('Eliminar este discurso?',function(){
+    D.discursos=D.discursos.filter(function(d){return d.id!==id;});
+    dbDeleteItem('discursos',id);
+    renderD();toast('Eliminado','s');
+  });
+}
+function discursoCat(num){
+  var n=parseInt(num);
+  if(!n)return null;
+  return (D.discursos||[]).find(function(d){return parseInt(d.numero)===n;})||null;
+}
+function esDiscursoInactivo(num){
+  var d=discursoCat(num);
+  return !!(d&&d.estado==='Inactivo');
+}
+function esDiscursoActivo(num){
+  var d=discursoCat(num);
+  return !d||d.estado!=='Inactivo';
+}
+function sincronizarDiscursosInactivos(mostrarToast){
+  var numsInactivos=(D.discursos||[]).filter(function(d){return d.estado==='Inactivo';}).map(function(d){return parseInt(d.numero);});
+  if(!numsInactivos.length)return{repertorios:0,planificacion:0};
+  var reps=0,plans=0;
+  (D.repertorioLocal||[]).forEach(function(r){
+    if(r&&numsInactivos.indexOf(parseInt(r.numDiscurso))>=0&&r.estado==='Activo'){
+      r.estado='Inactivo';reps++;
+    }
+  });
+  (D.planificacion||[]).forEach(function(p){
+    if(p&&!esSC(p)&&p.numDiscurso&&numsInactivos.indexOf(parseInt(p.numDiscurso))>=0){
+      p.numDiscurso='';p.titulo='';p.confirmado='Por confirmar';plans++;
+    }
+  });
+  if(mostrarToast&&(reps||plans))toast('Discurso inactivo aplicado: '+reps+' repertorio(s) desactivado(s) y '+plans+' fila(s) de planificacion reiniciada(s).','w');
+  return{repertorios:reps,planificacion:plans};
+}
+function importarDMasivo(){
+  var txt=document.getElementById('iat-d').value.trim();var ok=0,sk=0;
+  txt.split('\n').filter(function(l){return l.trim();}).forEach(function(l){
+    var p=sep(l);var num=parseInt(p[0]);var tit=(p[1]||'').trim();
+    if(!num||!tit||D.discursos.find(function(d){return d.numero===num;})){sk++;return;}
+    D.discursos.push({id:uid(),numero:num,titulo:tit,estado:'Activo',obs:''});ok++;
+  });
+  dbSaveArray('discursos');renderD();document.getElementById('iat-d').value='';toggleArea('ia-d');
+  toast(ok+' importados'+(sk?', '+sk+' omitidos':''),'s');
+}
+function sincronizarTitulosDiscursos(){
+  /* Actualizar titulos en planificacion cuando cambia el catalogo */
+  var changed=false;
+  D.planificacion.forEach(function(p){
+    if(!p.numDiscurso)return;
+    var num=parseInt(p.numDiscurso);
+    var disc=D.discursos.find(function(d){return d.numero===num;});
+    if(disc&&disc.titulo&&disc.titulo!==p.titulo){
+      p.titulo=disc.titulo;
+      dbUpsertItem('planificacion',p);
+      changed=true;
+    }
+  });
+  /* Actualizar titulos en historial */
+  D.historial.forEach(function(h){
+    if(!h.numDiscurso)return;
+    var num=parseInt(h.numDiscurso);
+    var disc=D.discursos.find(function(d){return d.numero===num;});
+    if(disc&&disc.titulo&&disc.titulo!==h.titulo){
+      h.titulo=disc.titulo;
+      dbUpsertItem('historial',h);
+      changed=true;
+    }
+  });
+  if(changed)console.log('Titulos sincronizados');
+}
+</script>
+</body>
+</html>

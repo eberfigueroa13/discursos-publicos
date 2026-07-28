@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Usuarios — Coordinador de Discursos</title>
+<link rel="stylesheet" href="../css/styles.css">
+<script type="module" src="../js/supabase.js"></script>
+</head>
+<body>
+
+<!-- Login overlay -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">&#128218;</div>
+    <div class="login-title">Coordinador de Discursos</div>
+    <div class="login-sub">Inicia sesion para acceder</div>
+    <button class="login-btn" onclick="fbLoginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continuar con Google
+    </button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- Invitacion overlay -->
+<div id="inv-overlay">
+  <div class="inv-card">
+    <div style="font-size:40px;margin-bottom:12px">&#127881;</div>
+    <h2 style="font-size:18px;font-weight:700;color:var(--tx);margin-bottom:4px">Fuiste invitado</h2>
+    <div class="inv-congr-name" id="inv-congr-nombre">---</div>
+    <div class="inv-rol-label" id="inv-rol-label">---</div>
+    <div id="inv-datos"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost" onclick="invRechazar()">Cancelar</button>
+      <button class="btn btn-primary" id="inv-aceptar-btn" onclick="invAceptar()">Aceptar e ingresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <span id="modal-title"></span>
+      <button id="modal-close" onclick="closeM()">&#10005;</button>
+    </div>
+    <div id="modal-body"></div>
+    <div id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Sidebar overlay mobile -->
+<div id="sidebar-overlay"></div>
+
+<!-- Layout -->
+<div id="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div id="sbh">
+      <div class="logo-icon">&#128218;</div>
+      <div class="logo-text">Discursos Pub.</div>
+    </div>
+    <nav>
+<div class="nav-section">General</div>
+<div class="nav-item " data-page="dashboard" data-label="Dashboard" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='app.html'">&#128202;<span class="ni-label">Dashboard</span></div>
+<div class="nav-section">Coordinacion</div>
+<div class="nav-item " data-page="planificacion" data-label="Planificacion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='planificacion.html'">&#128197;<span class="ni-label">Planificacion</span></div>
+<div class="nav-item " data-page="historial" data-label="Historial" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='historial.html'">&#128336;<span class="ni-label">Historial</span></div>
+<div class="nav-item " data-page="salidas" data-label="Salidas realizadas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas realizadas</span></div>
+<div class="nav-item " data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
+<div class="nav-item " data-page="reportes" data-label="Reportes" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='reportes.html'">&#128196;<span class="ni-label">Reportes</span></div>
+<div class="nav-section">Datos</div>
+<div class="nav-item " data-page="hermanos" data-label="Hermanos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='hermanos.html'">&#128101;<span class="ni-label">Hermanos</span></div>
+<div class="nav-item " data-page="repertorio" data-label="Repertorio" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='repertorio.html'">&#127897;<span class="ni-label">Repertorio</span></div>
+<div class="nav-item " data-page="discursos" data-label="Discursos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='discursos.html'">&#128218;<span class="ni-label">Discursos</span></div>
+<div class="nav-item " data-page="congregaciones" data-label="Congregaciones" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='congregaciones.html'">&#127968;<span class="ni-label">Congregaciones</span></div>
+<div class="nav-item " data-page="carga" data-label="Carga mensual" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='carga.html'">&#128203;<span class="ni-label">Carga mensual</span></div>
+<div class="nav-item " data-page="privilegios" data-label="Privilegios" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='privilegios.html'">&#127894;<span class="ni-label">Privilegios</span></div>
+<div class="nav-section">Sistema</div>
+<div class="nav-item " data-page="configuracion" data-label="Configuracion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='configuracion.html'">&#9881;<span class="ni-label">Configuracion</span></div>
+<div class="nav-item " data-page="respaldo" data-label="Respaldo" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='respaldo.html'">&#128190;<span class="ni-label">Respaldo</span></div>
+<div class="nav-section">Admin</div>
+<div class="nav-item active" data-page="admin" data-label="Usuarios" data-roles="superadmin,admin" onclick="window.location='admin.html'">&#128737;<span class="ni-label">Usuarios</span></div>
+
+    </nav>
+    <div id="sb-user" onclick="fbCerrarSesion()"></div>
+  </aside>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Topbar -->
+    <div id="topbar">
+      <button id="topbar-toggle" aria-label="Toggle sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <div id="page-title">Usuarios</div>
+      <div id="sync-indicator" class="sync-indicator">
+        <div class="sync-dot"></div>
+        <span class="sync-label">Sincronizando...</span>
+      </div>
+      <div id="page-meta"></div>
+    </div>
+
+    <!-- Content -->
+    <div id="content">
+
+<div class="page-header"><h1>Usuarios</h1><p>Gestion de acceso y congregaciones</p></div>
+
+<!-- Panel superadmin -->
+<div data-roles="superadmin">
+  <div class="card">
+    <div class="card-title">&#9757; Nueva Congregacion</div>
+    <div class="form-grid">
+      <div class="form-group form-span-full"><label>Nombre *</label><input id="sa-cong-nombre" type="text" placeholder="Nombre de la congregacion"></div>
+      <div class="form-group"><label>Circuito *</label><input id="sa-cong-circuito" type="text" placeholder="Ej: RM-13"></div>
+      <div class="form-group"><label>Ciudad</label><input id="sa-cong-ciudad" type="text" placeholder="Santiago"></div>
+      <div class="form-group form-span-full"><label>Email del Admin *</label><input id="sa-cong-admin" type="email" placeholder="admin@gmail.com"></div>
+      <div class="form-group form-span-full"><label>Nombre del Admin</label><input id="sa-cong-admin-nombre" type="text"></div>
+    </div>
+    <div class="btn-group"><button class="btn btn-primary" onclick="saCrearCongregacion()">Crear e Invitar Admin</button></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Congregaciones registradas</div>
+    <div id="sa-lista-congs"><div class="empty-state"><div class="es-icon">&#127968;</div><p>Cargando...</p></div></div>
+  </div>
+</div>
+
+<!-- Panel admin -->
+<div class="card">
+  <div class="card-title">Invitar usuario</div>
+  <div class="form-grid">
+    <div class="form-group"><label>Email *</label><input id="usr-inv-email" type="email" placeholder="correo@gmail.com"></div>
+    <div class="form-group"><label>Nombre *</label><input id="usr-inv-nombre" type="text"></div>
+    <div class="form-group"><label>Rol</label><select id="usr-inv-rol">
+      <option value="coordinador">Coordinador</option>
+      <option value="lector">Lector</option>
+      <option value="visor">Visor</option>
+      <option value="admin">Admin</option>
+    </select></div>
+  </div>
+  <div class="btn-group"><button class="btn btn-primary" onclick="usrInvitar()">Crear invitacion</button></div>
+  <div id="usr-inv-link" style="display:none;margin-top:12px" class="alert alert-info">
+    <strong>Link de invitacion:</strong>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+      <input id="usr-inv-link-txt" type="text" readonly style="flex:1;padding:6px;font-size:12px;border:1px solid var(--bd);border-radius:6px">
+      <button class="btn btn-ghost btn-sm" onclick="usrCopiarLink()">Copiar</button>
+      <button class="btn btn-ghost btn-sm" onclick="usrCompartirWhatsApp()">WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Usuarios activos</div>
+  <div id="usr-lista"><div class="empty-state"><div class="es-icon">&#128100;</div><p>Cargando...</p></div></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Invitaciones pendientes</div>
+  <div id="usr-lista-inv"><div class="empty-state"><div class="es-icon">&#128231;</div><p>Cargando...</p></div></div>
+</div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Scripts globales -->
+<script src="../js/utils.js"></script>
+
+<script src="../js/ui.js"></script>
+
+
+<!-- Script de pagina -->
+<script>
+
+var _invLinkActual='';
+var _saCongInvLink='';
+var _saCongInvId='';
+function initPagina(){
+  initSidebar();
+  setNavActivo('admin');
+  setPageTitle('Usuarios y Acceso');
+  usrCargarDatos();
+  if(_usr&&_usr.rol==='superadmin')saCargarDatos();
+}
+function usrCopiarLink(){
+  var txt=document.getElementById('usr-inv-link-txt');
+  if(!txt)return;
+  navigator.clipboard.writeText(txt.value)
+    .then(function(){toast('Link copiado!','s');})
+    .catch(function(){txt.select();document.execCommand('copy');toast('Link copiado!','s');});
+}
+function saCargarDatos(){
+  // Cargar congregaciones con acciones
+  _db.collection('congregaciones').orderBy('creadoEn','desc').get().then(function(snap){
+    var el=document.getElementById('sa-lista-congs');
+    if(!el)return;
+    if(snap.empty){el.innerHTML='<div class="es"><p>Sin congregaciones registradas</p></div>';return;}
+    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+      +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+      +'<th style="padding:8px;text-align:left">Nombre</th>'
+      +'<th style="padding:8px;text-align:left">Circuito</th>'
+      +'<th style="padding:8px;text-align:left">Ciudad</th>'
+      +'<th style="padding:8px;text-align:left">ID</th>'
+      +'<th style="padding:8px;text-align:left">Estado</th>'
+      +'<th style="padding:8px;text-align:left">Acciones</th>'
+      +'</tr></thead><tbody>'
+      +snap.docs.map(function(doc){
+        var d=doc.data();
+        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-id="'+doc.id+'" data-nombre="'+esc(d.nombre||'')+'" data-circuito="'+esc(d.circuito||'')+'" data-ciudad="'+esc(d.ciudad||'')+'" data-activo="'+(d.activo?'1':'0')+'">'
+          +'<td style="padding:8px"><strong>'+esc(d.nombre||'Sin nombre')+'</strong></td>'
+          +'<td style="padding:8px">'+esc(d.circuito||'---')+'</td>'
+          +'<td style="padding:8px">'+esc(d.ciudad||'---')+'</td>'
+          +'<td style="padding:8px;font-size:11px;color:var(--tx3)">'+doc.id+'</td>'
+          +'<td style="padding:8px"><span class="badge '+(d.activo?'bgn':'bgr')+'">'+(d.activo?'Activa':'Inactiva')+'</span></td>'
+          +'<td style="padding:8px;white-space:nowrap">'
+          +'<button class="btn bg bsm sa-edit-cong">Editar</button> '
+          +'<button class="btn bsm '+(d.activo?'bd2':'bp')+' sa-toggle-cong">'+(d.activo?'Desactivar':'Activar')+'</button> '
+          +'<button class="btn bd2 bsm sa-del-cong">Eliminar</button>'
+          +'</td></tr>';
+      }).join('')
+      +'</tbody></table></div>';
+    // Event listeners
+    el.querySelectorAll('.sa-edit-cong').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        saEditarCong(tr.dataset.id,tr.dataset.nombre,tr.dataset.circuito,tr.dataset.ciudad);
+      });
+    });
+    el.querySelectorAll('.sa-toggle-cong').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        saToggleCong(tr.dataset.id, tr.dataset.activo==='1');
+      });
+    });
+    el.querySelectorAll('.sa-del-cong').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        saEliminarCong(tr.dataset.id,tr.dataset.nombre);
+      });
+    });
+  }).catch(function(e){
+    var el=document.getElementById('sa-lista-congs');
+    if(el)el.innerHTML='<div class="al alw">Error: '+e.message+'</div>';
+  });
+  // Cargar invitaciones
+  _db.collection('invitaciones').orderBy('creadaEn','desc').limit(50).get().then(function(snap){
+    var el=document.getElementById('sa-lista-invs');
+    if(!el)return;
+    if(snap.empty){el.innerHTML='<div class="es"><p>Sin invitaciones</p></div>';return;}
+    var ahora=new Date();
+    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+      +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+      +'<th style="padding:8px;text-align:left">Email</th>'
+      +'<th style="padding:8px;text-align:left">Nombre</th>'
+      +'<th style="padding:8px;text-align:left">Congregacion</th>'
+      +'<th style="padding:8px;text-align:left">Rol</th>'
+      +'<th style="padding:8px;text-align:left">Estado</th>'
+      +'</tr></thead><tbody>'
+      +snap.docs.map(function(doc){
+        var d=doc.data();
+        var expira=d.expiraEn?d.expiraEn.toDate():null;
+        var estado=d.usada?'usada':(expira&&ahora>expira?'expirada':'pendiente');
+        var cls=estado==='usada'?'badge-inv-usada':estado==='expirada'?'badge-inv-exp':'badge-inv-pend';
+        var label=estado==='usada'?'Usada':estado==='expirada'?'Expirada':'Pendiente';
+        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px">'
+          +'<td style="padding:8px">'+esc(d.email||'---')+'</td>'
+          +'<td style="padding:8px">'+esc(d.nombreInvitado||'---')+'</td>'
+          +'<td style="padding:8px;font-size:11px">'+esc(d.congId||'---')+'</td>'
+          +'<td style="padding:8px"><span class="badge bbl">'+esc(d.rol||'')+'</span></td>'
+          +'<td style="padding:8px"><span class="'+cls+'">'+label+'</span></td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>';
+  }).catch(function(e){
+    var el=document.getElementById('sa-lista-invs');
+    if(el)el.innerHTML='<div class="al alw">Error cargando invitaciones: '+e.message+'</div>';
+  });
+}
+function saCrearCongregacion(){
+  if(!_usr||_usr.rol!=='superadmin'){toast('Sin permisos','e');return;}
+  var nombre=document.getElementById('sa-cong-nombre').value.trim();
+  var circuito=document.getElementById('sa-cong-circuito').value.trim();
+  var ciudad=document.getElementById('sa-cong-ciudad').value.trim();
+  var adminEmail=document.getElementById('sa-cong-admin').value.trim().toLowerCase();
+  var adminNombre=document.getElementById('sa-cong-admin-nombre').value.trim();
+  if(!nombre||!circuito||!adminEmail){toast('Nombre, circuito y email del admin son obligatorios','e');return;}
+  var iniciales=nombre.split(' ').map(function(w){return w[0]||'';}).join('').toLowerCase().replace(/[^a-z]/g,'').substring(0,4);
+  var circ=circuito.toLowerCase().replace(/[^a-z0-9]/g,'');
+  var baseId='cong'+iniciales+circ;
+  fbSyncBar(true,'Creando congregacion...');
+  _db.collection('congregaciones').where('baseId','==',baseId).get().then(function(snap){
+    var correlativo=String(snap.size+1).padStart(3,'0');
+    var congId=baseId+correlativo;
+    // Crear documento de metadata
+    return _db.collection('congregaciones').doc(congId).set({
+      nombre:nombre,circuito:circuito,ciudad:ciudad,baseId:baseId,
+      creadoPor:_usr.email,activo:true,
+      creadoEn:firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){
+      // Inicializar blob de datos con miCongr basico
+      var datosIniciales=JSON.parse(JSON.stringify(D)); // copia del modelo vacio
+      datosIniciales.miCongr={
+        nombre:nombre,direccion:'',dia:'6',horario:'',circuito:circuito,
+        mapsSalon:'',coordNombre:'',coordTel:'',coordEmail:'',
+        avNombre:'',avTel:'',avEmail:'',obs:''
+      };
+      datosIniciales.config={
+        mes:new Date().getMonth()+1,anio:new Date().getFullYear(),
+        congregacionExternaMes:'',diasBloqueo:365,discursosLocalesRequeridos:1,
+        habraSalidasMes:'no',habraSCMes:'no',
+        scNombre:'',scTel:'',scEmail:'',scObs:'',
+        plantillaCarta:'',plantillaWhatsApp:''
+      };
+      // Limpiar arrays para que sea una congregacion limpia
+      datosIniciales.discursos=D.discursos.slice(); // copiar catalogo de discursos
+      datosIniciales.locales=[];
+      datosIniciales.repertorioLocal=[];
+      datosIniciales.congregaciones=[];
+      datosIniciales.cargaMensual=[];
+      datosIniciales.planificacion=[];
+      datosIniciales.historial=[];
+      datosIniciales.salidasRealizadas=[];
+      datosIniciales.arreglos=[];
+      datosIniciales.privilegios=_privilegiosDefault.map(function(n){return{id:uid(),nombre:n};});
+      return _db.collection('congregaciones').doc(congId)
+        .collection('datos').doc('principal').set({
+          data:JSON.stringify(datosIniciales),
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+          updatedBy:'system'
+        });
+    }).then(function(){return congId;});
+  }).then(function(congId){
+    return saCrearInvitacion(adminEmail,adminNombre,congId,'admin').then(function(link){
+      return {congId:congId,link:link};
+    });
+  }).then(function(result){
+    fbSyncBar(false);
+    toast('Congregacion creada! ID: '+result.congId,'s');
+    ['sa-cong-nombre','sa-cong-circuito','sa-cong-ciudad','sa-cong-admin','sa-cong-admin-nombre'].forEach(function(id){
+      var el=document.getElementById(id);if(el)el.value='';
+    });
+    saCargarDatos();
+    _saCongInvLink=result.link;
+    _saCongInvId=result.congId;
+    openM('Congregacion creada',
+      '<div style="text-align:center">'
+      +'<div style="font-size:32px;margin-bottom:12px">&#127881;</div>'
+      +'<div style="font-weight:700;margin-bottom:4px">Congregacion creada exitosamente</div>'
+      +'<div style="font-size:13px;color:var(--tx2);margin-bottom:16px">ID: '+result.congId+'</div>'
+      +'<div style="font-size:13px;margin-bottom:8px">Link de invitacion para el admin (expira en 48 horas):</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">'
+      +'<input id="sa-link-txt" type="text" readonly style="flex:1;font-size:11px;background:var(--sf2);padding:6px" value="'+result.link+'">'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'
+      +'<button class="btn bg bsm" onclick="saCopiarLink()">Copiar link</button>'
+      +'<button class="btn bg bsm" onclick="saCompartirWA()">WhatsApp</button>'
+      +'</div></div>',
+      null
+    );
+  }).catch(function(e){
+    console.error('saCrearCongregacion error:',e);
+    fbSyncBar(false);
+    toast('Error al crear congregacion: '+e.message,'e');
+  });
+}
+function saCrearInvitacion(email,nombre,congId,rol){
+  var token=uid()+uid();
+  var expira=new Date(Date.now()+48*60*60*1000);
+  return _db.collection('invitaciones').doc(token).set({
+    email:email,nombreInvitado:nombre,congId:congId,rol:rol,
+    usada:false,
+    creadaEn:firebase.firestore.FieldValue.serverTimestamp(),
+    expiraEn:firebase.firestore.Timestamp.fromDate(expira),
+    creadaPor:_usr.email
+  }).then(function(){
+    return window.location.origin+window.location.pathname+'?inv='+token;
+  });
+}
+function saEditarCong(id,nombre,circuito,ciudad){
+  openM('Editar congregacion','<div class="fgrid">'
+    +'<div class="fg" style="grid-column:1/-1"><label>Nombre</label><input id="sace-n" value="'+esc(nombre)+'" type="text"></div>'
+    +'<div class="fg"><label>Circuito</label><input id="sace-c" value="'+esc(circuito)+'" type="text"></div>'
+    +'<div class="fg"><label>Ciudad</label><input id="sace-ci" value="'+esc(ciudad)+'" type="text"></div>'
+    +'</div>',
+    function(){
+      var n=document.getElementById('sace-n').value.trim();
+      var c=document.getElementById('sace-c').value.trim();
+      var ci=document.getElementById('sace-ci').value.trim();
+      if(!n){toast('Nombre obligatorio','e');return;}
+      _db.collection('congregaciones').doc(id).update({nombre:n,circuito:c,ciudad:ci})
+        .then(function(){toast('Congregacion actualizada','s');closeM();saCargarDatos();})
+        .catch(function(e){toast('Error: '+e.message,'e');});
+    }
+  );
+}
+function saToggleCong(id,activo){
+  confirmar((activo?'Desactivar':'Activar')+' esta congregacion?',function(){
+    _db.collection('congregaciones').doc(id).update({activo:!activo})
+      .then(function(){toast('Congregacion '+(activo?'desactivada':'activada'),'s');saCargarDatos();})
+      .catch(function(e){toast('Error: '+e.message,'e');});
+  });
+}
+function saEliminarCong(id,nombre){
+  confirmar('Eliminar la congregacion "'+nombre+'"? Esta accion no se puede deshacer.',function(){
+    _db.collection('congregaciones').doc(id).delete()
+      .then(function(){toast('Congregacion eliminada','s');saCargarDatos();})
+      .catch(function(e){toast('Error: '+e.message,'e');});
+  });
+}
+function saCopiarLink(){
+  var el=document.getElementById('sa-link-txt');
+  if(!el)return;
+  navigator.clipboard.writeText(el.value).then(function(){toast('Link copiado!','s');}).catch(function(){
+    el.select();document.execCommand('copy');toast('Link copiado!','s');
+  });
+}
+function saCompartirWA(){
+  var el=document.getElementById('sa-link-txt');
+  if(!el)return;
+  var msg='Invitacion al Coordinador de Discursos Publicos:\n'+el.value;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+function usrCargarDatos(){
+  if(!_usr||!_usr.congId)return;
+  var esSA=_usr.rol==='superadmin';
+  // Primero cargar mapa de congregaciones para resolver nombres
+  _db.collection('congregaciones').get().then(function(congSnap){
+    var congMap={};
+    congSnap.docs.forEach(function(doc){congMap[doc.id]=doc.data();});
+    var query=esSA
+      ?_db.collection('usuarios').orderBy('email')
+      :_db.collection('usuarios').where('congId','==',_usr.congId);
+    return query.get().then(function(snap){
+      var el=document.getElementById('usr-lista');
+      if(!el)return;
+      if(snap.empty){el.innerHTML='<div class="es"><p>Sin usuarios registrados</p></div>';return;}
+      var rows=snap.docs.map(function(doc){
+        var d=doc.data();
+        var cong=congMap[d.congId]||{};
+        var rolBadge='<span class="badge '+(d.rol==='superadmin'||d.rol==='admin'?'bbl':d.rol==='coordinador'?'bgn':'bgy')+'">'+esc(d.rol||'')+'</span>';
+        var estadoBadge='<span class="badge '+(d.activo?'bgn':'bgr')+'">'+(d.activo?'Activo':'Inactivo')+'</span>';
+        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-email="'+esc(doc.id)+'" data-nombre="'+esc(d.nombre||'')+'" data-rol="'+esc(d.rol||'')+'" data-activo="'+(d.activo?'1':'0')+'">'
+          +(esSA?'<td style="padding:8px"><div style="font-weight:600">'+esc(cong.nombre||d.congId||'---')+'</div><div style="font-size:11px;color:var(--tx3)">'+esc(cong.circuito||'')+'</div></td>':'')
+          +'<td style="padding:8px"><strong>'+esc(d.nombre||'---')+'</strong></td>'
+          +'<td style="padding:8px;font-size:12px">'+esc(d.email)+'</td>'
+          +'<td style="padding:8px;font-size:12px">'+esc(d.telefono||'---')+'</td>'
+          +'<td style="padding:8px">'+rolBadge+'</td>'
+          +'<td style="padding:8px">'+estadoBadge+'</td>'
+          +'<td style="padding:8px;white-space:nowrap">'
+          +'<button class="btn bg bsm usr-edit-btn">Editar</button> '
+          +'<button class="btn bsm '+(d.activo?'bd2':'bp')+' usr-toggle-btn">'+(d.activo?'Desactivar':'Activar')+'</button> '
+          +'<button class="btn bd2 bsm usr-del-btn">Eliminar</button>'
+          +'</td></tr>';
+      }).join('');
+      el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+        +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+        +(esSA?'<th style="padding:8px;text-align:left">Congregacion</th>':'')
+        +'<th style="padding:8px;text-align:left">Nombre</th>'
+        +'<th style="padding:8px;text-align:left">Email</th>'
+        +'<th style="padding:8px;text-align:left">Telefono</th>'
+        +'<th style="padding:8px;text-align:left">Rol</th>'
+        +'<th style="padding:8px;text-align:left">Estado</th>'
+        +'<th style="padding:8px;text-align:left">Acciones</th>'
+        +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+      el.querySelectorAll('.usr-edit-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var tr=btn.closest('tr');
+          usrEditar(tr.dataset.email,tr.dataset.nombre,tr.dataset.rol);
+        });
+      });
+      el.querySelectorAll('.usr-toggle-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var tr=btn.closest('tr');
+          usrToggleActivo(tr.dataset.email,tr.dataset.activo==='1');
+        });
+      });
+      el.querySelectorAll('.usr-del-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var tr=btn.closest('tr');
+          usrEliminar(tr.dataset.email);
+        });
+      });
+    });
+  }).catch(function(e){
+    var el=document.getElementById('usr-lista');
+    if(el)el.innerHTML='<div class="al alw">Error: '+e.message+'</div>';
+  });
+  // Invitaciones — sin orderBy para evitar indice compuesto
+  var qInv=esSA
+    ?_db.collection('invitaciones').where('usada','==',false)
+    :_db.collection('invitaciones').where('congId','==',_usr.congId).where('usada','==',false);
+  qInv.get().then(function(snap){
+    var el=document.getElementById('usr-lista-inv');
+    if(!el)return;
+    var ahora=new Date();
+    var pend=snap.docs.filter(function(doc){
+      var expira=doc.data().expiraEn?doc.data().expiraEn.toDate():null;
+      return !expira||ahora<=expira;
+    });
+    if(!pend.length){el.innerHTML='<div class="es"><p>Sin invitaciones pendientes</p></div>';return;}
+    var rows2=pend.map(function(doc){
+      var d=doc.data();
+      var expira=d.expiraEn?d.expiraEn.toDate().toLocaleDateString('es-CL'):'---';
+      return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-token="'+doc.id+'" data-email="'+esc(d.email||'')+'" data-nombre="'+esc(d.nombreInvitado||'')+'" data-rol="'+esc(d.rol||'')+'" data-congid="'+esc(d.congId||'')+'">'
+        +(esSA?'<td style="padding:8px;font-size:11px">'+esc(d.congId||'')+'</td>':'')
+        +'<td style="padding:8px">'+esc(d.email||'---')+'</td>'
+        +'<td style="padding:8px">'+esc(d.nombreInvitado||'---')+'</td>'
+        +'<td style="padding:8px"><span class="badge bbl">'+esc(d.rol||'')+'</span></td>'
+        +'<td style="padding:8px">'+expira+'</td>'
+        +'<td style="padding:8px;white-space:nowrap">'
+        +'<button class="btn bg bsm inv-reinv-btn">Reinvitar</button> '
+        +'<button class="btn bg bsm inv-copy-btn">Copiar</button> '
+        +'<button class="btn bd2 bsm inv-cancel-btn">Cancelar</button>'
+        +'</td></tr>';
+    }).join('');
+    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+      +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+      +(esSA?'<th style="padding:8px;text-align:left">Congr.</th>':'')
+      +'<th style="padding:8px;text-align:left">Email</th>'
+      +'<th style="padding:8px;text-align:left">Nombre</th>'
+      +'<th style="padding:8px;text-align:left">Rol</th>'
+      +'<th style="padding:8px;text-align:left">Expira</th>'
+      +'<th style="padding:8px;text-align:left">Acciones</th>'
+      +'</tr></thead><tbody>'+rows2+'</tbody></table></div>';
+    el.querySelectorAll('.inv-reinv-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        usrReinvitar(tr.dataset.token,tr.dataset.email,tr.dataset.nombre,tr.dataset.rol,tr.dataset.congid);
+      });
+    });
+    el.querySelectorAll('.inv-copy-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        usrCopiarLinkDirecto(window.location.origin+window.location.pathname+'?inv='+tr.dataset.token);
+      });
+    });
+    el.querySelectorAll('.inv-cancel-btn').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var tr=btn.closest('tr');
+        usrCancelarInv(tr.dataset.token);
+      });
+    });
+  }).catch(function(e){
+    var el=document.getElementById('usr-lista-inv');
+    if(el)el.innerHTML='<div class="al alw">Error: '+e.message+'</div>';
+  });
+}
+function usrInvitar(){
+  if(!_usr||(_usr.rol!=='admin'&&_usr.rol!=='superadmin')){toast('Sin permisos','e');return;}
+  var email=document.getElementById('usr-inv-email').value.trim().toLowerCase();
+  var nombre=document.getElementById('usr-inv-nombre').value.trim();
+  var rol=document.getElementById('usr-inv-rol').value;
+  if(!email||!nombre){toast('Email y nombre son obligatorios','e');return;}
+  fbSyncBar(true,'Creando invitacion...');
+  saCrearInvitacion(email,nombre,_usr.congId,rol).then(function(link){
+    fbSyncBar(false);
+    _invLinkActual=link;
+    var linkEl=document.getElementById('usr-inv-link');
+    var linkTxt=document.getElementById('usr-inv-link-txt');
+    if(linkEl)linkEl.style.display='block';
+    if(linkTxt)linkTxt.value=link;
+    toast('Invitacion creada!','s');
+    usrCargarDatos();
+    // Intentar enviar email via EmailJS si está configurado
+    usrEnviarEmailInvitacion(email,nombre,link,rol);
+  }).catch(function(e){
+    console.error('usrInvitar error:',e);
+    fbSyncBar(false);
+    toast('Error al crear invitacion','e');
+  });
+}
+function usrEditar(email,nombre,rol){
+  openM('Editar usuario','<div class="fgrid">'
+    +'<div class="fg"><label>Nombre</label><input id="ue-nombre" value="'+esc(nombre)+'" type="text"></div>'
+    +'<div class="fg"><label>Rol</label><select id="ue-rol">'
+    +'<option value="visor" '+(rol==='visor'?'selected':'')+'>Visor</option>'
+    +'<option value="lector" '+(rol==='lector'?'selected':'')+'>Lector</option>'
+    +'<option value="coordinador" '+(rol==='coordinador'?'selected':'')+'>Coordinador</option>'
+    +'<option value="admin" '+(rol==='admin'?'selected':'')+'>Admin</option>'
+    +(_usr&&_usr.rol==='superadmin'?'<option value="superadmin" '+(rol==='superadmin'?'selected':'')+'>Super Admin</option>':'')
+    +'</select></div>'
+    +'</div>',
+    function(){
+      var nuevoNombre=document.getElementById('ue-nombre').value.trim();
+      var nuevoRol=document.getElementById('ue-rol').value;
+      if(!nuevoNombre){toast('El nombre es obligatorio','e');return;}
+      _db.collection('usuarios').doc(email).update({nombre:nuevoNombre,rol:nuevoRol})
+        .then(function(){toast('Usuario actualizado','s');closeM();usrCargarDatos();})
+        .catch(function(e){console.error(e);toast('Error al actualizar','e');});
+    }
+  );
+}
+function usrToggleActivo(email,activo){
+  _db.collection('usuarios').doc(email).update({activo:!activo}).then(function(){
+    toast('Usuario '+(activo?'desactivado':'activado'),'s');
+    usrCargarDatos();
+  });
+}
+function usrEliminar(email){
+  confirmar('Eliminar definitivamente al usuario '+email+'?',function(){
+    _db.collection('usuarios').doc(email).delete()
+      .then(function(){toast('Usuario eliminado','s');usrCargarDatos();})
+      .catch(function(e){console.error(e);toast('Error al eliminar','e');});
+  });
+}
+function usrReinvitar(tokenViejo,email,nombre,rol,congId){
+  confirmar('Crear nueva invitacion para '+email+'?',function(){
+    _db.collection('invitaciones').doc(tokenViejo).update({usada:true});
+    var congIdFinal=congId||_usr.congId;
+    saCrearInvitacion(email,nombre,congIdFinal,rol).then(function(link){
+      _invLinkActual=link;
+      var linkEl=document.getElementById('usr-inv-link');
+      var linkTxt=document.getElementById('usr-inv-link-txt');
+      if(linkEl)linkEl.style.display='block';
+      if(linkTxt)linkTxt.value=link;
+      toast('Nueva invitacion creada','s');
+      usrCargarDatos();
+    });
+  });
+}
+function usrCancelarInv(token){
+  confirmar('Cancelar esta invitacion?',function(){
+    _db.collection('invitaciones').doc(token).update({usada:true}).then(function(){
+      toast('Invitacion cancelada','s');usrCargarDatos();
+    });
+  });
+}
+function usrCopiarLinkDirecto(link){
+  navigator.clipboard.writeText(link).then(function(){
+    toast('Link copiado!','s');
+  }).catch(function(){
+    var ta=document.createElement('textarea');
+    ta.value=link;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    toast('Link copiado!','s');
+  });
+}
+function usrCompartirWhatsApp(){
+  if(!_invLinkActual)return;
+  var msg='Hola! Te invito a unirte al Coordinador de Discursos de nuestra congregacion. Accede con tu cuenta Google usando este link (expira en 48 horas):\n'+_invLinkActual;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+function usrEnviarEmailInvitacion(email,nombre,link,rol){
+  // Placeholder para integracion con servicio de email
+  // Se implementara con Zoho Mail o EmailJS cuando este configurado
+  console.log('Email invitacion pendiente de configurar para:',email);
+}
+</script>
+</body>
+</html>

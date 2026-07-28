@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Congregaciones — Coordinador de Discursos</title>
+<link rel="stylesheet" href="../css/styles.css">
+<script type="module" src="../js/supabase.js"></script>
+</head>
+<body>
+
+<!-- Login overlay -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">&#128218;</div>
+    <div class="login-title">Coordinador de Discursos</div>
+    <div class="login-sub">Inicia sesion para acceder</div>
+    <button class="login-btn" onclick="fbLoginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continuar con Google
+    </button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- Invitacion overlay -->
+<div id="inv-overlay">
+  <div class="inv-card">
+    <div style="font-size:40px;margin-bottom:12px">&#127881;</div>
+    <h2 style="font-size:18px;font-weight:700;color:var(--tx);margin-bottom:4px">Fuiste invitado</h2>
+    <div class="inv-congr-name" id="inv-congr-nombre">---</div>
+    <div class="inv-rol-label" id="inv-rol-label">---</div>
+    <div id="inv-datos"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost" onclick="invRechazar()">Cancelar</button>
+      <button class="btn btn-primary" id="inv-aceptar-btn" onclick="invAceptar()">Aceptar e ingresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <span id="modal-title"></span>
+      <button id="modal-close" onclick="closeM()">&#10005;</button>
+    </div>
+    <div id="modal-body"></div>
+    <div id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Sidebar overlay mobile -->
+<div id="sidebar-overlay"></div>
+
+<!-- Layout -->
+<div id="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div id="sbh">
+      <div class="logo-icon">&#128218;</div>
+      <div class="logo-text">Discursos Pub.</div>
+    </div>
+    <nav>
+<div class="nav-section">General</div>
+<div class="nav-item " data-page="dashboard" data-label="Dashboard" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='app.html'">&#128202;<span class="ni-label">Dashboard</span></div>
+<div class="nav-section">Coordinacion</div>
+<div class="nav-item " data-page="planificacion" data-label="Planificacion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='planificacion.html'">&#128197;<span class="ni-label">Planificacion</span></div>
+<div class="nav-item " data-page="historial" data-label="Historial" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='historial.html'">&#128336;<span class="ni-label">Historial</span></div>
+<div class="nav-item " data-page="salidas" data-label="Salidas realizadas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas realizadas</span></div>
+<div class="nav-item " data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
+<div class="nav-item " data-page="reportes" data-label="Reportes" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='reportes.html'">&#128196;<span class="ni-label">Reportes</span></div>
+<div class="nav-section">Datos</div>
+<div class="nav-item " data-page="hermanos" data-label="Hermanos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='hermanos.html'">&#128101;<span class="ni-label">Hermanos</span></div>
+<div class="nav-item " data-page="repertorio" data-label="Repertorio" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='repertorio.html'">&#127897;<span class="ni-label">Repertorio</span></div>
+<div class="nav-item " data-page="discursos" data-label="Discursos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='discursos.html'">&#128218;<span class="ni-label">Discursos</span></div>
+<div class="nav-item active" data-page="congregaciones" data-label="Congregaciones" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='congregaciones.html'">&#127968;<span class="ni-label">Congregaciones</span></div>
+<div class="nav-item " data-page="carga" data-label="Carga mensual" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='carga.html'">&#128203;<span class="ni-label">Carga mensual</span></div>
+<div class="nav-item " data-page="privilegios" data-label="Privilegios" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='privilegios.html'">&#127894;<span class="ni-label">Privilegios</span></div>
+<div class="nav-section">Sistema</div>
+<div class="nav-item " data-page="configuracion" data-label="Configuracion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='configuracion.html'">&#9881;<span class="ni-label">Configuracion</span></div>
+<div class="nav-item " data-page="respaldo" data-label="Respaldo" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='respaldo.html'">&#128190;<span class="ni-label">Respaldo</span></div>
+<div class="nav-section">Admin</div>
+<div class="nav-item " data-page="admin" data-label="Usuarios" data-roles="superadmin,admin" onclick="window.location='admin.html'">&#128737;<span class="ni-label">Usuarios</span></div>
+
+    </nav>
+    <div id="sb-user" onclick="fbCerrarSesion()"></div>
+  </aside>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Topbar -->
+    <div id="topbar">
+      <button id="topbar-toggle" aria-label="Toggle sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <div id="page-title">Congregaciones</div>
+      <div id="sync-indicator" class="sync-indicator">
+        <div class="sync-dot"></div>
+        <span class="sync-label">Sincronizando...</span>
+      </div>
+      <div id="page-meta"></div>
+    </div>
+
+    <!-- Content -->
+    <div id="content">
+
+<div class="page-header"><h1>Congregaciones</h1><p>Congregaciones externas y carga mensual</p></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div>
+<div class="card">
+  <div class="card-title">Agregar congregacion</div>
+  <div class="form-grid">
+    <div class="form-group form-span-full"><label>Nombre *</label><input id="ce-n" type="text"></div>
+    <div class="form-group form-span-full"><label>Direccion</label><input id="ce-d" type="text"></div>
+    <div class="form-group"><label>Dia reunion</label><select id="ce-dia"><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miercoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sabado</option></select></div>
+    <div class="form-group"><label>Horario</label><input id="ce-h" type="text" placeholder="16:30"></div>
+    <div class="form-group"><label>Coordinador</label><input id="ce-cn" type="text"></div>
+    <div class="form-group"><label>Telefono</label><input id="ce-ct" type="text"></div>
+    <div class="form-group form-span-full"><label>Email</label><input id="ce-ce" type="email"></div>
+    <div class="form-group form-span-full"><label>Obs.</label><input id="ce-o" type="text"></div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="agregarCE()">+ Agregar</button>
+    <button class="btn btn-ghost" onclick="importarCEMasivo()">Importar</button>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">Congregaciones registradas</div>
+  <div class="table-wrap">
+    <table><thead><tr>
+      <th>Nombre</th><th>Dia</th><th>Coordinador</th><th></th>
+    </tr></thead><tbody id="tb-ce"></tbody></table>
+  </div>
+</div>
+</div>
+<div>
+<div class="card">
+  <div class="card-title">Carga mensual</div>
+  <div class="form-grid">
+    <div class="form-group form-span-full"><label>Congregacion</label><select id="cm-cong"><option value="">Selecciona...</option></select></div>
+    <div class="form-group"><label>Hermano *</label><input id="cm-h" type="text"></div>
+    <div class="form-group"><label>N°</label><input id="cm-n" type="number"></div>
+    <div class="form-group"><label>Telefono</label><input id="cm-t" type="text"></div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="agregarMC()">+ Agregar</button>
+    <button class="btn btn-ghost" onclick="importarMCMasivo()">Importar Forma B</button>
+    <button class="btn btn-danger btn-sm" onclick="limpiarMC()">Limpiar mes</button>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">Oradores del mes</div>
+  <div class="table-wrap">
+    <table><thead><tr>
+      <th class="chk-col"><input type="checkbox" onchange="selAll('cm',this)"></th>
+      <th>Congregacion</th><th>Hermano</th><th>N°</th><th>Tel</th><th></th>
+    </tr></thead><tbody id="tb-cm"></tbody></table>
+  </div>
+</div>
+</div>
+</div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Scripts globales -->
+<script src="../js/utils.js"></script>
+
+<script src="../js/ui.js"></script>
+
+
+<!-- Script de pagina -->
+<script>
+
+function initPagina(){
+  initSidebar();
+  setNavActivo('congregaciones');
+  setPageTitle('Congregaciones');
+  
+  
+  poblarSelCE();poblarSelCMCong();
+  
+  
+  renderCE();renderMC();
+}
+
+function agregarCE(){
+  var n=document.getElementById('ce-n').value.trim();if(!n){toast('Nombre obligatorio','e');return;}
+  D.congregaciones.push({id:uid(),nombre:n,estado:document.getElementById('ce-e').value,
+    direccion:document.getElementById('ce-d').value.trim(),dia:document.getElementById('ce-dia').value,
+    horario:document.getElementById('ce-h').value.trim(),coordNombre:document.getElementById('ce-cn').value.trim(),
+    coordTel:document.getElementById('ce-ct').value.trim(),coordEmail:document.getElementById('ce-ce').value.trim(),
+    obs:document.getElementById('ce-o').value.trim()});
+  var nc=D.congregaciones[D.congregaciones.length-1];dbUpsertItem('congregaciones',nc);renderCE();poblarSelCE();poblarSelCMCong();toast('Congregacion agregada','s');
+  ['ce-n','ce-d','ce-h','ce-cn','ce-ct','ce-ce','ce-o'].forEach(function(i){document.getElementById(i).value='';});
+}
+function renderCE(){
+  var q=document.getElementById('bq-ce').value.toLowerCase();
+  var lista=D.congregaciones.filter(function(c){return !q||c.nombre.toLowerCase().includes(q);});
+  lista=ordenar(lista,'ce','nombre',1);
+  var tb=document.getElementById('tb-ce');
+  if(!lista.length){tb.innerHTML='<tr><td colspan="9"><div class="es"><div class="ic2">&#127963;</div><p>Sin congregaciones</p></div></td></tr>';return;}
+  tb.innerHTML=lista.map(function(c){
+    var sel=_sel.ce.indexOf(c.id)>=0;
+    return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('ce',c.id)+'</td>'
+      +'<td><strong>'+esc(c.nombre)+'</strong></td>'
+      +'<td><span class="badge '+(c.estado==='Activa'?'bgn':'bgr')+'">'+c.estado+'</span></td>'
+      +'<td>'+esc(c.direccion||'---')+'</td><td>'+nomDia(c.dia)+'</td><td>'+esc(c.horario||'---')+'</td>'
+      +'<td>'+esc(c.coordNombre||'---')+'</td><td>'+esc(c.coordTel||'---')+'</td>'
+      +'<td class="ac">'+btnAc('bg','editar','editCE',c.id)+btnAc('bd2','x','delCE',c.id)+'</td></tr>';
+  }).join('');
+  tb.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=_sel.ce.indexOf(c.dataset.id)>=0;});
+}
+function editCE(id){
+  var c=D.congregaciones.find(function(x){return x.id===id;});if(!c)return;
+  openM('Editar congregacion','<div class="fgrid">'
+    +'<div class="fg"><label>Nombre</label><input id="ece-n" value="'+esc(c.nombre)+'"></div>'
+    +'<div class="fg"><label>Estado</label><select id="ece-e"><option '+(c.estado==='Activa'?'selected':'')+'>Activa</option><option '+(c.estado==='Inactiva'?'selected':'')+'>Inactiva</option></select></div>'
+    +'<div class="fg"><label>Direccion</label><input id="ece-d" value="'+esc(c.direccion||'')+'"></div>'
+    +'<div class="fg"><label>Dia discurso</label><select id="ece-dia"><option value="0" '+(c.dia==='0'?'selected':'')+'>Domingo</option><option value="1" '+(c.dia==='1'?'selected':'')+'>Lunes</option><option value="2" '+(c.dia==='2'?'selected':'')+'>Martes</option><option value="3" '+(c.dia==='3'?'selected':'')+'>Miercoles</option><option value="4" '+(c.dia==='4'?'selected':'')+'>Jueves</option><option value="5" '+(c.dia==='5'?'selected':'')+'>Viernes</option><option value="6" '+(c.dia==='6'?'selected':'')+'>Sabado</option></select></div>'
+    +'<div class="fg"><label>Horario</label><input id="ece-h" value="'+esc(c.horario||'')+'"></div>'
+    +'<div class="fg"><label>Coord. nombre</label><input id="ece-cn" value="'+esc(c.coordNombre||'')+'"></div>'
+    +'<div class="fg"><label>Coord. tel</label><input id="ece-ct" value="'+esc(c.coordTel||'')+'"></div>'
+    +'<div class="fg"><label>Coord. email</label><input id="ece-ce" value="'+esc(c.coordEmail||'')+'"></div>'
+    +'<div class="fg"><label>Obs.</label><input id="ece-o" value="'+esc(c.obs||'')+'"></div></div>',
+    [{l:'Cancelar',c:'bg',fn:closeM},{l:'Guardar',c:'bp',fn:function(){
+      c.nombre=document.getElementById('ece-n').value.trim();c.estado=document.getElementById('ece-e').value;
+      c.direccion=document.getElementById('ece-d').value.trim();c.dia=document.getElementById('ece-dia').value;
+      c.horario=document.getElementById('ece-h').value.trim();c.coordNombre=document.getElementById('ece-cn').value.trim();
+      c.coordTel=document.getElementById('ece-ct').value.trim();c.coordEmail=document.getElementById('ece-ce').value.trim();
+      c.obs=document.getElementById('ece-o').value.trim();
+      dbSaveArray('congregaciones');renderCE();poblarSelCE();poblarSelCMCong();closeM();toast('Actualizado','s');
+    }}]);
+}
+function delCE(id){
+  confirmar('Eliminar esta congregacion?',function(){
+    D.congregaciones=D.congregaciones.filter(function(c){return c.id!==id;});
+    dbDeleteItem('congregaciones',id);
+    renderCE();poblarSelCE();poblarSelArreglos&&poblarSelArreglos();toast('Eliminada','s');
+  });
+}
+function poblarSelCE(){
+  var sel=document.getElementById('cfg-ce');if(!sel)return;var v=D.config.congregacionExternaMes;
+  sel.innerHTML='<option value="">-- Seleccionar --</option>'+D.congregaciones.filter(function(c){return c.estado==='Activa';}).map(function(c){return '<option value="'+esc(c.nombre)+'" '+(v===c.nombre?'selected':'')+'>'+esc(c.nombre)+'</option>';}).join('');
+}
+function importarCEMasivo(){
+  var txt=document.getElementById('iat-ce').value.trim();var ok=0,sk=0;
+  txt.split('\n').filter(function(l){return l.trim();}).forEach(function(l){
+    var p=sep(l);var n=(p[0]||'').trim();if(!n){sk++;return;}
+    if(D.congregaciones.find(function(c){return c.nombre.toLowerCase()===n.toLowerCase();})){sk++;return;}
+    var dv=parseInt(p[2]);if(isNaN(dv))dv=0;
+    D.congregaciones.push({id:uid(),nombre:n,estado:'Activa',direccion:(p[1]||'').trim(),dia:dv.toString(),
+      horario:(p[3]||'').trim(),coordNombre:(p[4]||'').trim(),coordTel:(p[5]||'').trim(),coordEmail:(p[6]||'').trim(),obs:(p[7]||'').trim()});ok++;
+  });
+  dbUpsertItem('congregaciones',ce);renderCE();poblarSelCE();poblarSelCMCong();document.getElementById('iat-ce').value='';toggleArea('ia-ce');
+  toast(ok+' importadas'+(sk?', '+sk+' omitidas':''),'s');
+}
+function congsCarga(){return uniq(D.cargaMensual.filter(function(c){return esDiscursoActivo(c.numDiscurso);}).map(function(c){return c.congregacion;})).sort(function(a,b){return a.localeCompare(b);});}
+function congsDestino(){return D.congregaciones.filter(function(c){return c.estado!=='Inactiva';}).map(function(c){return c.nombre;}).sort(function(a,b){return a.localeCompare(b);});}
+function poblarSelCMCong(){
+  ['cm-c','cm-pc'].forEach(function(sid){
+    var sel=document.getElementById(sid);if(!sel)return;var v=sel.value;
+    sel.innerHTML='<option value="">-- Seleccionar --</option>'+D.congregaciones.filter(function(c){return c.estado==='Activa';}).map(function(c){return '<option value="'+esc(c.nombre)+'">'+esc(c.nombre)+'</option>';}).join('');
+    if(v)sel.value=v;
+  });
+}
+</script>
+</body>
+</html>

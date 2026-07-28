@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Coordinador de Discursos Publicos</title>
+<link rel="stylesheet" href="css/styles.css">
+<style>
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--sidebar-bg);}
+.login-card{background:#1e293b;border-radius:20px;padding:48px 40px;max-width:400px;width:90%;text-align:center;border:1px solid rgba(255,255,255,.08);}
+.login-logo{font-size:52px;margin-bottom:16px;}
+.login-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:6px;}
+.login-sub{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:28px;line-height:1.6;}
+.login-field{width:100%;padding:12px 14px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.06);color:#fff;font-size:14px;margin-bottom:10px;}
+.login-field::placeholder{color:rgba(255,255,255,.3);}
+.login-field:focus{outline:none;border-color:var(--pr);}
+.login-btn-main{width:100%;padding:13px;background:var(--pr);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;margin-top:4px;}
+.login-btn-main:hover{background:var(--prd);}
+.login-btn-main:disabled{opacity:.5;cursor:not-allowed;}
+.login-forgot{font-size:12px;color:rgba(255,255,255,.4);cursor:pointer;margin-top:12px;display:block;text-decoration:underline;}
+.login-forgot:hover{color:rgba(255,255,255,.7);}
+.login-err{margin-top:12px;font-size:13px;color:#f87171;min-height:20px;}
+.login-version{font-size:11px;color:rgba(255,255,255,.2);margin-top:20px;}
+</style>
+</head>
+<body>
+<div class="login-card">
+  <div class="login-logo">&#128218;</div>
+  <div class="login-title">Coordinador de Discursos</div>
+  <div class="login-sub">Accede con tu email y contraseña</div>
+  <input class="login-field" id="login-email" type="email" placeholder="tu@email.com" autocomplete="email">
+  <input class="login-field" id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password"
+    onkeydown="if(event.key==='Enter')doLogin()">
+  <button class="login-btn-main" id="login-btn" onclick="doLogin()">Ingresar</button>
+  <span class="login-forgot" onclick="doResetPassword()">Olvidé mi contraseña</span>
+  <div class="login-err" id="login-err"></div>
+  <div class="login-version">v4.0 — coordinadordiscursos.cl</div>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+  window._sb = createClient(
+    'https://drfqhkvppvteqwiycbjd.supabase.co',
+    'sb_publishable_hEs_ro07hCvZXLFm_Gq88A_1kvfvqAE'
+  );
+
+  function loginErr(msg){
+    const el = document.getElementById('login-err');
+    if(el) el.textContent = msg||'';
+  }
+
+  window.doLogin = async function(){
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    if(!email||!pass){ loginErr('Ingresa tu email y contraseña'); return; }
+    const btn = document.getElementById('login-btn');
+    if(btn){ btn.disabled=true; btn.textContent='Ingresando...'; }
+    loginErr('');
+    const { data, error } = await _sb.auth.signInWithPassword({ email, password: pass });
+    if(error){
+      loginErr('Email o contraseña incorrectos');
+      if(btn){ btn.disabled=false; btn.textContent='Ingresar'; }
+      return;
+    }
+    // Verificar acceso
+    const { data: usr, error: e2 } = await _sb.from('usuarios')
+      .select('*').eq('email', email).single();
+    if(e2||!usr||!usr.activo){
+      loginErr('No tienes acceso. Contacta al administrador.');
+      await _sb.auth.signOut();
+      if(btn){ btn.disabled=false; btn.textContent='Ingresar'; }
+      return;
+    }
+    window.location.href = 'app.html';
+  };
+
+  window.doResetPassword = async function(){
+    const email = document.getElementById('login-email').value.trim();
+    if(!email){ loginErr('Ingresa tu email primero'); return; }
+    const { error } = await _sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/index.html'
+    });
+    if(error){ loginErr('Error: ' + error.message); return; }
+    loginErr('');
+    alert('Se envió un email para restablecer tu contraseña. Revisa tu bandeja.');
+  };
+
+  // Si ya tiene sesion, redirigir
+  const { data: { session } } = await _sb.auth.getSession();
+  if(session) window.location.href = 'app.html';
+</script>
+</body>
+</html>

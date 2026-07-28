@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Planificacion — Coordinador de Discursos</title>
+<link rel="stylesheet" href="../css/styles.css">
+<script type="module" src="../js/supabase.js"></script>
+</head>
+<body>
+
+<!-- Login overlay -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">&#128218;</div>
+    <div class="login-title">Coordinador de Discursos</div>
+    <div class="login-sub">Inicia sesion para acceder</div>
+    <button class="login-btn" onclick="fbLoginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continuar con Google
+    </button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- Invitacion overlay -->
+<div id="inv-overlay">
+  <div class="inv-card">
+    <div style="font-size:40px;margin-bottom:12px">&#127881;</div>
+    <h2 style="font-size:18px;font-weight:700;color:var(--tx);margin-bottom:4px">Fuiste invitado</h2>
+    <div class="inv-congr-name" id="inv-congr-nombre">---</div>
+    <div class="inv-rol-label" id="inv-rol-label">---</div>
+    <div id="inv-datos"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost" onclick="invRechazar()">Cancelar</button>
+      <button class="btn btn-primary" id="inv-aceptar-btn" onclick="invAceptar()">Aceptar e ingresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <span id="modal-title"></span>
+      <button id="modal-close" onclick="closeM()">&#10005;</button>
+    </div>
+    <div id="modal-body"></div>
+    <div id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Sidebar overlay mobile -->
+<div id="sidebar-overlay"></div>
+
+<!-- Layout -->
+<div id="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div id="sbh">
+      <div class="logo-icon">&#128218;</div>
+      <div class="logo-text">Discursos Pub.</div>
+    </div>
+    <nav>
+<div class="nav-section">General</div>
+<div class="nav-item " data-page="dashboard" data-label="Dashboard" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='app.html'">&#128202;<span class="ni-label">Dashboard</span></div>
+<div class="nav-section">Coordinacion</div>
+<div class="nav-item active" data-page="planificacion" data-label="Planificacion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='planificacion.html'">&#128197;<span class="ni-label">Planificacion</span></div>
+<div class="nav-item " data-page="historial" data-label="Historial" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='historial.html'">&#128336;<span class="ni-label">Historial</span></div>
+<div class="nav-item " data-page="salidas" data-label="Salidas realizadas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas realizadas</span></div>
+<div class="nav-item " data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
+<div class="nav-item " data-page="reportes" data-label="Reportes" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='reportes.html'">&#128196;<span class="ni-label">Reportes</span></div>
+<div class="nav-section">Datos</div>
+<div class="nav-item " data-page="hermanos" data-label="Hermanos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='hermanos.html'">&#128101;<span class="ni-label">Hermanos</span></div>
+<div class="nav-item " data-page="repertorio" data-label="Repertorio" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='repertorio.html'">&#127897;<span class="ni-label">Repertorio</span></div>
+<div class="nav-item " data-page="discursos" data-label="Discursos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='discursos.html'">&#128218;<span class="ni-label">Discursos</span></div>
+<div class="nav-item " data-page="congregaciones" data-label="Congregaciones" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='congregaciones.html'">&#127968;<span class="ni-label">Congregaciones</span></div>
+<div class="nav-item " data-page="carga" data-label="Carga mensual" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='carga.html'">&#128203;<span class="ni-label">Carga mensual</span></div>
+<div class="nav-item " data-page="privilegios" data-label="Privilegios" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='privilegios.html'">&#127894;<span class="ni-label">Privilegios</span></div>
+<div class="nav-section">Sistema</div>
+<div class="nav-item " data-page="configuracion" data-label="Configuracion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='configuracion.html'">&#9881;<span class="ni-label">Configuracion</span></div>
+<div class="nav-item " data-page="respaldo" data-label="Respaldo" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='respaldo.html'">&#128190;<span class="ni-label">Respaldo</span></div>
+<div class="nav-section">Admin</div>
+<div class="nav-item " data-page="admin" data-label="Usuarios" data-roles="superadmin,admin" onclick="window.location='admin.html'">&#128737;<span class="ni-label">Usuarios</span></div>
+
+    </nav>
+    <div id="sb-user" onclick="fbCerrarSesion()"></div>
+  </aside>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Topbar -->
+    <div id="topbar">
+      <button id="topbar-toggle" aria-label="Toggle sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <div id="page-title">Planificacion</div>
+      <div id="sync-indicator" class="sync-indicator">
+        <div class="sync-dot"></div>
+        <span class="sync-label">Sincronizando...</span>
+      </div>
+      <div id="page-meta"></div>
+    </div>
+
+    <!-- Content -->
+    <div id="content">
+
+<div class="page-header"><h1>Planificacion</h1><p>Programa mensual de discursos</p></div>
+<div class="card">
+  <div class="table-toolbar">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label style="font-size:13px;font-weight:600">Mes:</label>
+      <select id="pl-mes" onchange="guardarConfig()" style="padding:6px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px">
+        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+        <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+        <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+        <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+      </select>
+      <input id="pl-anio" type="number" onchange="guardarConfig()" style="width:80px;padding:6px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px">
+      <label style="font-size:13px">Salidas:</label>
+      <select id="pl-salidas" onchange="toggleSalidas()" style="padding:6px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px">
+        <option value="no">No</option><option value="si">Si</option>
+      </select>
+    </div>
+    <div class="btn-group" style="margin-top:0">
+      <button class="btn btn-primary" onclick="doGenerar()">Generar fechas</button>
+      <button class="btn btn-ghost" onclick="expPrograma('pdf')">PDF</button>
+      <button class="btn btn-ghost" onclick="expPrograma('word')">Word</button>
+      <button class="btn btn-ghost" onclick="exportarConfirmacionArreglo('pdf')">Confirmacion PDF</button>
+      <button class="btn btn-danger btn-sm" onclick="cerrarMes()">Cerrar mes</button>
+    </div>
+  </div>
+  <div id="pval"></div>
+</div>
+<div class="card">
+  <div class="card-title">Oradores que vienen</div>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th class="chk-col"><input type="checkbox" onchange="selAll('pe',this)"></th>
+      <th>Tipo</th><th>Fecha</th><th>Congregacion</th><th>Hermano</th>
+      <th>N°</th><th>Titulo</th><th>Estado</th><th>Confirmado</th><th>Obs.</th><th></th>
+    </tr></thead>
+    <tbody id="tb-pe"></tbody>
+  </table></div>
+  <div class="btn-group" data-roles="coordinador,admin,superadmin">
+    <button class="btn btn-ghost btn-sm" onclick="agregarFE()">+ Agregar orador</button>
+  </div>
+</div>
+<div class="card" id="card-salidas" style="display:none">
+  <div class="card-title">Hermanos que salen</div>
+  <div id="sug-salidas"></div>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th class="chk-col"><input type="checkbox" onchange="selAll('ps',this)"></th>
+      <th>Fecha</th><th>Congregacion destino</th><th>Hermano</th>
+      <th>N°</th><th>Titulo</th><th>Estado</th><th>Confirmado</th><th>Obs.</th><th></th>
+    </tr></thead>
+    <tbody id="tb-ps"></tbody>
+  </table></div>
+  <div class="btn-group" data-roles="coordinador,admin,superadmin">
+    <button class="btn btn-ghost btn-sm" onclick="agregarFS()">+ Agregar salida</button>
+  </div>
+</div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Scripts globales -->
+<script src="../js/utils.js"></script>
+
+<script src="../js/ui.js"></script>
+
+
+<!-- Script de pagina -->
+<script>
+
+function initPagina(){
+  initSidebar();
+  setNavActivo('planificacion');
+  setPageTitle('Planificacion');
+  cargarConfigPlan();
+  renderPlan();
+}
+function cargarConfigPlan(){
+  var c=D.config;
+  var selMes=document.getElementById('pl-mes');
+  var inpAnio=document.getElementById('pl-anio');
+  var selSal=document.getElementById('pl-salidas');
+  if(selMes)selMes.value=c.mes||new Date().getMonth()+1;
+  if(inpAnio)inpAnio.value=c.anio||new Date().getFullYear();
+  if(selSal)selSal.value=c.habraSalidasMes||'no';
+  toggleSalidas();
+}
+function guardarConfig(){
+  var selMes=document.getElementById('pl-mes');
+  var inpAnio=document.getElementById('pl-anio');
+  if(selMes)D.config.mes=parseInt(selMes.value);
+  if(inpAnio)D.config.anio=parseInt(inpAnio.value);
+  dbSaveDoc('config');
+}
+function toggleSalidas(){
+  var sel=document.getElementById('pl-salidas');
+  var card=document.getElementById('card-salidas');
+  var val=sel?sel.value:'no';
+  D.config.habraSalidasMes=val;
+  if(card)card.style.display=val==='si'?'block':'none';
+}
+function doGenerar(){
+  confirmar('Generar fechas del mes? Se reemplazara la planificacion actual.',function(){
+    _doGenerar();
+  });
+}
+function cerrarMes(){
+  confirmar('Cerrar el mes y pasar al historial?',function(){
+    pasarPlanAHistoriales();
+  });
+}
+function renderPlan(){
+  sincronizarDiscursosInactivos(false);
+  var sel=document.getElementById('pl-salidas');if(sel)sel.value=D.config.habraSalidasMes||'no';
+  var scsel=document.getElementById('pl-sc');if(scsel)scsel.value=D.config.habraSCMes||'no';
+  var card=document.getElementById('card-salidas-plan');if(card)card.style.display=haySalidasPlan()?'block':'none';
+  var ext=D.planificacion.filter(function(p){return p.tipo==='Externo';});
+  var sal=D.planificacion.filter(function(p){return p.tipo==='Salida'||p.tipo==='Local';});
+  renderPlanExt(ext);
+  if(haySalidasPlan()){renderSugSalidas();renderPlanSal(sal);}
+  valPlan();
+}
+function renderPlanExt(lista){
+  var tb=document.getElementById('tb-pe');
+  if(!lista.length){tb.innerHTML='<tr><td colspan="11" style="text-align:center;color:var(--tx3);padding:20px">Sin oradores. Genera las fechas del mes o usa + Agregar.</td></tr>';return;}
+  var congs=congsCarga();
+  var hermLoc=D.locales.filter(function(h){return h.estado==='Activo'&&h.puedeLocal==='si';}).sort(function(a,b){return a.nombre.localeCompare(b.nombre);});
+  var html='';
+  lista.forEach(function(p){
+    var pid=p.id,sel=_sel.pe.indexOf(pid)>=0;
+    var info=(p.numDiscurso&&!esSC(p))?calcRec(parseInt(p.numDiscurso)):null;
+    var eB='bgr',eT='---';
+    if(esSC(p)){eB='bbl';eT='Especial';}
+    else if(info&&p.numDiscurso){eB=info.estado==='Disponible'?'bgn':'brd';eT=info.estado==='Disponible'?'OK':'Bloq.';}
+    var scOpt=(haySCPlan()||esSC(p))?'<option value="SC" '+(esSC(p)?'selected':'')+'>Superintendente</option>':'';
+    var selOr='<select class="pi" data-id="'+pid+'" onchange="pOrig(this)" style="width:132px">'
+      +'<option value="Externo" '+(p._origen!=='Local'&&!esSC(p)?'selected':'')+'>Externo</option>'
+      +'<option value="Local" '+(p._origen==='Local'?'selected':'')+'>Local</option>'
+      +scOpt+'</select>';
+    var celCong,selH,selD,tituloCel;
+    if(esSC(p)){
+      if(D.config.scNombre)p.hermano=D.config.scNombre;
+      p.congregacion='Superintendente de Circuito';
+      celCong='<input type="text" class="pi" value="Superintendente de Circuito" disabled style="min-width:160px">';
+      selH='<input type="text" class="pi" value="'+esc(p.hermano||D.config.scNombre||'')+'" disabled style="min-width:150px">';
+      selD='<input class="pi" type="number" style="width:74px" value="'+esc(p.numDiscurso||'')+'" data-id="'+pid+'" data-f="numDiscurso" onchange="pFld(this)" placeholder="Opc.">';
+      tituloCel='<input type="text" class="pi" value="'+esc(p.titulo||'')+'" data-id="'+pid+'" data-f="titulo" onchange="pFld(this)" placeholder="Tema obligatorio" style="min-width:210px">';
+    }else if(p._origen==='Local'){
+      celCong='<input type="text" class="pi" value="'+esc(D.miCongr.nombre||'Mi Congregacion')+'" disabled style="min-width:120px">';
+      selH='<select class="pi" data-id="'+pid+'" onchange="pEH(this)" style="min-width:125px"><option value="">-- Hermano --</option>'+hermLoc.map(function(h){return '<option value="L:'+h.id+'" '+(p._hermanoId===h.id?'selected':'')+'>'+esc(h.nombre)+'</option>';}).join('')+'</select>';
+      if(p._hermanoId){var rl=D.repertorioLocal.filter(function(r){return r.hermanoId===p._hermanoId&&r.puedeLocal==='si'&&r.estado==='Activo'&&esDiscursoActivo(r.numDiscurso);}).sort(function(a,b){return a.numDiscurso-b.numDiscurso;});selD='<select class="pi" data-id="'+pid+'" onchange="pED(this)" style="width:64px"><option value="">--</option>'+rl.map(function(r){return '<option value="'+r.numDiscurso+'" '+(p.numDiscurso==r.numDiscurso?'selected':'')+'>'+r.numDiscurso+'</option>';}).join('')+'</select>';}
+      else selD='<input class="pi" type="number" style="width:64px" disabled placeholder="--">';
+      tituloCel=esc(p.titulo||'---');
+    }else{
+      celCong='<select class="pi" data-id="'+pid+'" onchange="pCongExt(this)" style="min-width:130px">'+optionList(congs,p.congregacion,'-- Congregacion --')+'</select>';
+      var hermanos=p.congregacion?uniq(D.cargaMensual.filter(function(cm){return cm.congregacion===p.congregacion&&esDiscursoActivo(cm.numDiscurso);}).map(function(cm){return cm.hermano;})).sort(function(a,b){return a.localeCompare(b);}):[];
+      selH='<select class="pi" data-id="'+pid+'" onchange="pEH(this)" style="min-width:125px" '+(!p.congregacion?'disabled':'')+'><option value="">-- Hermano --</option>'+hermanos.map(function(h){return '<option value="E:'+esc(h)+'" '+(p.hermano===h?'selected':'')+'>'+esc(h)+'</option>';}).join('')+'</select>';
+      if(p.hermano){var cms=D.cargaMensual.filter(function(cm){return cm.congregacion===p.congregacion&&cm.hermano===p.hermano&&esDiscursoActivo(cm.numDiscurso);}).sort(function(a,b){return a.numDiscurso-b.numDiscurso;});selD='<select class="pi" data-id="'+pid+'" onchange="pED(this)" style="width:64px"><option value="">--</option>'+cms.map(function(cm){return '<option value="'+cm.numDiscurso+'" '+(p.numDiscurso==cm.numDiscurso?'selected':'')+'>'+cm.numDiscurso+'</option>';}).join('')+'</select>';}
+      else selD='<input class="pi" type="number" style="width:64px" disabled placeholder="--">';
+      tituloCel=esc(p.titulo||'---');
+    }
+    html+='<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('pe',pid)+'</td>'
+      +'<td>'+selOr+'</td>'
+      +'<td><input type="date" class="pi" value="'+esc(p.fecha||'')+'" data-id="'+pid+'" data-f="fecha" onchange="pFld(this)"></td>'
+      +'<td>'+celCong+'</td>'
+      +'<td>'+selH+'</td><td>'+selD+'</td>'
+      +'<td style="min-width:130px;font-size:12px">'+tituloCel+'</td>'
+      +'<td><span class="badge '+eB+'">'+eT+'</span></td>'
+      +'<td><select class="pi" data-id="'+pid+'" data-f="confirmado" onchange="pFld(this)"><option '+(normConf(p.confirmado)==='Por confirmar'?'selected':'')+'>Por confirmar</option><option '+(normConf(p.confirmado)==='Si'?'selected':'')+'>Si</option><option '+(normConf(p.confirmado)==='No'?'selected':'')+'>No</option></select></td>'
+      +'<td><input type="text" class="pi" value="'+esc(p.obs||'')+'" data-id="'+pid+'" data-f="obs" onchange="pFld(this)" placeholder="Obs." style="min-width:60px"></td>'
+      +'<td><button class="btn bd2 bsm" data-id="'+pid+'" onclick="delFP(this)">x</button></td></tr>';
+  });
+  tb.innerHTML=html;
+  tb.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=_sel.pe.indexOf(c.dataset.id)>=0;});
+}
+function renderPlanSal(lista){
+  var tb=document.getElementById('tb-ps');
+  if(!lista.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--tx3);padding:20px">Sin salidas. Usa + Agregar salida si este mes corresponde.</td></tr>';return;}
+  var pS=D.locales.filter(function(h){return h.estado==='Activo'&&h.puedeAfuera==='si';}).sort(function(a,b){return a.nombre.localeCompare(b.nombre);});
+  var destinos=congsDestino();
+  var html='';
+  lista.forEach(function(p){
+    var pid=p.id,sel=_sel.ps.indexOf(pid)>=0;
+    var infoSal=p._hermanoId?calcRecSalida(p._hermanoId,pid):null;
+    var eSB=infoSal?(infoSal.estado==='Disponible'?'bgn':'brd'):'bgr';
+    var eST=infoSal?(infoSal.estado==='Disponible'?'OK':'Bloq.'):'---';
+    var opH=pS.map(function(h){return '<option value="'+h.id+'" '+(p._hermanoId===h.id?'selected':'')+'>'+esc(h.nombre)+'</option>';}).join('');
+    var selC='<select class="pi" data-id="'+pid+'" onchange="pSDest(this)" style="min-width:130px">'+optionList(destinos,p.congregacion,'-- Destino --')+'</select>';
+    var selH='<select class="pi" data-id="'+pid+'" onchange="pSH(this)" style="min-width:125px"><option value="">-- Hermano --</option>'+opH+'</select>';
+    var selD;
+    if(p._hermanoId){var rep=D.repertorioLocal.filter(function(r){return r.hermanoId===p._hermanoId&&r.puedeAfuera==='si'&&r.estado==='Activo'&&esDiscursoActivo(r.numDiscurso);}).sort(function(a,b){return a.numDiscurso-b.numDiscurso;});selD='<select class="pi" data-id="'+pid+'" onchange="pSD(this)" style="width:64px"><option value="">--</option>'+rep.map(function(r){return '<option value="'+r.numDiscurso+'" '+(p.numDiscurso==r.numDiscurso?'selected':'')+'>'+r.numDiscurso+'</option>';}).join('')+'</select>';}
+    else selD='<input class="pi" type="number" style="width:64px" disabled placeholder="--">';
+    html+='<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('ps',pid)+'</td>'
+      +'<td><input type="date" class="pi" value="'+esc(p.fecha||'')+'" data-id="'+pid+'" data-f="fecha" onchange="pFld(this)"></td>'
+      +'<td>'+selC+'</td>'
+      +'<td>'+selH+'</td><td>'+selD+'</td>'
+      +'<td style="min-width:130px;font-size:12px">'+esc(p.titulo||'---')+'</td>'
+      +'<td><span class="badge '+eSB+'">'+eST+'</span>'+(infoSal&&infoSal.ultima!=='Nunca'?'<br><span style="font-size:11px;color:var(--tx3)">'+(infoSal.motivo?esc(infoSal.motivo)+' · ':'')+fmtF(infoSal.ultima)+' · '+infoSal.dias+' dias al 1 de '+nMes(D.config.mes)+'</span>':'')+'</td>'
+      +'<td><select class="pi" data-id="'+pid+'" data-f="confirmado" onchange="pFld(this)"><option '+(normConf(p.confirmado)==='Por confirmar'?'selected':'')+'>Por confirmar</option><option '+(normConf(p.confirmado)==='Si'?'selected':'')+'>Si</option><option '+(normConf(p.confirmado)==='No'?'selected':'')+'>No</option></select></td>'
+      +'<td><input type="text" class="pi" value="'+esc(p.obs||'')+'" data-id="'+pid+'" data-f="obs" onchange="pFld(this)" placeholder="Obs." style="min-width:60px"></td>'
+      +'<td><button class="btn bd2 bsm" data-id="'+pid+'" onclick="delFP(this)">x</button></td></tr>';
+  });
+  tb.innerHTML=html;
+  tb.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=_sel.ps.indexOf(c.dataset.id)>=0;});
+}
+function renderSugSalidas(){
+  var box=document.getElementById('sug-salidas');if(!box)return;
+  var lista=sugerenciasSalidas();
+  if(!lista.length){box.innerHTML='<div class="al als" style="margin-bottom:10px">No hay hermanos pendientes de salida segun los plazos configurados: ancianos sobre 2 meses y siervos ministeriales sobre 4 meses.</div>';return;}
+  var rows=lista.map(function(x){
+    var ult=x.ultima?fmtF(x.ultima)+'<br><span style="font-size:11px;color:var(--tx3)">'+x.dias+' dias al 1 de '+nMes(D.config.mes)+(x.origen?' · '+esc(x.origen):'')+'</span>':'Nunca';
+    return '<tr><td>'+esc(x.h.nombre)+'</td><td>'+esc(x.h.nombramiento)+'</td><td>'+ult+'</td><td>'+x.discursos+'</td><td><span class="badge bye">'+x.rec+'</span></td><td><button class="btn bp bsm" data-id="'+x.h.id+'" onclick="usarSugSalida(this)">Usar</button></td></tr>';
+  }).join('');
+  box.innerHTML='<div class="al alw" style="margin-bottom:10px"><strong>Hermanos sugeridos para salir</strong><br>Se consideran solo hermanos activos, disponibles para salir, con repertorio marcado para salida, sin asignaciones en el mes configurado, y que cumplan la rotacion: ancianos 2 meses / siervos ministeriales 4 meses. El calculo se realiza al 1 de '+nMes(D.config.mes)+' '+D.config.anio+'.</div>'
+    +'<div class="tw"><table><thead><tr><th>Hermano</th><th>Nombramiento</th><th>Ultima asignacion</th><th>Discursos disponibles</th><th>Recomendacion</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+function pFld(el){
+  var p=D.planificacion.find(function(x){return x.id===el.dataset.id;});
+  if(!p)return;
+  p[el.dataset.f]=el.value;
+  /* Si cambia el numero de discurso, actualizar titulo desde catalogo */
+  if(el.dataset.f==='numDiscurso'&&el.value){
+    var num=parseInt(el.value);
+    var disc=D.discursos.find(function(d){return d.numero===num;});
+    if(disc&&disc.estado!=='Inactivo'){
+      p.titulo=disc.titulo||'';
+    }else if(!disc){
+      p.titulo='';
+    }
+  }
+  dbUpsertItem('planificacion',p);
+  if(el.dataset.f==='fecha'||el.dataset.f==='numDiscurso')renderPlan();
+  else valPlan();
+}
+function delFP(el){
+  var id=el.dataset.id;
+  D.planificacion=D.planificacion.filter(function(p){return p.id!==id;});
+  dbDeleteItem('planificacion',id);
+  renderPlan();
+}
+function agregarFE(){
+  var item={id:uid(),tipo:'Externo',_origen:'Externo',_hermanoId:'',fecha:'',congregacion:'',hermano:'',numDiscurso:'',titulo:'',confirmado:'Por confirmar',obs:''};
+  D.planificacion.push(item);
+  dbUpsertItem('planificacion',item);
+  renderPlan();
+}
+function agregarFS(){if(!haySalidasPlan()){D.config.habraSalidasMes='si';}D.planificacion.push({id:uid(),tipo:'Salida',_origen:'Local',_hermanoId:'',fecha:'',congregacion:D.config.congregacionExternaMes||'',hermano:'',numDiscurso:'',titulo:'',confirmado:'Por confirmar',obs:''});dbSaveArray('planificacion');renderPlan();}
+function esSC(p){return p&&p._origen==='SC';}
+function haySalidasPlan(){return D.config&&D.config.habraSalidasMes==='si';}
+function haySCPlan(){return D.config&&D.config.habraSCMes==='si';}
+function valPlan(){
+  sincronizarDiscursosInactivos(false);
+  var al=[];
+  var ext=D.planificacion.filter(function(p){return p.tipo==='Externo'&&!esSC(p);});
+  var sal=D.planificacion.filter(function(p){return p.tipo==='Salida'||p.tipo==='Local';});
+  var nums=ext.filter(function(p){return p.numDiscurso&&esDiscursoActivo(p.numDiscurso);}).map(function(p){return parseInt(p.numDiscurso);});
+  var dup=nums.filter(function(n,i){return nums.indexOf(n)!==i;});
+  if(dup.length)al.push('Discursos repetidos en nuestra congregacion: N '+[...new Set(dup)].join(', '));
+  D.planificacion.forEach(function(p){if(p.numDiscurso&&esDiscursoInactivo(p.numDiscurso))al.push('N '+p.numDiscurso+' esta inactivo y no puede usarse en programacion.');});
+  ext.forEach(function(p){
+    if(p.numDiscurso&&!esSC(p)&&esDiscursoActivo(p.numDiscurso)){
+      var r=calcRec(parseInt(p.numDiscurso));
+      if(r.estado==='Bloqueado')al.push('N '+p.numDiscurso+' ('+p.hermano+'): bloqueado al 1 de '+nMes(D.config.mes)+' - '+r.dias+' dias desde ultima vez (min '+D.config.diasBloqueo+')');
+    }
+  });
+  if(haySalidasPlan()){
+    sal.forEach(function(p){
+      if(p._hermanoId){
+        var rs=calcRecSalida(p._hermanoId,p.id);
+        if(rs.estado==='Bloqueado')al.push(p.hermano+': '+(rs.motivo?rs.motivo+'. ':'')+'ultima asignacion el '+fmtF(rs.ultima)+'; '+rs.dias+' dias al 1 de '+nMes(D.config.mes)+' (regla: '+(rs.limiteMeses||limiteSalidaMeses(D.locales.find(function(h){return h.id===p._hermanoId;})))+' meses; corte '+(rs.corte?fmtF(rs.corte):'')+')');
+      }
+    });
+  }
+  D.planificacion.filter(function(p){return esSC(p);}).forEach(function(p){
+    if(!(D.config.scNombre||'').trim())al.push('Hay una fila del Superintendente de Circuito, pero no esta registrado su nombre en Configuracion.');
+    if(!p.titulo)al.push('Falta el tema obligatorio del Superintendente de Circuito para la fecha '+(p.fecha?fmtF(p.fecha):'sin fecha')+'.');
+  });
+  if(!haySalidasPlan()&&D.planificacion.some(function(p){return p.tipo==='Salida'||p.tipo==='Local';}))
+    al.push('Hay salidas cargadas, pero la seccion de salidas esta desactivada. No se exportaran ni cerraran al mes.');
+  var incExt=D.planificacion.filter(function(p){return p.tipo==='Externo'&&!esSC(p)&&(!p.hermano||!p.numDiscurso||!esDiscursoActivo(p.numDiscurso));}).length;
+  var incSal=sal.filter(function(p){return !p.hermano||!p.numDiscurso||!esDiscursoActivo(p.numDiscurso);}).length;
+  if(incExt)al.push(incExt+' orador(es) sin hermano, sin discurso o con discurso inactivo. Quedaran fuera al cerrar el mes.');
+  if(incSal&&haySalidasPlan())al.push(incSal+' salida(s) sin hermano, sin discurso o con discurso inactivo. Quedaran fuera al cerrar el mes.');
+  document.getElementById('pval').innerHTML=al.length
+    ?al.map(function(a){return '<div class="al alw">'+a+'</div>';}).join('')
+    :'<div class="al als">Sin alertas.</div>';
+}
+function _doGenerar(){
+  var c=D.config,mc=D.miCongr;
+  var fExt=fechasMes(c.mes,c.anio,mc.dia);
+  D.planificacion=[];
+  // Filas para oradores que vienen
+  fExt.forEach(function(f){
+    D.planificacion.push({id:uid(),tipo:'Externo',_origen:'Externo',_hermanoId:'',fecha:f,congregacion:'',hermano:'',numDiscurso:'',titulo:'',confirmado:'Por confirmar',obs:''});
+  });
+  // Si hay salidas activas y congregacion externa configurada, generar fechas de salida
+  if(haySalidasPlan()&&c.congregacionExternaMes){
+    var ce=D.congregaciones.find(function(x){return x.nombre===c.congregacionExternaMes;});
+    if(ce&&ce.dia!==undefined&&ce.dia!==''){
+      var fSal=fechasMes(c.mes,c.anio,ce.dia);
+      fSal.forEach(function(f){
+        D.planificacion.push({id:uid(),tipo:'Salida',_origen:'Local',_hermanoId:'',fecha:f,congregacion:c.congregacionExternaMes,hermano:'',numDiscurso:'',titulo:'',confirmado:'Por confirmar',obs:''});
+      });
+      toast('Generadas '+fExt.length+' fechas de entrada y '+fSal.length+' fechas de salida','s');
+    }else{
+      toast('Generadas '+fExt.length+' fechas. Configura el dia de reunion de la congregacion externa para generar salidas automaticamente.','w');
+    }
+  }else{
+    toast('Generadas '+fExt.length+' fechas para discursos en nuestra congregacion','s');
+  }
+  dbSaveArray('planificacion');renderPlan();
+}
+function pasarPlanAHistoriales(lista){
+  var res={internos:0,salidas:0};
+  lista.forEach(function(p){
+    if(!p.fecha||!p.hermano)return;
+    if(p.tipo==='Salida'||p.tipo==='Local'){
+      var numS=parseInt(p.numDiscurso);if(!numS||!esDiscursoActivo(numS))return;
+      var yaS=D.salidasRealizadas.find(function(s){return s.fecha===p.fecha&&s.numDiscurso==numS&&s.hermano===p.hermano&&s.congregacion===p.congregacion;});
+      if(!yaS){D.salidasRealizadas.push({id:uid(),fecha:p.fecha,congregacion:p.congregacion,hermano:p.hermano,hermanoId:p._hermanoId||'',telefono:p.telefono||telefonoParaPlan(p),numDiscurso:numS,titulo:p.titulo,obs:p.obs||''});res.salidas++;}
+    }else if(esSC(p)){
+      var numSC=parseInt(p.numDiscurso)||'';
+      var yaSC=D.historial.find(function(h){return h.fecha===p.fecha&&h.tipo==='Superintendente de Circuito'&&h.hermano===p.hermano&&h.titulo===p.titulo;});
+      if(!yaSC){D.historial.push({id:uid(),fecha:p.fecha,tipo:'Superintendente de Circuito',congregacion:'Superintendente de Circuito',hermano:p.hermano,telefono:D.config.scTel||p.telefono||'',numDiscurso:numSC,titulo:p.titulo,obs:p.obs||''});res.internos++;}
+    }else{
+      var num=parseInt(p.numDiscurso);if(!num||!esDiscursoActivo(num))return;
+      var tipo=p._origen==='Local'?'Local':'Externo';
+      var ya=D.historial.find(function(h){return h.fecha===p.fecha&&h.numDiscurso==num&&h.hermano===p.hermano;});
+      if(!ya){D.historial.push({id:uid(),fecha:p.fecha,tipo:tipo,congregacion:p.congregacion,hermano:p.hermano,telefono:p.telefono||telefonoParaPlan(p),numDiscurso:num,titulo:p.titulo,obs:p.obs||''});res.internos++;}
+    }
+  });
+  return res;
+}
+function sugerenciasSalidas(){
+  var lista=[];
+  D.locales.filter(function(h){return h.estado==='Activo'&&h.puedeAfuera==='si';}).forEach(function(h){
+    var mesAsignado=asignacionMesHermano(h,'');
+    if(mesAsignado)return;
+    var reps=D.repertorioLocal.filter(function(r){return r.hermanoId===h.id&&r.estado==='Activo'&&r.puedeAfuera==='si'&&esDiscursoActivo(r.numDiscurso);}).sort(function(a,b){return a.numDiscurso-b.numDiscurso;});
+    if(!reps.length)return;
+    var ult=ultimaAsignacionHermano(h,'');
+    var dias=ult?diasDesde(ult.fecha,refMes()):Infinity;
+    var lim=limiteSalidaDias(h);
+    if(!ult||cumpleRotacionSalida(h,ult.fecha)){
+      lista.push({h:h,ultima:ult?ult.fecha:null,origen:ult?ult.origen:'',dias:dias,limite:lim,limiteMeses:limiteSalidaMeses(h),discursos:reps.map(function(r){return r.numDiscurso;}).join(' - '),rec:!ult?'Prioridad alta':'Deberia salir'});
+    }
+  });
+  return lista.sort(function(a,b){
+    if(a.dias===Infinity&&b.dias!==Infinity)return -1;
+    if(b.dias===Infinity&&a.dias!==Infinity)return 1;
+    return b.dias-a.dias;
+  });
+}
+function congsCarga(){return uniq(D.cargaMensual.filter(function(c){return esDiscursoActivo(c.numDiscurso);}).map(function(c){return c.congregacion;})).sort(function(a,b){return a.localeCompare(b);});}
+function congsDestino(){return D.congregaciones.filter(function(c){return c.estado!=='Inactiva';}).map(function(c){return c.nombre;}).sort(function(a,b){return a.localeCompare(b);});}
+function telefonoParaPlan(p){return telefonoOrador(p.congregacion,p.hermano,p.numDiscurso,esSC(p)?'Superintendente de Circuito':(p._origen==='Local'?'Local':'Externo'));}
+function esAsignacionLocalPlan(p){return p&&(p.tipo==='Salida'||p.tipo==='Local'||p._origen==='Local');}
+function planPermiteDiscurso(p){
+  return esSC(p)||!p.numDiscurso||esDiscursoActivo(p.numDiscurso);
+}
+function plantillaDefault(){
+  return 'ARREGLO DE CONFERENCIAS CON {{congregacionDestino}}\n\nA: {{coordDestNombre}}\n\nEstimado hermano {{coordDestNombre}}:\n\nJunto con saludarle y esperando que se encuentre bien, es un agrado para nosotros contar con la oportunidad de realizar el arreglo de conferencias con su congregacion para el mes de {{mes}}. En armonia con lo anterior, compartimos los datos necesarios para contactarnos ante cualquier consulta o inquietud:\n\n- Congregacion {{miCongr}} - Circuito {{circuito}}\n- Direccion del Salon del Reino: {{direccion}}\n- Horario de reunion: {{dia}} {{horario}}\n- Coordinador de discursos publicos: {{coordNombre}}, {{coordTel}}, {{coordEmail}}\n- Contacto de Audio y Video: {{avNombre}}, {{avTel}}, {{avEmail}}\n- Google Maps del Salon: {{mapsSalon}}\n\nTodas las semanas tenemos el arreglo de hospitalidad con los hermanos que nos visitan. Por esta razon, les pedimos que indiquen a los hermanos que nos visitaran si podran quedarse a la hospitalidad, a mas tardar el miercoles de cada semana, para que los hermanos de cada grupo puedan hacer los arreglos correspondientes.\n\nEn la siguiente pagina (Anexo 1) encontrara el detalle de los conferenciantes y los bosquejos de discursos publicos disponibles para exponerlos en su congregacion.\n\nSe despide afectuosamente,';
+}
+function resetPlantillaCarta(){
+  D.config.plantillaCarta=plantillaDefault();
+  dbSaveDoc('config');
+  var el=document.getElementById('cfg-carta');if(el)el.value=D.config.plantillaCarta;
+  toast('Plantilla restaurada','s');
+}
+function aplicarMarcadores(texto,ce){
+  var c=D.config,mc=D.miCongr;
+  return texto
+    .replace(/\{\{mes\}\}/g,nMes(c.mes)+' '+c.anio)
+    .replace(/\{\{congregacionDestino\}\}/g,c.congregacionExternaMes||'')
+    .replace(/\{\{coordDestNombre\}\}/g,(ce&&ce.coordNombre)||'')
+    .replace(/\{\{miCongr\}\}/g,mc.nombre||'')
+    .replace(/\{\{circuito\}\}/g,mc.circuito||'')
+    .replace(/\{\{direccion\}\}/g,mc.direccion||'')
+    .replace(/\{\{dia\}\}/g,nomDia(mc.dia))
+    .replace(/\{\{horario\}\}/g,mc.horario||'')
+    .replace(/\{\{coordNombre\}\}/g,mc.coordNombre||'')
+    .replace(/\{\{coordTel\}\}/g,mc.coordTel||'')
+    .replace(/\{\{coordEmail\}\}/g,mc.coordEmail||'')
+    .replace(/\{\{avNombre\}\}/g,mc.avNombre||'')
+    .replace(/\{\{avTel\}\}/g,mc.avTel||'')
+    .replace(/\{\{avEmail\}\}/g,mc.avEmail||'')
+    .replace(/\{\{mapsSalon\}\}/g,mc.mapsSalon||'');
+}
+function buildConfirmacionHTML(){return buildConfirmacionArregloStyled('pdf');}
+function exportarConfirmacionArreglo(tipo){
+  var sal=D.planificacion.filter(function(p){return(p.tipo==='Salida'||p.tipo==='Local')&&p.hermano;});
+  if(!sal.length){toast('No hay salidas con hermano asignado','w');return;}
+  var html=tipo==='word'?buildConfirmacionWordHTML():buildConfirmacionHTML();
+  if(!html){toast('Sin datos','w');return;}
+  var c=D.config,nom='confirmacion_arreglo_'+nMes(c.mes)+'_'+c.anio;
+  if(tipo==='pdf'){
+    var w=window.open('','_blank');
+    w.document.write(html);
+    w.document.close();
+    setTimeout(function(){w.print();},700);
+  }else{
+    descargarWordHTMLCartaPlanificacion(nom,'Confirmacion de arreglo',html);
+  }
+}
+function buildProgHTML(){
+  var mc=D.miCongr||{},c=D.config;
+  var ma=nMes(c.mes)+' '+c.anio;
+  var datos=planMesRows(),ext=datos.ext,sal=datos.sal;
+  var TH='padding:8px 10px;text-align:left;border-bottom:2px solid #333;font-size:12px;font-weight:bold';
+  var TD='padding:7px 10px;border-bottom:1px solid #ccc;font-size:13px;vertical-align:top';
+  function progVal(p,campo){
+    // En la exportacion, si el discurso no esta confirmado,
+    // se mantiene el nombre del hermano y solo los datos del discurso quedan como "Por confirmar".
+    if(!esConfirmado(p)){
+      if(campo==='hermano')return docTxt(p.hermano);
+      if(campo==='n')return 'Por confirmar';
+      if(campo==='titulo')return 'Por confirmar';
+      return docTxt('');
+    }
+    if(campo==='hermano')return docTxt(p.hermano);
+    if(campo==='n')return docTxt(p.numDiscurso);
+    if(campo==='titulo')return docTxt(p.titulo);
+    return docTxt('');
+  }
+  var tExt=ext.length?'<table><thead><tr><th style="'+TH+'">Fecha</th><th style="'+TH+'">Congregacion origen</th><th style="'+TH+'">Hermano</th><th style="'+TH+'">N</th><th style="'+TH+'">Tema</th></tr></thead><tbody>'+ext.map(function(p){return '<tr><td style="'+TD+'">'+fmtF(p.fecha)+'</td><td style="'+TD+'">'+docTxt(p.congregacion)+'</td><td style="'+TD+'">'+progVal(p,'hermano')+'</td><td style="'+TD+';text-align:center">'+progVal(p,'n')+'</td><td style="'+TD+'">'+progVal(p,'titulo')+'</td></tr>';}).join('')+'</tbody></table>':'<p class="empty">Sin oradores planificados para este mes.</p>';
+  var tSal=sal.length?'<table><thead><tr><th style="'+TH+'">Fecha</th><th style="'+TH+'">Congregacion destino</th><th style="'+TH+'">Hermano</th><th style="'+TH+'">N</th><th style="'+TH+'">Tema</th></tr></thead><tbody>'+sal.map(function(p){return '<tr><td style="'+TD+'">'+fmtF(p.fecha)+'</td><td style="'+TD+'">'+docTxt(p.congregacion)+'</td><td style="'+TD+'">'+progVal(p,'hermano')+'</td><td style="'+TD+';text-align:center">'+progVal(p,'n')+'</td><td style="'+TD+'">'+progVal(p,'titulo')+'</td></tr>';}).join('')+'</tbody></table>':'<p class="empty">Sin salidas planificadas para este mes.</p>';
+  var congs=uniq(ext.concat(sal).map(function(p){return p.congregacion;}).filter(function(n){return n&&n!==(mc.nombre||'')&&n!=='Superintendente de Circuito';}));
+  var contacto='';
+  if(congs.length===1){
+    var ce=D.congregaciones.find(function(x){return x.nombre===congs[0];})||{};
+    contacto='<div class="doc-box"><div class="box-title">Datos de la congregacion externa</div>'
+      +'<div><strong>Congregacion:</strong> '+docTxt(congs[0])+'</div>'
+      +'<div><strong>Direccion del Salon:</strong> '+docTxt(ce.direccion)+'</div>'
+      +'<div><strong>Dia y horario de reunion:</strong> '+docReunion(ce.dia,ce.horario)+'</div>'
+      +'<div><strong>Coordinador de discursos publicos:</strong> '+docCoord(ce.coordNombre,ce.coordTel,ce.coordEmail)+'</div></div>';
+  }else if(congs.length>1){
+    // Si la planificacion incluye varias congregaciones, no se muestra recuadro superior.
+    // La congregacion de origen/destino queda indicada directamente en cada fila de las tablas.
+    contacto='';
+  }
+  var ubicacionSalon='';
+  if(safeUrl(mc.mapsSalon)){
+    ubicacionSalon='<div class="doc-box"><div class="box-title">Ubicacion de nuestro Salon</div>'
+      +'<div><strong>Direccion:</strong> '+docTxt(mc.direccion||'---')+'</div>'
+      +'<div><strong>Google Maps:</strong> '+linkMapsSalon('Abrir ubicacion del Salon')+'</div></div>';
+  }
+  return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Programa '+ma+'</title>'
+    +'<style>body{font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#222;margin:38px;max-width:900px}.doc-head{text-align:center;margin-bottom:18px}.doc-head h1{text-align:center;font-size:21px;margin:0 0 4px}.doc-sub{text-align:center;font-size:15px;font-weight:bold;margin-bottom:14px}.doc-box{border:1px solid #999;padding:12px 14px;line-height:1.55;margin-top:14px}.box-title{font-weight:bold;text-transform:uppercase;font-size:11px;letter-spacing:.03em;margin-bottom:5px}h2{font-size:13px;font-weight:bold;margin:24px 0 8px;text-transform:uppercase;border-bottom:2px solid #333;padding-bottom:4px}table{width:100%;border-collapse:collapse;margin-top:8px}.contactos th{font-size:11px;text-align:left;border-bottom:1px solid #999;padding:5px}.contactos td{font-size:12px;border-bottom:1px solid #ddd;padding:5px;vertical-align:top}.empty{font-size:12px;color:#777;margin:10px 0 18px}.footer{margin-top:28px;font-size:10px;color:#777;text-align:right}@media print{body{margin:22mm}}</style></head><body>'
+    +'<div class="doc-head"><h1>Programa de Discursos Publicos</h1><div class="doc-sub">'+docTxt(ma)+'</div></div>'
+    +ubicacionSalon
+    +contacto
+    +'<h2>Oradores que daran discurso en nuestra congregacion</h2>'+tExt
+    +(haySalidasPlan()?'<h2>Hermanos locales programados para salir</h2>'+tSal:'')
+    +'<div class="footer">Generado el '+new Date().toLocaleDateString('es-CL')+'</div></body></html>';
+}
+function expPrograma(tipo){
+  var html=buildProgHTML(),c=D.config,nom='programa_'+nMes(c.mes)+'_'+c.anio;
+  if(tipo==='pdf'){var w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(function(){w.print();},600);}
+  else{descargarWordHTML(nom,'Programa de discursos publicos',html);}
+}
+function exportarPlanXLSX(){
+  var c=D.config,ma=nMes(c.mes)+' '+c.anio,datos=planMesRows(),ext=datos.ext,sal=datos.sal,rows=[];
+  function add(vals,bold){rows.push({vals:vals,bold:!!bold});}
+  add(['Programa de Discursos Publicos'],true);add([ma],true);add(['']);
+  var mc=D.miCongr||{};
+  var congs=uniq(ext.concat(sal).map(function(p){return p.congregacion;}).filter(function(n){return n&&n!==(mc.nombre||'')&&n!=='Superintendente de Circuito';}));
+  if(congs.length===1){
+    var ce=D.congregaciones.find(function(x){return x.nombre===congs[0];})||{};
+    add(['Datos de la congregacion externa'],true);add(['Congregacion',congs[0]]);add(['Direccion del Salon',ce.direccion||'']);add(['Dia y horario de reunion',docReunion(ce.dia,ce.horario).replace(/<[^>]+>/g,'')]);add(['Coordinador',docCoord(ce.coordNombre,ce.coordTel,ce.coordEmail).replace(/<[^>]+>/g,'')]);add(['']);
+  }
+  add(['Oradores que daran discurso en nuestra congregacion'],true);add(['Fecha','Congregacion origen','Hermano','N','Tema'],true);
+  if(ext.length){ext.forEach(function(p){add([fmtF(p.fecha),p.congregacion||'',progPlain(p,'hermano'),progPlain(p,'n'),progPlain(p,'titulo')]);});}else add(['Sin oradores planificados para este mes.']);
+  if(haySalidasPlan()){
+    add(['']);add(['Hermanos locales programados para salir'],true);add(['Fecha','Congregacion destino','Hermano','N','Tema'],true);
+    if(sal.length){sal.forEach(function(p){add([fmtF(p.fecha),p.congregacion||'',progPlain(p,'hermano'),progPlain(p,'n'),progPlain(p,'titulo')]);});}else add(['Sin salidas planificadas para este mes.']);
+  }
+  var sheet='<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="1" width="14" customWidth="1"/><col min="2" max="2" width="28" customWidth="1"/><col min="3" max="3" width="28" customWidth="1"/><col min="4" max="4" width="12" customWidth="1"/><col min="5" max="5" width="55" customWidth="1"/></cols><sheetData>';
+  rows.forEach(function(r,i){var rn=i+1;sheet+='<row r="'+rn+'">';r.vals.forEach(function(v,j){var cn=xcol(j+1)+rn;sheet+='<c r="'+cn+'" t="inlineStr" s="'+(r.bold?1:0)+'"><is><t>'+xesc(v)+'</t></is></c>';});sheet+='</row>';});
+  sheet+='</sheetData><pageMargins left="0.3" right="0.3" top="0.5" bottom="0.5" header="0.2" footer="0.2"/><pageSetup orientation="portrait" fitToWidth="1" fitToHeight="1"/></worksheet>';
+  var files=[
+    {name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+    {name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name:'xl/workbook.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Programacion" sheetId="1" r:id="rId1"/></sheets></workbook>'},
+    {name:'xl/_rels/workbook.xml.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name:'xl/styles.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Arial"/></font><font><b/><sz val="11"/><name val="Arial"/></font></fonts><fills count="1"><fill><patternFill patternType="none"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs></styleSheet>'},
+    {name:'xl/worksheets/sheet1.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+sheet}
+  ];
+  var blob=zipStore(files),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='programa_'+nMes(c.mes)+'_'+c.anio+'.xlsx';a.click();toast('Excel generado','s');
+}
+function exportarPlanCSV(){
+  var datos=planMesRows();
+  var rows=datos.ext.concat(haySalidasPlan()?datos.sal:[]);
+  var cols=['Tipo','Fecha','Congregacion','Hermano','N','Tema'];
+  var filas=rows.map(function(p){var h=progPlain(p,'hermano');var n=progPlain(p,'n');var t=progPlain(p,'titulo');return [p.tipo,p.fecha,p.congregacion,h,n,t].map(function(v){return '"'+(v||'').toString().replace(/"/g,'""')+'"';}).join(';');});
+  var csv=[cols.join(';')].concat(filas).join('\r\n');
+  var b=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='planificacion_'+nMes(D.config.mes)+'_'+D.config.anio+'.csv';a.click();toast('CSV exportado','s');
+}
+function refMes(){
+  var c=D.config;
+  var m=String(c.mes).padStart(2,'0');
+  return c.anio+'-'+m+'-01T00:00:00';
+}
+</script>
+</body>
+</html>
