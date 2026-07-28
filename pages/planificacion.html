@@ -613,4 +613,21 @@ function refMes(){
 }
 </script>
 </body>
-</html>
+</html><script>
+function sincronizarDiscursosInactivos(mostrarToast){
+  var numsInactivos=(D.discursos||[]).filter(function(d){return d.estado==='Inactivo';}).map(function(d){return parseInt(d.numero);});
+  if(!numsInactivos.length)return;
+  var changed=false;
+  (D.repertorioLocal||[]).forEach(function(r){
+    if(r&&numsInactivos.indexOf(parseInt(r.numDiscurso))>=0&&r.estado==='Activo'){
+      r.estado='Inactivo';dbUpsertItem('repertorioLocal',r);changed=true;
+    }
+  });
+  (D.planificacion||[]).forEach(function(p){
+    if(p&&numsInactivos.indexOf(parseInt(p.numDiscurso))>=0){
+      p.numDiscurso='';p.titulo='';dbUpsertItem('planificacion',p);changed=true;
+    }
+  });
+  if(changed&&mostrarToast)toast('Discursos inactivos sincronizados','i');
+}
+</script>
