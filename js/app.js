@@ -990,6 +990,7 @@ function poblarAnioArreglos(){
 
 function loadArreglosUI(){
   poblarDatalistAr();poblarAnioArreglos();setArForm({mes:D.config.mes,anio:D.config.anio});
+  renderArreglos();
 }
 
 function autocompletarArregloCong(){
