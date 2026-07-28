@@ -1917,8 +1917,9 @@ function exportarPlanCSV(){
 
 function loadReporteOpts(){
   var m=document.getElementById('rpt-m'),a=document.getElementById('rpt-a');
-  if(m&&!m.dataset.init){m.value=D.config.mes||new Date().getMonth()+1;m.dataset.init='1';}
-  if(a&&!a.dataset.init){a.value=D.config.anio||new Date().getFullYear();a.dataset.init='1';}
+  // Solo setear valor si el elemento existe y no tiene valor previo
+  if(m&&!m.value){m.value=D.config.mes||new Date().getMonth()+1;}
+  if(a&&!a.value){a.value=D.config.anio||new Date().getFullYear();}
 }
 
 function reporteMesRows(){
