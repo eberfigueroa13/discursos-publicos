@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Hermanos Locales — Coordinador de Discursos</title>
+<link rel="stylesheet" href="../css/styles.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<!-- Login overlay -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">&#128218;</div>
+    <div class="login-title">Coordinador de Discursos</div>
+    <div class="login-sub">Inicia sesion para acceder</div>
+    <button class="login-btn" onclick="fbLoginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continuar con Google
+    </button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- Invitacion overlay -->
+<div id="inv-overlay">
+  <div class="inv-card">
+    <div style="font-size:40px;margin-bottom:12px">&#127881;</div>
+    <h2 style="font-size:18px;font-weight:700;color:var(--tx);margin-bottom:4px">Fuiste invitado</h2>
+    <div class="inv-congr-name" id="inv-congr-nombre">---</div>
+    <div class="inv-rol-label" id="inv-rol-label">---</div>
+    <div id="inv-datos"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost" onclick="invRechazar()">Cancelar</button>
+      <button class="btn btn-primary" id="inv-aceptar-btn" onclick="invAceptar()">Aceptar e ingresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <span id="modal-title"></span>
+      <button id="modal-close" onclick="closeM()">&#10005;</button>
+    </div>
+    <div id="modal-body"></div>
+    <div id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Sidebar overlay mobile -->
+<div id="sidebar-overlay"></div>
+
+<!-- Layout -->
+<div id="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div id="sbh">
+      <div class="logo-icon">&#128218;</div>
+      <div class="logo-text">Discursos Pub.</div>
+    </div>
+    <nav>
+<div class="nav-section">General</div>
+<div class="nav-item " data-page="dashboard" data-label="Dashboard" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='app.html'">&#128202;<span class="ni-label">Dashboard</span></div>
+<div class="nav-section">Coordinacion</div>
+<div class="nav-item " data-page="planificacion" data-label="Planificacion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='planificacion.html'">&#128197;<span class="ni-label">Planificacion</span></div>
+<div class="nav-item " data-page="historial" data-label="Historial" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='historial.html'">&#128336;<span class="ni-label">Historial</span></div>
+<div class="nav-item " data-page="salidas" data-label="Salidas realizadas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas realizadas</span></div>
+<div class="nav-item " data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
+<div class="nav-item " data-page="reportes" data-label="Reportes" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='reportes.html'">&#128196;<span class="ni-label">Reportes</span></div>
+<div class="nav-section">Datos</div>
+<div class="nav-item active" data-page="hermanos" data-label="Hermanos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='hermanos.html'">&#128101;<span class="ni-label">Hermanos</span></div>
+<div class="nav-item " data-page="repertorio" data-label="Repertorio" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='repertorio.html'">&#127897;<span class="ni-label">Repertorio</span></div>
+<div class="nav-item " data-page="discursos" data-label="Discursos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='discursos.html'">&#128218;<span class="ni-label">Discursos</span></div>
+<div class="nav-item " data-page="congregaciones" data-label="Congregaciones" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='congregaciones.html'">&#127968;<span class="ni-label">Congregaciones</span></div>
+<div class="nav-item " data-page="carga" data-label="Carga mensual" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='carga.html'">&#128203;<span class="ni-label">Carga mensual</span></div>
+<div class="nav-item " data-page="privilegios" data-label="Privilegios" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='privilegios.html'">&#127894;<span class="ni-label">Privilegios</span></div>
+<div class="nav-section">Sistema</div>
+<div class="nav-item " data-page="configuracion" data-label="Configuracion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='configuracion.html'">&#9881;<span class="ni-label">Configuracion</span></div>
+<div class="nav-item " data-page="respaldo" data-label="Respaldo" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='respaldo.html'">&#128190;<span class="ni-label">Respaldo</span></div>
+<div class="nav-section">Admin</div>
+<div class="nav-item " data-page="admin" data-label="Usuarios" data-roles="superadmin,admin" onclick="window.location='admin.html'">&#128737;<span class="ni-label">Usuarios</span></div>
+
+    </nav>
+    <div id="sb-user" onclick="fbCerrarSesion()"></div>
+  </aside>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Topbar -->
+    <div id="topbar">
+      <button id="topbar-toggle" aria-label="Toggle sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <div id="page-title">Hermanos Locales</div>
+      <div id="sync-indicator" class="sync-indicator">
+        <div class="sync-dot"></div>
+        <span class="sync-label">Sincronizando...</span>
+      </div>
+      <div id="page-meta"></div>
+    </div>
+
+    <!-- Content -->
+    <div id="content">
+
+<div class="page-header"><h1>Hermanos Locales</h1><p>Gestiona los hermanos de tu congregacion</p></div>
+<div class="card" data-roles="coordinador,admin,superadmin">
+  <div class="card-title">Agregar hermano</div>
+  <div class="form-grid">
+    <div class="form-group"><label>Nombre completo *</label><input id="h-n" type="text" placeholder="Nombre completo"></div>
+    <div class="form-group"><label>Nombramiento</label><select id="h-nom"><option>Anciano</option><option>Siervo Ministerial</option></select></div>
+    <div class="form-group"><label>Telefono</label><input id="h-t" type="text" placeholder="+56 9..."></div>
+    <div class="form-group"><label>Puede dar local</label><select id="h-lo"><option value="si">Si</option><option value="no">No</option></select></div>
+    <div class="form-group"><label>Puede salir</label><select id="h-af"><option value="si">Si</option><option value="no">No</option></select></div>
+    <div class="form-group"><label>Estado</label><select id="h-e"><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select></div>
+    <div class="form-group form-span-full"><label>Observaciones</label><input id="h-o" type="text" placeholder="Opcional"></div>
+    <div class="form-group form-span-full"><label>Privilegios adicionales</label><div id="priv-chks-add" class="priv-checks">Cargando...</div></div>
+  </div>
+  <div class="btn-group"><button class="btn btn-primary" onclick="agregarH()">+ Agregar</button></div>
+</div>
+<div class="card">
+  <div class="table-toolbar">
+    <input class="search-input" id="bq-h" placeholder="Buscar hermano..." oninput="renderH()">
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="chk-col"><input type="checkbox" onchange="selAll('h',this)"></th>
+        <th>Nombre</th><th>Nombramiento</th><th>Telefono</th>
+        <th>Privilegios</th><th>Local</th><th>Salida</th><th>Estado</th><th></th>
+      </tr></thead>
+      <tbody id="tb-h"></tbody>
+    </table>
+  </div>
+</div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Scripts globales -->
+<script src="../js/utils.js"></script>
+<script src="../js/firebase.js"></script>
+<script src="../js/ui.js"></script>
+<script src="../js/auth.js"></script>
+
+<!-- Script de pagina -->
+<script>
+
+function initPagina(){
+  initSidebar();
+  setNavActivo('hermanos');
+  setPageTitle('Hermanos Locales');
+  
+  poblarPrivChksAdd();
+  
+  
+  renderH();
+  
+}
+
+function agregarH(){
+  var n=document.getElementById('h-n').value.trim();if(!n){toast('Nombre obligatorio','e');return;}
+  var privSelecs=[];
+  document.querySelectorAll('.priv-chk:checked').forEach(function(chk){privSelecs.push(chk.dataset.id);});
+  var privSelecs=[];document.querySelectorAll('.priv-chk-add:checked').forEach(function(chk){privSelecs.push(chk.dataset.id);});
+  D.locales.push({id:uid(),nombre:n,nombramiento:document.getElementById('h-nom').value,
+    puedeAfuera:document.getElementById('h-af').value,puedeLocal:document.getElementById('h-lo').value,
+    estado:document.getElementById('h-e').value,telefono:document.getElementById('h-t').value.trim(),
+    obs:document.getElementById('h-o').value.trim(),privilegios:privSelecs});
+  var nh=D.locales[D.locales.length-1];dbUpsertItem('locales',nh);renderH();fillSelH();fillFRepH();toast('Hermano agregado','s');
+  ['h-n','h-t','h-o'].forEach(function(i){document.getElementById(i).value='';});
+}
+function renderH(){
+  var q=document.getElementById('bq-h').value.toLowerCase();
+  var nom=document.getElementById('fh-nom').value;
+  var af=document.getElementById('fh-af').value;
+  var lista=D.locales.filter(function(h){return(!q||h.nombre.toLowerCase().includes(q))&&(!nom||h.nombramiento===nom)&&(!af||h.puedeAfuera===af);});
+  lista=ordenar(lista,'h','nombre',1);
+  var tb=document.getElementById('tb-h');
+  if(!lista.length){tb.innerHTML='<tr><td colspan="9"><div class="es"><div class="ic2">&#128101;</div><p>Sin hermanos</p></div></td></tr>';return;}
+  tb.innerHTML=lista.map(function(h){
+    var sel=_sel.h.indexOf(h.id)>=0;
+    return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('h',h.id)+'</td>'
+      +'<td><strong>'+esc(h.nombre)+'</strong></td><td>'+h.nombramiento+'</td>'
+      +'<td><span class="badge '+(h.puedeAfuera==='si'?'bgn':'bgr')+'">'+(h.puedeAfuera==='si'?'Si':'No')+'</span></td>'
+      +'<td><span class="badge '+(h.puedeLocal==='si'?'bgn':'bgr')+'">'+(h.puedeLocal==='si'?'Si':'No')+'</span></td>'
+      +'<td><span class="badge '+(h.estado==='Activo'?'bgn':'bgr')+'">'+h.estado+'</span></td>'
+      +'<td>'+(h.telefono?esc(h.telefono):'---')+'</td><td>'+(nomPrivilegios(h)||'---')+'</td><td>'+(h.obs?esc(h.obs):'---')+'</td>'
+      +'<td class="ac">'+btnAc('bg','editar','editH',h.id)+btnAc('bd2','x','delH',h.id)+'</td></tr>';
+  }).join('');
+  tb.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=_sel.h.indexOf(c.dataset.id)>=0;});
+}
+function editH(id){
+  var h=D.locales.find(function(x){return x.id===id;});if(!h)return;
+  var privHTML='<div class="fg" style="grid-column:1/-1"><label>Privilegios adicionales</label><div id="priv-chks-edit" style="display:flex;flex-wrap:wrap;gap:8px;padding:6px 0">'
+    +D.privilegios.map(function(p){var chk=(h.privilegios||[]).indexOf(p.id)>=0;return '<label style="display:inline-flex;align-items:center;gap:6px;margin-right:12px;font-size:13px"><input type="checkbox" class="priv-chk-edit" data-id="'+p.id+'" '+(chk?'checked':'')+'>'+esc(p.nombre)+'</label>';}).join('')
+    +'</div></div>';
+  openM('Editar hermano','<div class="fgrid">'
+    +'<div class="fg"><label>Nombre</label><input id="eh-n" value="'+esc(h.nombre)+'"></div>'
+    +'<div class="fg"><label>Nombramiento</label><select id="eh-nom"><option '+(h.nombramiento==='Anciano'?'selected':'')+'>Anciano</option><option '+(h.nombramiento==='Siervo Ministerial'?'selected':'')+'>Siervo Ministerial</option></select></div>'
+    +'<div class="fg"><label>Sale afuera</label><select id="eh-af"><option value="si" '+(h.puedeAfuera==='si'?'selected':'')+'>Si</option><option value="no" '+(h.puedeAfuera==='no'?'selected':'')+'>No</option></select></div>'
+    +'<div class="fg"><label>Local</label><select id="eh-lo"><option value="si" '+(h.puedeLocal==='si'?'selected':'')+'>Si</option><option value="no" '+(h.puedeLocal==='no'?'selected':'')+'>No</option></select></div>'
+    +'<div class="fg"><label>Estado</label><select id="eh-e"><option '+(h.estado==='Activo'?'selected':'')+'>Activo</option><option '+(h.estado==='Inactivo'?'selected':'')+'>Inactivo</option></select></div>'
+    +'<div class="fg"><label>Tel</label><input id="eh-t" value="'+esc(h.telefono||'')+'"></div>'
+    +'<div class="fg"><label>Obs.</label><input id="eh-o" value="'+esc(h.obs||'')+'"></div>'+privHTML+'</div>',
+    [{l:'Cancelar',c:'bg',fn:closeM},{l:'Guardar',c:'bp',fn:function(){
+      h.nombre=document.getElementById('eh-n').value.trim();h.nombramiento=document.getElementById('eh-nom').value;
+      var privEdit=[];document.querySelectorAll('.priv-chk-edit:checked').forEach(function(chk){privEdit.push(chk.dataset.id);});h.privilegios=privEdit;
+      h.puedeAfuera=document.getElementById('eh-af').value;h.puedeLocal=document.getElementById('eh-lo').value;
+      h.estado=document.getElementById('eh-e').value;h.telefono=document.getElementById('eh-t').value.trim();
+      h.obs=document.getElementById('eh-o').value.trim();
+      dbUpsertItem('locales',h);renderH();fillSelH();closeM();toast('Actualizado','s');
+    }}]);
+}
+function delH(id){
+  confirmar('Eliminar este hermano?',function(){
+    var repsElim=D.repertorioLocal.filter(function(r){return r.hermanoId===id;});
+    D.locales=D.locales.filter(function(h){return h.id!==id;});
+    D.repertorioLocal=D.repertorioLocal.filter(function(r){return r.hermanoId!==id;});
+    dbDeleteItem('locales',id);
+    repsElim.forEach(function(r){dbDeleteItem('repertorioLocal',r.id);});
+    renderH();fillSelH();toast('Eliminado','s');
+  });
+}
+function fillSelH(){
+  var sel=document.getElementById('rep-h');if(!sel)return;var v=sel.value;
+  sel.innerHTML='<option value="">-- Seleccionar --</option>'+D.locales.filter(function(h){return h.estado==='Activo';}).sort(function(a,b){return a.nombre.localeCompare(b.nombre);}).map(function(h){return '<option value="'+h.id+'">'+esc(h.nombre)+'</option>';}).join('');
+  if(v)sel.value=v;
+}
+function poblarPrivChksAdd(){
+  var c=document.getElementById('priv-chks-add');if(!c)return;
+  c.innerHTML=D.privilegios.map(function(p){
+    return '<label style="display:inline-flex;align-items:center;gap:6px;margin-right:14px;font-size:13px;cursor:pointer">'
+      +'<input type="checkbox" class="priv-chk-add" data-id="'+p.id+'"> '+esc(p.nombre)+'</label>';
+  }).join('');
+}
+function nomPrivilegios(h){
+  if(!h.privilegios||!h.privilegios.length)return '';
+  return h.privilegios.map(function(pid){
+    var p=D.privilegios.find(function(x){return x.id===pid;});
+    return p?p.nombre:'';
+  }).filter(Boolean).join(' & ');
+}
+function asignacionesHermano(h,excluirPlanId){
+  if(!h)return [];
+  var nn=normName(h.nombre||''),items=[];
+  (D.salidasRealizadas||[]).forEach(function(s){
+    if(s.fecha&&(s.hermanoId===h.id||(nn&&normName(s.hermano||'')===nn))){
+      items.push({fecha:s.fecha,origen:'Salida realizada'});
+    }
+  });
+  (D.historial||[]).forEach(function(x){
+    if(x.fecha&&x.tipo==='Local'&&nn&&normName(x.hermano||'')===nn){
+      items.push({fecha:x.fecha,origen:'Historial interno'});
+    }
+  });
+  (D.planificacion||[]).forEach(function(p){
+    if(!p.fecha||p.id===excluirPlanId||!esAsignacionLocalPlan(p)||!mismoHermanoPlan(p,h))return;
+    items.push({fecha:p.fecha,origen:p.tipo==='Salida'?'Salida planificada':'Planificacion local'});
+  });
+  return items;
+}
+function ultimaAsignacionHermano(h,excluirPlanId){
+  var ref=refMesISO();
+  var items=asignacionesHermano(h,excluirPlanId).filter(function(x){return x.fecha&&x.fecha<ref;});
+  if(!items.length)return null;
+  return items.sort(function(a,b){return new Date(b.fecha)-new Date(a.fecha);})[0];
+}
+function limiteSalidaDias(h){return limiteSalidaMeses(h)*30;}
+function limiteSalidaMeses(h){return h&&h.nombramiento==='Anciano'?2:4;}
+function fechaCorteSalida(h){
+  var r=new Date(refMesISO()+'T00:00:00');
+  r.setMonth(r.getMonth()-limiteSalidaMeses(h));
+  var y=r.getFullYear(),m=String(r.getMonth()+1).padStart(2,'0'),d=String(r.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+d;
+}
+function cumpleRotacionSalida(h,fecha){return !fecha||fecha<fechaCorteSalida(h);}
+function ultimaSalidaHermano(hermanoId,excluirPlanId){
+  var h=D.locales.find(function(x){return x.id===hermanoId;});
+  var ult=ultimaAsignacionHermano(h,excluirPlanId);
+  return ult?ult.fecha:null;
+}
+function calcRecSalida(hermanoId,excluirPlanId){
+  var h=D.locales.find(function(x){return x.id===hermanoId;});
+  if(!h)return{ultima:'Nunca',dias:Infinity,estado:'Disponible',motivo:''};
+  var mes=asignacionMesHermano(h,excluirPlanId);
+  if(mes)return{ultima:mes.fecha,dias:0,estado:'Bloqueado',motivo:'Ya tiene asignacion en el mes configurado'};
+  var ult=ultimaAsignacionHermano(h,excluirPlanId);
+  if(!ult)return{ultima:'Nunca',dias:Infinity,estado:'Disponible',motivo:''};
+  var dias=diasDesde(ult.fecha,refMes());
+  if(isNaN(dias))return{ultima:ult.fecha,dias:Infinity,estado:'Disponible',motivo:ult.origen||''};
+  var ok=cumpleRotacionSalida(h,ult.fecha);
+  return{ultima:ult.fecha,dias:dias,estado:ok?'Disponible':'Bloqueado',motivo:ult.origen||'',limite:limiteSalidaDias(h),limiteMeses:limiteSalidaMeses(h),corte:fechaCorteSalida(h)};
+}
+function hermanoProgramadoSalidaMes(h){return !!asignacionMesHermano(h,'');}
+function mismoHermanoPlan(p,h){
+  if(!p||!h)return false;
+  return (p._hermanoId&&p._hermanoId===h.id)||normName(p.hermano||'')===normName(h.nombre||'');
+}
+</script>
+</body>
+</html>

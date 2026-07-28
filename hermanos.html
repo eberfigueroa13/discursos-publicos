@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Arreglos — Coordinador de Discursos</title>
+<link rel="stylesheet" href="../css/styles.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<!-- Login overlay -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">&#128218;</div>
+    <div class="login-title">Coordinador de Discursos</div>
+    <div class="login-sub">Inicia sesion para acceder</div>
+    <button class="login-btn" onclick="fbLoginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continuar con Google
+    </button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- Invitacion overlay -->
+<div id="inv-overlay">
+  <div class="inv-card">
+    <div style="font-size:40px;margin-bottom:12px">&#127881;</div>
+    <h2 style="font-size:18px;font-weight:700;color:var(--tx);margin-bottom:4px">Fuiste invitado</h2>
+    <div class="inv-congr-name" id="inv-congr-nombre">---</div>
+    <div class="inv-rol-label" id="inv-rol-label">---</div>
+    <div id="inv-datos"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost" onclick="invRechazar()">Cancelar</button>
+      <button class="btn btn-primary" id="inv-aceptar-btn" onclick="invAceptar()">Aceptar e ingresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <span id="modal-title"></span>
+      <button id="modal-close" onclick="closeM()">&#10005;</button>
+    </div>
+    <div id="modal-body"></div>
+    <div id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Sidebar overlay mobile -->
+<div id="sidebar-overlay"></div>
+
+<!-- Layout -->
+<div id="layout">
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div id="sbh">
+      <div class="logo-icon">&#128218;</div>
+      <div class="logo-text">Discursos Pub.</div>
+    </div>
+    <nav>
+<div class="nav-section">General</div>
+<div class="nav-item " data-page="dashboard" data-label="Dashboard" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='app.html'">&#128202;<span class="ni-label">Dashboard</span></div>
+<div class="nav-section">Coordinacion</div>
+<div class="nav-item " data-page="planificacion" data-label="Planificacion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='planificacion.html'">&#128197;<span class="ni-label">Planificacion</span></div>
+<div class="nav-item " data-page="historial" data-label="Historial" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='historial.html'">&#128336;<span class="ni-label">Historial</span></div>
+<div class="nav-item " data-page="salidas" data-label="Salidas realizadas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas realizadas</span></div>
+<div class="nav-item active" data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
+<div class="nav-item " data-page="reportes" data-label="Reportes" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='reportes.html'">&#128196;<span class="ni-label">Reportes</span></div>
+<div class="nav-section">Datos</div>
+<div class="nav-item " data-page="hermanos" data-label="Hermanos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='hermanos.html'">&#128101;<span class="ni-label">Hermanos</span></div>
+<div class="nav-item " data-page="repertorio" data-label="Repertorio" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='repertorio.html'">&#127897;<span class="ni-label">Repertorio</span></div>
+<div class="nav-item " data-page="discursos" data-label="Discursos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='discursos.html'">&#128218;<span class="ni-label">Discursos</span></div>
+<div class="nav-item " data-page="congregaciones" data-label="Congregaciones" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='congregaciones.html'">&#127968;<span class="ni-label">Congregaciones</span></div>
+<div class="nav-item " data-page="carga" data-label="Carga mensual" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='carga.html'">&#128203;<span class="ni-label">Carga mensual</span></div>
+<div class="nav-item " data-page="privilegios" data-label="Privilegios" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='privilegios.html'">&#127894;<span class="ni-label">Privilegios</span></div>
+<div class="nav-section">Sistema</div>
+<div class="nav-item " data-page="configuracion" data-label="Configuracion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='configuracion.html'">&#9881;<span class="ni-label">Configuracion</span></div>
+<div class="nav-item " data-page="respaldo" data-label="Respaldo" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='respaldo.html'">&#128190;<span class="ni-label">Respaldo</span></div>
+<div class="nav-section">Admin</div>
+<div class="nav-item " data-page="admin" data-label="Usuarios" data-roles="superadmin,admin" onclick="window.location='admin.html'">&#128737;<span class="ni-label">Usuarios</span></div>
+
+    </nav>
+    <div id="sb-user" onclick="fbCerrarSesion()"></div>
+  </aside>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Topbar -->
+    <div id="topbar">
+      <button id="topbar-toggle" aria-label="Toggle sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <div id="page-title">Arreglos</div>
+      <div id="sync-indicator" class="sync-indicator">
+        <div class="sync-dot"></div>
+        <span class="sync-label">Sincronizando...</span>
+      </div>
+      <div id="page-meta"></div>
+    </div>
+
+    <!-- Content -->
+    <div id="content">
+
+<div class="page-header"><h1>Arreglos</h1><p>Coordinacion de arreglos con otras congregaciones</p></div>
+<div class="card" data-roles="coordinador,admin,superadmin">
+  <div class="card-title">Nuevo arreglo</div>
+  <div class="form-grid">
+    <div class="form-group"><label>Mes *</label><select id="ar-mes">
+      <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+      <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+      <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+      <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+    </select></div>
+    <div class="form-group"><label>Año *</label><input id="ar-anio" type="number" value="2026"></div>
+    <div class="form-group form-span-full"><label>Congregacion *</label><select id="ar-cong"><option value="">Selecciona...</option></select></div>
+    <div class="form-group"><label>Tipo</label><select id="ar-tipo"><option value="entrada">Entrada</option><option value="salida">Salida</option></select></div>
+    <div class="form-group"><label>Estado</label><select id="ar-est"><option value="pendiente">Pendiente</option><option value="confirmado">Confirmado</option><option value="rechazado">Rechazado</option></select></div>
+    <div class="form-group form-span-full"><label>Observaciones</label><textarea id="ar-obs" rows="2"></textarea></div>
+  </div>
+  <div class="btn-group"><button class="btn btn-primary" onclick="guardarArreglo()">Guardar arreglo</button></div>
+</div>
+<div class="card">
+  <div class="table-toolbar">
+    <select id="fil-ar-anio" onchange="filtrarArreglos()" style="padding:7px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px"></select>
+    <select id="fil-ar-mes" onchange="filtrarArreglos()" style="padding:7px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px">
+      <option value="">Todos los meses</option>
+    </select>
+    <input class="search-input" id="bq-ar" placeholder="Buscar..." oninput="filtrarArreglos()">
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr>
+      <th class="chk-col"><input type="checkbox" onchange="selAll('ar',this)"></th>
+      <th>Mes/Año</th><th>Congregacion</th><th>Tipo</th><th>Estado</th><th>Obs.</th><th></th>
+    </tr></thead>
+    <tbody id="tb-ar"></tbody>
+  </table></div>
+</div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Scripts globales -->
+<script src="../js/utils.js"></script>
+<script src="../js/firebase.js"></script>
+<script src="../js/ui.js"></script>
+<script src="../js/auth.js"></script>
+
+<!-- Script de pagina -->
+<script>
+
+function initPagina(){
+  initSidebar();
+  setNavActivo('arreglos');
+  setPageTitle('Arreglos');
+  poblarSelArreglos&&poblarSelArreglos();
+  poblarAnioArreglos&&poblarAnioArreglos();
+  loadArreglosUI&&loadArreglosUI();
+}
+function renderArreglos(){
+  D.arreglos=(D.arreglos||[]).map(normalizarArreglo);
+  poblarDatalistAr();poblarAnioArreglos();
+  var lista=arreglosFiltradosAnio();
+  lista=ordenar(lista,'ar','mes',1);
+  if(!getSC('ar'))lista=lista.sort(function(a,b){return (a.mes-b.mes)||a.congregacion.localeCompare(b.congregacion);});
+  var tb=document.getElementById('tb-ar');if(!tb)return;
+  if(!lista.length){tb.innerHTML='<tr><td colspan="11"><div class="es"><div class="ic2">&#128197;</div><p>Sin arreglos registrados para este año.</p></div></td></tr>';return;}
+  tb.innerHTML=lista.map(function(a){var sel=_sel.ar.indexOf(a.id)>=0;return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('ar',a.id)+'</td>'
+    +'<td><strong>'+nMes(a.mes)+'</strong></td><td>'+a.anio+'</td><td><strong>'+esc(a.congregacion)+'</strong></td><td>'+arEstadoBadge(a.estado)+'</td>'
+    +'<td>'+esc(a.coordNombre||'---')+'</td><td>'+esc(a.coordTel||'---')+'</td><td>'+esc(a.coordEmail||'---')+'</td>'
+    +'<td>'+(a.coordTel?'<button class="btn bg bsm" onclick="abrirWhatsAppCoord(\''+a.id+'\')">WhatsApp</button>':'---')+'</td><td>'+esc(a.obs||'')+'</td>'
+    +'<td class="ac">'+btnAc('bg','editar','editArreglo',a.id)+btnAc('bd2','x','delArreglo',a.id)+'</td></tr>';}).join('');
+  tb.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=_sel.ar.indexOf(c.dataset.id)>=0;});
+}
+function loadArreglosUI(){
+  poblarDatalistAr();poblarAnioArreglos();setArForm({mes:D.config.mes,anio:D.config.anio});
+}
+function normalizarArreglo(a){
+  if(!a.id)a.id=uid();
+  a.mes=parseInt(a.mes)||D.config.mes||1;
+  a.anio=parseInt(a.anio)||D.config.anio||new Date().getFullYear();
+  if(!a.congregacion&&a.nombre)a.congregacion=a.nombre;
+  if(!a.estado)a.estado='Conversado';
+  ['direccion','horario','coordNombre','coordTel','coordEmail','obs'].forEach(function(k){if(a[k]===undefined)a[k]='';});
+  if(a.dia===undefined||a.dia===null||a.dia==='')a.dia='0';
+  if(!a.createdAt)a.createdAt=new Date().toISOString();
+  a.updatedAt=a.updatedAt||a.createdAt;
+  return a;
+}
+function upsertCongDesdeArreglo(a){
+  var n=(a.congregacion||'').trim();if(!n)return null;
+  var c=buscarCongregacion(n);
+  if(!c){
+    c={id:uid(),nombre:n,estado:'Activa',direccion:'',dia:'0',horario:'',coordNombre:'',coordTel:'',coordEmail:'',obs:''};
+    D.congregaciones.push(c);
+  }
+  if(a.direccion)c.direccion=a.direccion;
+  if(a.dia!==undefined&&a.dia!==null&&a.dia!=='')c.dia=a.dia.toString();
+  if(a.horario)c.horario=a.horario;
+  if(a.coordNombre)c.coordNombre=a.coordNombre;
+  if(a.coordTel)c.coordTel=a.coordTel;
+  if(a.coordEmail)c.coordEmail=a.coordEmail;
+  if(a.obs&&!c.obs)c.obs=a.obs;
+  if(!c.estado)c.estado='Activa';
+  return c;
+}
+function limpiarCamposDatosArreglo(){
+  ['ar-d','ar-h','ar-cn','ar-ct','ar-ce','ar-o'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var dia=document.getElementById('ar-dia');if(dia)dia.value='0';
+}
+function limpiarFormArreglo(){setArForm({mes:(document.getElementById('ar-m')||{}).value||D.config.mes,anio:(document.getElementById('ar-a')||{}).value||D.config.anio});limpiarCamposDatosArreglo();}
+function existeArregloMes(mes,anio){
+  return (D.arreglos||[]).some(function(a){return parseInt(a.mes)===parseInt(mes)&&parseInt(a.anio)===parseInt(anio)&&a.estado!=='Cancelado';});
+}
+function avanzarFormArregloDespuesGuardar(mes,anio){
+  var sig=siguienteMesDisponible(mes,anio);
+  setArForm({mes:sig.mes,anio:sig.anio,estado:'Conversado'});
+  var y=document.getElementById('ar-y');
+  if(y){poblarAnioArreglos();y.value=sig.anio;}
+}
+function poblarAnioArreglos(){
+  var sel=document.getElementById('ar-y');if(!sel)return;
+  var actual=new Date().getFullYear();
+  var years={};
+  years[actual]=true;years[D.config.anio||actual]=true;
+  (D.arreglos||[]).forEach(function(a){years[parseInt(a.anio)||actual]=true;});
+  for(var y=actual-1;y<=actual+5;y++)years[y]=true;
+  var arr=Object.keys(years).map(Number).sort(function(a,b){return a-b;});
+  var val=sel.value||String(actual);
+  sel.innerHTML=arr.map(function(y){return '<option value="'+y+'">'+y+'</option>';}).join('');
+  sel.value=arr.indexOf(parseInt(val))>=0?val:String(actual);
+}
+function delArreglo(id){confirmar('Eliminar este arreglo?',function(){D.arreglos=D.arreglos.filter(function(a){return a.id!==id;});dbSaveArray('arreglos');renderArreglos();aplicarArregloAConfig();toast('Arreglo eliminado','s');});}
+function editArreglo(id){
+  var a=D.arreglos.find(function(x){return x.id===id;});if(!a)return;normalizarArreglo(a);
+  openM('Editar arreglo','<div class="fgrid">'
+    +'<div class="fg"><label>Mes</label><select id="ear-m"><option value="1" '+(a.mes==1?'selected':'')+'>Enero</option><option value="2" '+(a.mes==2?'selected':'')+'>Febrero</option><option value="3" '+(a.mes==3?'selected':'')+'>Marzo</option><option value="4" '+(a.mes==4?'selected':'')+'>Abril</option><option value="5" '+(a.mes==5?'selected':'')+'>Mayo</option><option value="6" '+(a.mes==6?'selected':'')+'>Junio</option><option value="7" '+(a.mes==7?'selected':'')+'>Julio</option><option value="8" '+(a.mes==8?'selected':'')+'>Agosto</option><option value="9" '+(a.mes==9?'selected':'')+'>Septiembre</option><option value="10" '+(a.mes==10?'selected':'')+'>Octubre</option><option value="11" '+(a.mes==11?'selected':'')+'>Noviembre</option><option value="12" '+(a.mes==12?'selected':'')+'>Diciembre</option></select></div>'
+    +'<div class="fg"><label>Año</label><input id="ear-a" type="number" value="'+a.anio+'"></div>'
+    +'<div class="fg"><label>Congregación</label><input id="ear-c" value="'+esc(a.congregacion)+'"></div>'
+    +'<div class="fg"><label>Estado</label><select id="ear-e"><option '+(a.estado==='Conversado'?'selected':'')+'>Conversado</option><option '+(a.estado==='Confirmado'?'selected':'')+'>Confirmado</option><option '+(a.estado==='Pendiente datos'?'selected':'')+'>Pendiente datos</option><option '+(a.estado==='Cancelado'?'selected':'')+'>Cancelado</option><option '+(a.estado==='Cerrado'?'selected':'')+'>Cerrado</option></select></div>'
+    +'<div class="fg"><label>Dirección</label><input id="ear-d" value="'+esc(a.direccion||'')+'"></div>'
+    +'<div class="fg"><label>Día</label><select id="ear-dia"><option value="0" '+(a.dia==='0'?'selected':'')+'>Domingo</option><option value="1" '+(a.dia==='1'?'selected':'')+'>Lunes</option><option value="2" '+(a.dia==='2'?'selected':'')+'>Martes</option><option value="3" '+(a.dia==='3'?'selected':'')+'>Miércoles</option><option value="4" '+(a.dia==='4'?'selected':'')+'>Jueves</option><option value="5" '+(a.dia==='5'?'selected':'')+'>Viernes</option><option value="6" '+(a.dia==='6'?'selected':'')+'>Sábado</option></select></div>'
+    +'<div class="fg"><label>Horario</label><input id="ear-h" value="'+esc(a.horario||'')+'"></div>'
+    +'<div class="fg"><label>Coordinador</label><input id="ear-cn" value="'+esc(a.coordNombre||'')+'"></div>'
+    +'<div class="fg"><label>Teléfono</label><input id="ear-ct" value="'+esc(a.coordTel||'')+'"></div>'
+    +'<div class="fg"><label>Correo</label><input id="ear-ce" value="'+esc(a.coordEmail||'')+'"></div>'
+    +'<div class="fg"><label>Obs.</label><input id="ear-o" value="'+esc(a.obs||'')+'"></div></div>',
+    [{l:'Cancelar',c:'bg',fn:closeM},{l:'Guardar',c:'bp',fn:function(){
+      a.mes=parseInt(document.getElementById('ear-m').value)||1;a.anio=parseInt(document.getElementById('ear-a').value)||new Date().getFullYear();a.congregacion=document.getElementById('ear-c').value.trim();a.estado=document.getElementById('ear-e').value;
+      a.direccion=document.getElementById('ear-d').value.trim();a.dia=document.getElementById('ear-dia').value;a.horario=document.getElementById('ear-h').value.trim();a.coordNombre=document.getElementById('ear-cn').value.trim();a.coordTel=document.getElementById('ear-ct').value.trim();a.coordEmail=document.getElementById('ear-ce').value.trim();a.obs=document.getElementById('ear-o').value.trim();a.updatedAt=new Date().toISOString();
+      normalizarArreglo(a);upsertCongDesdeArreglo(a);dbSaveArray('arreglos');poblarSelCE();poblarSelCMCong();renderArreglos();aplicarArregloAConfig();closeM();toast('Arreglo actualizado','s');
+    }}]);
+}
+</script>
+</body>
+</html>
