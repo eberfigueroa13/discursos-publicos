@@ -106,10 +106,18 @@ function openM(tit,html,bots){
   document.getElementById('mb').innerHTML=html;
   var ma=document.getElementById('ma');ma.innerHTML='';
   (bots||[]).forEach(function(b){var el=document.createElement('button');el.className='btn '+b.c;el.textContent=b.l;el.onclick=b.fn;ma.appendChild(el);});
-  document.getElementById('modal').classList.add('open');
+  var overlay=document.getElementById('modal-overlay');
+  var modal=document.getElementById('modal');
+  if(overlay)overlay.style.display='flex';
+  if(modal)modal.classList.add('open');
 }
 
-function closeM(){document.getElementById('modal').classList.remove('open');}
+function closeM(){
+  var overlay=document.getElementById('modal-overlay');
+  var modal=document.getElementById('modal');
+  if(overlay)overlay.style.display='none';
+  if(modal)modal.classList.remove('open');
+}
 
 function confirmar(msg,cb){openM('Confirmar','<p style="font-size:14px">'+msg+'</p>',[{l:'Cancelar',c:'bg',fn:closeM},{l:'Confirmar',c:'bd2',fn:function(){closeM();cb();}}]);}
 
