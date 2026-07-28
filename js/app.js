@@ -2485,36 +2485,35 @@ function importarCompleto(){
 }
 
 function saEditarCong(id,nombre,circuito,ciudad){
-  openM('Editar congregacion','<div class="fgrid">'
-    +'<div class="fg" style="grid-column:1/-1"><label>Nombre</label><input id="sace-n" value="'+esc(nombre)+'" type="text"></div>'
+  openM('Editar congregacion',
+    '<div class="fg"><label>Nombre</label><input id="sace-n" value="'+esc(nombre)+'" type="text"></div>'
     +'<div class="fg"><label>Circuito</label><input id="sace-c" value="'+esc(circuito)+'" type="text"></div>'
-    +'<div class="fg"><label>Ciudad</label><input id="sace-ci" value="'+esc(ciudad)+'" type="text"></div>'
-    +'</div>',
-    function(){
+    +'<div class="fg"><label>Ciudad</label><input id="sace-ci" value="'+esc(ciudad)+'" type="text"></div>',
+    [{l:'Cancelar',c:'bg',fn:closeM},{l:'Guardar',c:'bp',fn:async function(){
       var n=document.getElementById('sace-n').value.trim();
       var c=document.getElementById('sace-c').value.trim();
       var ci=document.getElementById('sace-ci').value.trim();
       if(!n){toast('Nombre obligatorio','e');return;}
-      _db.collection('congregaciones').doc(id).update({nombre:n,circuito:c,ciudad:ci})
-        .then(function(){toast('Congregacion actualizada','s');closeM();saCargarDatos();})
-        .catch(function(e){toast('Error: '+e.message,'e');});
-    }
+      var res=await _sb.from('congregaciones').update({nombre:n,circuito:c,ciudad:ci}).eq('id',id);
+      if(res.error){toast('Error: '+res.error.message,'e');return;}
+      toast('Actualizado','s');closeM();saCargarDatos();
+    }}]
   );
 }
 
 function saToggleCong(id,activo){
-  confirmar((activo?'Desactivar':'Activar')+' esta congregacion?',function(){
-    _db.collection('congregaciones').doc(id).update({activo:!activo})
-      .then(function(){toast('Congregacion '+(activo?'desactivada':'activada'),'s');saCargarDatos();})
-      .catch(function(e){toast('Error: '+e.message,'e');});
+  confirmar((activo?'Desactivar':'Activar')+' esta congregacion?',async function(){
+    var res=await _sb.from('congregaciones').update({activo:!activo}).eq('id',id);
+    if(res.error){toast('Error','e');return;}
+    toast('Congregacion '+(activo?'desactivada':'activada'),'s');saCargarDatos();
   });
 }
 
 function saEliminarCong(id,nombre){
-  confirmar('Eliminar la congregacion "'+nombre+'"? Esta accion no se puede deshacer.',function(){
-    _db.collection('congregaciones').doc(id).delete()
-      .then(function(){toast('Congregacion eliminada','s');saCargarDatos();})
-      .catch(function(e){toast('Error: '+e.message,'e');});
+  confirmar('Eliminar la congregacion "'+nombre+'"? Esta accion no se puede deshacer.',async function(){
+    var res=await _sb.from('congregaciones').delete().eq('id',id);
+    if(res.error){toast('Error: '+res.error.message,'e');return;}
+    toast('Congregacion eliminada','s');saCargarDatos();
   });
 }
 
@@ -2545,219 +2544,152 @@ function sincronizarTitulosDiscursos(){
   if(changed)console.log('Titulos sincronizados');
 }
 
-function saCrearCongregacion(){
+async function saCrearCongregacion(){
   if(!_usr||_usr.rol!=='superadmin'){toast('Sin permisos','e');return;}
   var nombre=document.getElementById('sa-cong-nombre').value.trim();
   var circuito=document.getElementById('sa-cong-circuito').value.trim();
   var ciudad=document.getElementById('sa-cong-ciudad').value.trim();
   var adminEmail=document.getElementById('sa-cong-admin').value.trim().toLowerCase();
   var adminNombre=document.getElementById('sa-cong-admin-nombre').value.trim();
-  if(!nombre||!circuito||!adminEmail){toast('Nombre, circuito y email del admin son obligatorios','e');return;}
+  if(!nombre||!circuito||!adminEmail){toast('Nombre, circuito y email son obligatorios','e');return;}
+  // Generar congId: cong+iniciales+circuito+correlativo
   var iniciales=nombre.split(' ').map(function(w){return w[0]||'';}).join('').toLowerCase().replace(/[^a-z]/g,'').substring(0,4);
   var circ=circuito.toLowerCase().replace(/[^a-z0-9]/g,'');
   var baseId='cong'+iniciales+circ;
-  fbSyncBar(true,'Creando congregacion...');
-  _db.collection('congregaciones').where('baseId','==',baseId).get().then(function(snap){
-    var correlativo=String(snap.size+1).padStart(3,'0');
-    var congId=baseId+correlativo;
-    // Crear documento de metadata
-    return _db.collection('congregaciones').doc(congId).set({
-      nombre:nombre,circuito:circuito,ciudad:ciudad,baseId:baseId,
-      creadoPor:_usr.email,activo:true,
-      creadoEn:firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function(){
-      // Inicializar blob de datos con miCongr basico
-      var datosIniciales=JSON.parse(JSON.stringify(D)); // copia del modelo vacio
-      datosIniciales.miCongr={
-        nombre:nombre,direccion:'',dia:'6',horario:'',circuito:circuito,
-        mapsSalon:'',coordNombre:'',coordTel:'',coordEmail:'',
-        avNombre:'',avTel:'',avEmail:'',obs:''
-      };
-      datosIniciales.config={
-        mes:new Date().getMonth()+1,anio:new Date().getFullYear(),
-        congregacionExternaMes:'',diasBloqueo:365,discursosLocalesRequeridos:1,
-        habraSalidasMes:'no',habraSCMes:'no',
-        scNombre:'',scTel:'',scEmail:'',scObs:'',
-        plantillaCarta:'',plantillaWhatsApp:''
-      };
-      // Limpiar arrays para que sea una congregacion limpia
-      datosIniciales.discursos=D.discursos.slice(); // copiar catalogo de discursos
-      datosIniciales.locales=[];
-      datosIniciales.repertorioLocal=[];
-      datosIniciales.congregaciones=[];
-      datosIniciales.cargaMensual=[];
-      datosIniciales.planificacion=[];
-      datosIniciales.historial=[];
-      datosIniciales.salidasRealizadas=[];
-      datosIniciales.arreglos=[];
-      datosIniciales.privilegios=_privilegiosDefault.map(function(n){return{id:uid(),nombre:n};});
-      return _db.collection('congregaciones').doc(congId)
-        .collection('datos').doc('principal').set({
-          data:JSON.stringify(datosIniciales),
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-          updatedBy:'system'
-        });
-    }).then(function(){return congId;});
-  }).then(function(congId){
-    return saCrearInvitacion(adminEmail,adminNombre,congId,'admin').then(function(link){
-      return {congId:congId,link:link};
-    });
-  }).then(function(result){
-    fbSyncBar(false);
-    toast('Congregacion creada! ID: '+result.congId,'s');
-    ['sa-cong-nombre','sa-cong-circuito','sa-cong-ciudad','sa-cong-admin','sa-cong-admin-nombre'].forEach(function(id){
-      var el=document.getElementById(id);if(el)el.value='';
-    });
-    saCargarDatos();
-    _saCongInvLink=result.link;
-    _saCongInvId=result.congId;
-    openM('Congregacion creada',
-      '<div style="text-align:center">'
-      +'<div style="font-size:32px;margin-bottom:12px">&#127881;</div>'
-      +'<div style="font-weight:700;margin-bottom:4px">Congregacion creada exitosamente</div>'
-      +'<div style="font-size:13px;color:var(--tx2);margin-bottom:16px">ID: '+result.congId+'</div>'
-      +'<div style="font-size:13px;margin-bottom:8px">Link de invitacion para el admin (expira en 48 horas):</div>'
-      +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">'
-      +'<input id="sa-link-txt" type="text" readonly style="flex:1;font-size:11px;background:var(--sf2);padding:6px" value="'+result.link+'">'
-      +'</div>'
-      +'<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'
-      +'<button class="btn bg bsm" onclick="saCopiarLink()">Copiar link</button>'
-      +'<button class="btn bg bsm" onclick="saCompartirWA()">WhatsApp</button>'
-      +'</div></div>',
-      null
-    );
-  }).catch(function(e){
-    console.error('saCrearCongregacion error:',e);
-    fbSyncBar(false);
-    toast('Error al crear congregacion: '+e.message,'e');
+  syncBar(true,'Creando congregacion...');
+  // Buscar correlativo
+  var existing=await _sb.from('congregaciones').select('id').like('id',baseId+'%');
+  var correlativo=String((existing.data||[]).length+1).padStart(3,'0');
+  var congId=baseId+correlativo;
+  // Crear congregacion
+  var res=await _sb.from('congregaciones').insert({
+    id:congId,nombre:nombre,circuito:circuito,ciudad:ciudad,
+    base_id:baseId,activo:true,creado_por:_usr.email
   });
+  if(res.error){syncBar(false);toast('Error: '+res.error.message,'e');return;}
+  // Crear invitacion
+  var link=await saCrearInvitacion(adminEmail,adminNombre,congId,'admin');
+  syncBar(false);
+  if(!link)return;
+  toast('Congregacion creada! ID: '+congId,'s');
+  ['sa-cong-nombre','sa-cong-circuito','sa-cong-ciudad','sa-cong-admin','sa-cong-admin-nombre'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  saCargarDatos();
+  openM('Congregacion creada',
+    '<div style="text-align:center">'
+    +'<div style="font-size:32px;margin-bottom:12px">&#127881;</div>'
+    +'<div style="font-weight:700;margin-bottom:4px">'+esc(nombre)+'</div>'
+    +'<div style="font-size:13px;color:var(--tx3);margin-bottom:16px">ID: '+congId+'</div>'
+    +'<div style="font-size:13px;margin-bottom:8px">Link de invitacion (48 horas):</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">'
+    +'<input id="sa-link-txt" type="text" value="'+esc(link)+'" readonly style="flex:1;font-size:11px;padding:6px;border:1px solid var(--bd);border-radius:6px">'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;justify-content:center">'
+    +'<button class="btn bg bsm" onclick="saCopiarLink()">Copiar</button>'
+    +'<button class="btn bg bsm" onclick="saCompartirWA()">WhatsApp</button>'
+    +'</div></div>',
+    null
+  );
 }
 
-function saCrearInvitacion(email,nombre,congId,rol){
+async function saCrearInvitacion(email,nombre,congId,rol){
   var token=uid()+uid();
   var expira=new Date(Date.now()+48*60*60*1000);
-  return _db.collection('invitaciones').doc(token).set({
-    email:email,nombreInvitado:nombre,congId:congId,rol:rol,
-    usada:false,
-    creadaEn:firebase.firestore.FieldValue.serverTimestamp(),
-    expiraEn:firebase.firestore.Timestamp.fromDate(expira),
-    creadaPor:_usr.email
-  }).then(function(){
-    return window.location.origin+window.location.pathname+'?inv='+token;
+  var res=await _sb.from('invitaciones').insert({
+    token:token,email:email,nombre_invitado:nombre,
+    cong_id:congId,rol:rol,usada:false,
+    expira_en:expira.toISOString(),
+    creado_por:_usr.email
   });
+  if(res.error){toast('Error al crear invitacion: '+res.error.message,'e');return null;}
+  return window.location.origin+'/index.html?inv='+token;
 }
 
-function saCargarDatos(){
-  // Cargar congregaciones con acciones
-  _db.collection('congregaciones').orderBy('creadoEn','desc').get().then(function(snap){
-    var el=document.getElementById('sa-lista-congs');
-    if(!el)return;
-    if(snap.empty){el.innerHTML='<div class="es"><p>Sin congregaciones registradas</p></div>';return;}
-    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
-      +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
-      +'<th style="padding:8px;text-align:left">Nombre</th>'
-      +'<th style="padding:8px;text-align:left">Circuito</th>'
-      +'<th style="padding:8px;text-align:left">Ciudad</th>'
-      +'<th style="padding:8px;text-align:left">ID</th>'
-      +'<th style="padding:8px;text-align:left">Estado</th>'
-      +'<th style="padding:8px;text-align:left">Acciones</th>'
-      +'</tr></thead><tbody>'
-      +snap.docs.map(function(doc){
-        var d=doc.data();
-        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-id="'+doc.id+'" data-nombre="'+esc(d.nombre||'')+'" data-circuito="'+esc(d.circuito||'')+'" data-ciudad="'+esc(d.ciudad||'')+'" data-activo="'+(d.activo?'1':'0')+'">'
-          +'<td style="padding:8px"><strong>'+esc(d.nombre||'Sin nombre')+'</strong></td>'
-          +'<td style="padding:8px">'+esc(d.circuito||'---')+'</td>'
-          +'<td style="padding:8px">'+esc(d.ciudad||'---')+'</td>'
-          +'<td style="padding:8px;font-size:11px;color:var(--tx3)">'+doc.id+'</td>'
-          +'<td style="padding:8px"><span class="badge '+(d.activo?'bgn':'bgr')+'">'+(d.activo?'Activa':'Inactiva')+'</span></td>'
-          +'<td style="padding:8px;white-space:nowrap">'
-          +'<button class="btn bg bsm sa-edit-cong">Editar</button> '
-          +'<button class="btn bsm '+(d.activo?'bd2':'bp')+' sa-toggle-cong">'+(d.activo?'Desactivar':'Activar')+'</button> '
-          +'<button class="btn bd2 bsm sa-del-cong">Eliminar</button>'
-          +'</td></tr>';
-      }).join('')
-      +'</tbody></table></div>';
-    // Event listeners
-    el.querySelectorAll('.sa-edit-cong').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        var tr=btn.closest('tr');
-        saEditarCong(tr.dataset.id,tr.dataset.nombre,tr.dataset.circuito,tr.dataset.ciudad);
+async function saCargarDatos(){
+  // Congregaciones
+  var res=await _sb.from('congregaciones').select('*').order('creado_en',{ascending:false});
+  var el=document.getElementById('sa-lista-congs');
+  if(el){
+    if(!res.data||!res.data.length){
+      el.innerHTML='<div class="es"><p>Sin congregaciones registradas</p></div>';
+    } else {
+      el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+        +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+        +'<th style="padding:8px;text-align:left">Nombre</th>'
+        +'<th style="padding:8px;text-align:left">Circuito</th>'
+        +'<th style="padding:8px;text-align:left">ID</th>'
+        +'<th style="padding:8px;text-align:left">Estado</th>'
+        +'<th style="padding:8px;text-align:left">Acciones</th>'
+        +'</tr></thead><tbody>'
+        +res.data.map(function(d){
+          return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-id="'+d.id+'" data-nombre="'+esc(d.nombre||'')+'" data-circuito="'+esc(d.circuito||'')+'" data-ciudad="'+esc(d.ciudad||'')+'" data-activo="'+(d.activo?'1':'0')+'">'
+            +'<td style="padding:8px"><strong>'+esc(d.nombre||'')+'</strong></td>'
+            +'<td style="padding:8px">'+esc(d.circuito||'')+'</td>'
+            +'<td style="padding:8px;font-size:11px;color:var(--tx3)">'+d.id+'</td>'
+            +'<td style="padding:8px"><span class="badge '+(d.activo?'bgn':'bgr')+'">'+(d.activo?'Activa':'Inactiva')+'</span></td>'
+            +'<td style="padding:8px;white-space:nowrap">'
+            +'<button class="btn bg bsm sa-edit-btn">Editar</button> '
+            +'<button class="btn bsm '+(d.activo?'bd2':'bp')+' sa-tog-btn">'+(d.activo?'Desactivar':'Activar')+'</button> '
+            +'<button class="btn bd2 bsm sa-del-btn">Eliminar</button>'
+            +'</td></tr>';
+        }).join('')+'</tbody></table></div>';
+      el.querySelectorAll('.sa-edit-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){var tr=btn.closest('tr');saEditarCong(tr.dataset.id,tr.dataset.nombre,tr.dataset.circuito,tr.dataset.ciudad);});
       });
-    });
-    el.querySelectorAll('.sa-toggle-cong').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        var tr=btn.closest('tr');
-        saToggleCong(tr.dataset.id, tr.dataset.activo==='1');
+      el.querySelectorAll('.sa-tog-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){var tr=btn.closest('tr');saToggleCong(tr.dataset.id,tr.dataset.activo==='1');});
       });
-    });
-    el.querySelectorAll('.sa-del-cong').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        var tr=btn.closest('tr');
-        saEliminarCong(tr.dataset.id,tr.dataset.nombre);
+      el.querySelectorAll('.sa-del-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){var tr=btn.closest('tr');saEliminarCong(tr.dataset.id,tr.dataset.nombre);});
       });
-    });
-  }).catch(function(e){
-    var el=document.getElementById('sa-lista-congs');
-    if(el)el.innerHTML='<div class="al alw">Error: '+e.message+'</div>';
-  });
-  // Cargar invitaciones
-  _db.collection('invitaciones').orderBy('creadaEn','desc').limit(50).get().then(function(snap){
-    var el=document.getElementById('sa-lista-invs');
-    if(!el)return;
-    if(snap.empty){el.innerHTML='<div class="es"><p>Sin invitaciones</p></div>';return;}
-    var ahora=new Date();
-    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
-      +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
-      +'<th style="padding:8px;text-align:left">Email</th>'
-      +'<th style="padding:8px;text-align:left">Nombre</th>'
-      +'<th style="padding:8px;text-align:left">Congregacion</th>'
-      +'<th style="padding:8px;text-align:left">Rol</th>'
-      +'<th style="padding:8px;text-align:left">Estado</th>'
-      +'</tr></thead><tbody>'
-      +snap.docs.map(function(doc){
-        var d=doc.data();
-        var expira=d.expiraEn?d.expiraEn.toDate():null;
-        var estado=d.usada?'usada':(expira&&ahora>expira?'expirada':'pendiente');
-        var cls=estado==='usada'?'badge-inv-usada':estado==='expirada'?'badge-inv-exp':'badge-inv-pend';
-        var label=estado==='usada'?'Usada':estado==='expirada'?'Expirada':'Pendiente';
-        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px">'
-          +'<td style="padding:8px">'+esc(d.email||'---')+'</td>'
-          +'<td style="padding:8px">'+esc(d.nombreInvitado||'---')+'</td>'
-          +'<td style="padding:8px;font-size:11px">'+esc(d.congId||'---')+'</td>'
-          +'<td style="padding:8px"><span class="badge bbl">'+esc(d.rol||'')+'</span></td>'
-          +'<td style="padding:8px"><span class="'+cls+'">'+label+'</span></td>'
-          +'</tr>';
-      }).join('')
-      +'</tbody></table></div>';
-  }).catch(function(e){
-    var el=document.getElementById('sa-lista-invs');
-    if(el)el.innerHTML='<div class="al alw">Error cargando invitaciones: '+e.message+'</div>';
-  });
+    }
+  }
+  // Invitaciones
+  var res2=await _sb.from('invitaciones').select('*').order('creado_en',{ascending:false}).limit(50);
+  var el2=document.getElementById('sa-lista-invs');
+  if(el2){
+    if(!res2.data||!res2.data.length){
+      el2.innerHTML='<div class="es"><p>Sin invitaciones</p></div>';
+    } else {
+      var ahora=new Date();
+      el2.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+        +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+        +'<th style="padding:8px;text-align:left">Email</th><th style="padding:8px;text-align:left">Rol</th>'
+        +'<th style="padding:8px;text-align:left">Congregacion</th><th style="padding:8px;text-align:left">Estado</th>'
+        +'</tr></thead><tbody>'
+        +res2.data.map(function(d){
+          var expira=d.expira_en?new Date(d.expira_en):null;
+          var estado=d.usada?'usada':(expira&&ahora>expira?'expirada':'pendiente');
+          var cls=estado==='usada'?'badge-inv-usada':estado==='expirada'?'badge-inv-exp':'badge-inv-pend';
+          var label=estado==='usada'?'Usada':estado==='expirada'?'Expirada':'Pendiente';
+          return '<tr style="border-bottom:1px solid var(--bd);font-size:13px">'
+            +'<td style="padding:8px">'+esc(d.email||'')+'</td>'
+            +'<td style="padding:8px"><span class="badge bbl">'+esc(d.rol||'')+'</span></td>'
+            +'<td style="padding:8px;font-size:11px">'+esc(d.cong_id||'')+'</td>'
+            +'<td style="padding:8px"><span class="'+cls+'">'+label+'</span></td>'
+            +'</tr>';
+        }).join('')+'</tbody></table></div>';
+    }
+  }
 }
 
-function usrInvitar(){
+async function usrInvitar(){
   if(!_usr||(_usr.rol!=='admin'&&_usr.rol!=='superadmin')){toast('Sin permisos','e');return;}
   var email=document.getElementById('usr-inv-email').value.trim().toLowerCase();
   var nombre=document.getElementById('usr-inv-nombre').value.trim();
   var rol=document.getElementById('usr-inv-rol').value;
   if(!email||!nombre){toast('Email y nombre son obligatorios','e');return;}
-  fbSyncBar(true,'Creando invitacion...');
-  saCrearInvitacion(email,nombre,_usr.congId,rol).then(function(link){
-    fbSyncBar(false);
-    _invLinkActual=link;
-    var linkEl=document.getElementById('usr-inv-link');
-    var linkTxt=document.getElementById('usr-inv-link-txt');
-    if(linkEl)linkEl.style.display='block';
-    if(linkTxt)linkTxt.value=link;
-    toast('Invitacion creada!','s');
-    usrCargarDatos();
-    // Intentar enviar email via EmailJS si está configurado
-    usrEnviarEmailInvitacion(email,nombre,link,rol);
-  }).catch(function(e){
-    console.error('usrInvitar error:',e);
-    fbSyncBar(false);
-    toast('Error al crear invitacion','e');
-  });
+  syncBar(true,'Creando invitacion...');
+  var link=await saCrearInvitacion(email,nombre,_usr.cong_id,rol);
+  syncBar(false);
+  if(!link)return;
+  var linkEl=document.getElementById('usr-inv-link');
+  var linkTxt=document.getElementById('usr-inv-link-txt');
+  if(linkEl)linkEl.style.display='block';
+  if(linkTxt)linkTxt.value=link;
+  toast('Invitacion creada!','s');
+  usrCargarDatos();
 }
 
 function usrCopiarLink(){
@@ -2778,35 +2710,36 @@ function usrEnviarEmailInvitacion(email,nombre,link,rol){
   console.log('Email invitacion pendiente de configurar para:',email);
 }
 
-function usrCargarDatos(){
-  if(!_usr||!_usr.congId)return;
+async function usrCargarDatos(){
+  if(!_usr)return;
   var esSA=_usr.rol==='superadmin';
-  // Primero cargar mapa de congregaciones para resolver nombres
-  _db.collection('congregaciones').get().then(function(congSnap){
-    var congMap={};
-    congSnap.docs.forEach(function(doc){congMap[doc.id]=doc.data();});
-    var query=esSA
-      ?_db.collection('usuarios').orderBy('email')
-      :_db.collection('usuarios').where('congId','==',_usr.congId);
-    return query.get().then(function(snap){
-      var el=document.getElementById('usr-lista');
-      if(!el)return;
-      if(snap.empty){el.innerHTML='<div class="es"><p>Sin usuarios registrados</p></div>';return;}
-      var rows=snap.docs.map(function(doc){
-        var d=doc.data();
-        var cong=congMap[d.congId]||{};
+  // Cargar mapa de congregaciones
+  var congRes=await _sb.from('congregaciones').select('id,nombre,circuito');
+  var congMap={};
+  (congRes.data||[]).forEach(function(c){congMap[c.id]=c;});
+  // Cargar usuarios
+  var qUsr=esSA
+    ?_sb.from('usuarios').select('*').order('email')
+    :_sb.from('usuarios').select('*').eq('cong_id',_usr.cong_id);
+  var res=await qUsr;
+  var el=document.getElementById('usr-lista');
+  if(el){
+    if(!res.data||!res.data.length){
+      el.innerHTML='<div class="es"><p>Sin usuarios registrados</p></div>';
+    } else {
+      var rows=res.data.map(function(d){
+        var cong=congMap[d.cong_id]||{};
         var rolBadge='<span class="badge '+(d.rol==='superadmin'||d.rol==='admin'?'bbl':d.rol==='coordinador'?'bgn':'bgy')+'">'+esc(d.rol||'')+'</span>';
         var estadoBadge='<span class="badge '+(d.activo?'bgn':'bgr')+'">'+(d.activo?'Activo':'Inactivo')+'</span>';
-        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-email="'+esc(doc.id)+'" data-nombre="'+esc(d.nombre||'')+'" data-rol="'+esc(d.rol||'')+'" data-activo="'+(d.activo?'1':'0')+'">'
-          +(esSA?'<td style="padding:8px"><div style="font-weight:600">'+esc(cong.nombre||d.congId||'---')+'</div><div style="font-size:11px;color:var(--tx3)">'+esc(cong.circuito||'')+'</div></td>':'')
-          +'<td style="padding:8px"><strong>'+esc(d.nombre||'---')+'</strong></td>'
-          +'<td style="padding:8px;font-size:12px">'+esc(d.email)+'</td>'
-          +'<td style="padding:8px;font-size:12px">'+esc(d.telefono||'---')+'</td>'
+        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-email="'+esc(d.email)+'" data-nombre="'+esc(d.nombre||'')+'" data-rol="'+esc(d.rol||'')+'" data-activo="'+(d.activo?'1':'0')+'">'
+          +(esSA?'<td style="padding:8px;font-size:11px">'+esc(cong.nombre||d.cong_id||'')+'</td>':'')
+          +'<td style="padding:8px"><strong>'+esc(d.nombre||'')+'</strong></td>'
+          +'<td style="padding:8px">'+esc(d.email)+'</td>'
           +'<td style="padding:8px">'+rolBadge+'</td>'
           +'<td style="padding:8px">'+estadoBadge+'</td>'
           +'<td style="padding:8px;white-space:nowrap">'
           +'<button class="btn bg bsm usr-edit-btn">Editar</button> '
-          +'<button class="btn bsm '+(d.activo?'bd2':'bp')+' usr-toggle-btn">'+(d.activo?'Desactivar':'Activar')+'</button> '
+          +'<button class="btn bsm '+(d.activo?'bd2':'bp')+' usr-tog-btn">'+(d.activo?'Desactivar':'Activar')+'</button> '
           +'<button class="btn bd2 bsm usr-del-btn">Eliminar</button>'
           +'</td></tr>';
       }).join('');
@@ -2815,138 +2748,118 @@ function usrCargarDatos(){
         +(esSA?'<th style="padding:8px;text-align:left">Congregacion</th>':'')
         +'<th style="padding:8px;text-align:left">Nombre</th>'
         +'<th style="padding:8px;text-align:left">Email</th>'
-        +'<th style="padding:8px;text-align:left">Telefono</th>'
         +'<th style="padding:8px;text-align:left">Rol</th>'
         +'<th style="padding:8px;text-align:left">Estado</th>'
         +'<th style="padding:8px;text-align:left">Acciones</th>'
         +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
       el.querySelectorAll('.usr-edit-btn').forEach(function(btn){
-        btn.addEventListener('click',function(){
-          var tr=btn.closest('tr');
-          usrEditar(tr.dataset.email,tr.dataset.nombre,tr.dataset.rol);
-        });
+        btn.addEventListener('click',function(){var tr=btn.closest('tr');usrEditar(tr.dataset.email,tr.dataset.nombre,tr.dataset.rol);});
       });
-      el.querySelectorAll('.usr-toggle-btn').forEach(function(btn){
-        btn.addEventListener('click',function(){
-          var tr=btn.closest('tr');
-          usrToggleActivo(tr.dataset.email,tr.dataset.activo==='1');
-        });
+      el.querySelectorAll('.usr-tog-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){var tr=btn.closest('tr');usrToggleActivo(tr.dataset.email,tr.dataset.activo==='1');});
       });
       el.querySelectorAll('.usr-del-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){var tr=btn.closest('tr');usrEliminar(tr.dataset.email);});
+      });
+    }
+  }
+  // Invitaciones pendientes
+  var qInv=esSA
+    ?_sb.from('invitaciones').select('*').eq('usada',false).order('creado_en',{ascending:false}).limit(50)
+    :_sb.from('invitaciones').select('*').eq('cong_id',_usr.cong_id).eq('usada',false);
+  var res2=await qInv;
+  var el2=document.getElementById('usr-lista-inv');
+  if(el2){
+    var ahora=new Date();
+    var pend=(res2.data||[]).filter(function(d){
+      var exp=d.expira_en?new Date(d.expira_en):null;
+      return !exp||ahora<=exp;
+    });
+    if(!pend.length){
+      el2.innerHTML='<div class="es"><p>Sin invitaciones pendientes</p></div>';
+    } else {
+      var rows2=pend.map(function(d){
+        var exp=d.expira_en?new Date(d.expira_en).toLocaleDateString('es-CL'):'---';
+        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-token="'+d.token+'" data-email="'+esc(d.email||'')+'" data-nombre="'+esc(d.nombre_invitado||'')+'" data-rol="'+esc(d.rol||'')+'" data-congid="'+esc(d.cong_id||'')+'">'
+          +(esSA?'<td style="padding:8px;font-size:11px">'+esc(d.cong_id||'')+'</td>':'')
+          +'<td style="padding:8px">'+esc(d.email||'')+'</td>'
+          +'<td style="padding:8px">'+esc(d.nombre_invitado||'')+'</td>'
+          +'<td style="padding:8px"><span class="badge bbl">'+esc(d.rol||'')+'</span></td>'
+          +'<td style="padding:8px">'+exp+'</td>'
+          +'<td style="padding:8px;white-space:nowrap">'
+          +'<button class="btn bg bsm inv-copy-btn">Copiar link</button> '
+          +'<button class="btn bd2 bsm inv-cancel-btn">Cancelar</button>'
+          +'</td></tr>';
+      }).join('');
+      el2.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+        +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
+        +(esSA?'<th style="padding:8px;text-align:left">Congr.</th>':'')
+        +'<th style="padding:8px;text-align:left">Email</th>'
+        +'<th style="padding:8px;text-align:left">Nombre</th>'
+        +'<th style="padding:8px;text-align:left">Rol</th>'
+        +'<th style="padding:8px;text-align:left">Expira</th>'
+        +'<th style="padding:8px;text-align:left">Acciones</th>'
+        +'</tr></thead><tbody>'+rows2+'</tbody></table></div>';
+      el2.querySelectorAll('.inv-copy-btn').forEach(function(btn){
         btn.addEventListener('click',function(){
           var tr=btn.closest('tr');
-          usrEliminar(tr.dataset.email);
+          var link=window.location.origin+'/index.html?inv='+tr.dataset.token;
+          navigator.clipboard.writeText(link).then(function(){toast('Link copiado!','s');});
         });
       });
-    });
-  }).catch(function(e){
-    var el=document.getElementById('usr-lista');
-    if(el)el.innerHTML='<div class="al alw">Error: '+e.message+'</div>';
-  });
-  // Invitaciones — sin orderBy para evitar indice compuesto
-  var qInv=esSA
-    ?_db.collection('invitaciones').where('usada','==',false)
-    :_db.collection('invitaciones').where('congId','==',_usr.congId).where('usada','==',false);
-  qInv.get().then(function(snap){
-    var el=document.getElementById('usr-lista-inv');
-    if(!el)return;
-    var ahora=new Date();
-    var pend=snap.docs.filter(function(doc){
-      var expira=doc.data().expiraEn?doc.data().expiraEn.toDate():null;
-      return !expira||ahora<=expira;
-    });
-    if(!pend.length){el.innerHTML='<div class="es"><p>Sin invitaciones pendientes</p></div>';return;}
-    var rows2=pend.map(function(doc){
-      var d=doc.data();
-      var expira=d.expiraEn?d.expiraEn.toDate().toLocaleDateString('es-CL'):'---';
-      return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-token="'+doc.id+'" data-email="'+esc(d.email||'')+'" data-nombre="'+esc(d.nombreInvitado||'')+'" data-rol="'+esc(d.rol||'')+'" data-congid="'+esc(d.congId||'')+'">'
-        +(esSA?'<td style="padding:8px;font-size:11px">'+esc(d.congId||'')+'</td>':'')
-        +'<td style="padding:8px">'+esc(d.email||'---')+'</td>'
-        +'<td style="padding:8px">'+esc(d.nombreInvitado||'---')+'</td>'
-        +'<td style="padding:8px"><span class="badge bbl">'+esc(d.rol||'')+'</span></td>'
-        +'<td style="padding:8px">'+expira+'</td>'
-        +'<td style="padding:8px;white-space:nowrap">'
-        +'<button class="btn bg bsm inv-reinv-btn">Reinvitar</button> '
-        +'<button class="btn bg bsm inv-copy-btn">Copiar</button> '
-        +'<button class="btn bd2 bsm inv-cancel-btn">Cancelar</button>'
-        +'</td></tr>';
-    }).join('');
-    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
-      +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
-      +(esSA?'<th style="padding:8px;text-align:left">Congr.</th>':'')
-      +'<th style="padding:8px;text-align:left">Email</th>'
-      +'<th style="padding:8px;text-align:left">Nombre</th>'
-      +'<th style="padding:8px;text-align:left">Rol</th>'
-      +'<th style="padding:8px;text-align:left">Expira</th>'
-      +'<th style="padding:8px;text-align:left">Acciones</th>'
-      +'</tr></thead><tbody>'+rows2+'</tbody></table></div>';
-    el.querySelectorAll('.inv-reinv-btn').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        var tr=btn.closest('tr');
-        usrReinvitar(tr.dataset.token,tr.dataset.email,tr.dataset.nombre,tr.dataset.rol,tr.dataset.congid);
+      el2.querySelectorAll('.inv-cancel-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var tr=btn.closest('tr');
+          confirmar('Cancelar esta invitacion?',async function(){
+            await _sb.from('invitaciones').update({usada:true}).eq('token',tr.dataset.token);
+            toast('Invitacion cancelada','s');usrCargarDatos();
+          });
+        });
       });
-    });
-    el.querySelectorAll('.inv-copy-btn').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        var tr=btn.closest('tr');
-        usrCopiarLinkDirecto(window.location.origin+window.location.pathname+'?inv='+tr.dataset.token);
-      });
-    });
-    el.querySelectorAll('.inv-cancel-btn').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        var tr=btn.closest('tr');
-        usrCancelarInv(tr.dataset.token);
-      });
-    });
-  }).catch(function(e){
-    var el=document.getElementById('usr-lista-inv');
-    if(el)el.innerHTML='<div class="al alw">Error: '+e.message+'</div>';
-  });
+    }
+  }
 }
 
 function usrEditar(email,nombre,rol){
-  openM('Editar usuario','<div class="fgrid">'
-    +'<div class="fg"><label>Nombre</label><input id="ue-nombre" value="'+esc(nombre)+'" type="text"></div>'
+  openM('Editar usuario',
+    '<div class="fg"><label>Nombre</label><input id="ue-nombre" value="'+esc(nombre)+'" type="text"></div>'
     +'<div class="fg"><label>Rol</label><select id="ue-rol">'
     +'<option value="visor" '+(rol==='visor'?'selected':'')+'>Visor</option>'
     +'<option value="lector" '+(rol==='lector'?'selected':'')+'>Lector</option>'
     +'<option value="coordinador" '+(rol==='coordinador'?'selected':'')+'>Coordinador</option>'
     +'<option value="admin" '+(rol==='admin'?'selected':'')+'>Admin</option>'
     +(_usr&&_usr.rol==='superadmin'?'<option value="superadmin" '+(rol==='superadmin'?'selected':'')+'>Super Admin</option>':'')
-    +'</select></div>'
-    +'</div>',
-    function(){
-      var nuevoNombre=document.getElementById('ue-nombre').value.trim();
-      var nuevoRol=document.getElementById('ue-rol').value;
-      if(!nuevoNombre){toast('El nombre es obligatorio','e');return;}
-      _db.collection('usuarios').doc(email).update({nombre:nuevoNombre,rol:nuevoRol})
-        .then(function(){toast('Usuario actualizado','s');closeM();usrCargarDatos();})
-        .catch(function(e){console.error(e);toast('Error al actualizar','e');});
-    }
+    +'</select></div>',
+    [{l:'Cancelar',c:'bg',fn:closeM},{l:'Guardar',c:'bp',fn:async function(){
+      var n=document.getElementById('ue-nombre').value.trim();
+      var r=document.getElementById('ue-rol').value;
+      if(!n){toast('Nombre obligatorio','e');return;}
+      var res=await _sb.from('usuarios').update({nombre:n,rol:r}).eq('email',email);
+      if(res.error){toast('Error: '+res.error.message,'e');return;}
+      toast('Usuario actualizado','s');closeM();usrCargarDatos();
+    }}]
   );
 }
 
 function usrEliminar(email){
-  confirmar('Eliminar definitivamente al usuario '+email+'?',function(){
-    _db.collection('usuarios').doc(email).delete()
-      .then(function(){toast('Usuario eliminado','s');usrCargarDatos();})
-      .catch(function(e){console.error(e);toast('Error al eliminar','e');});
+  confirmar('Eliminar definitivamente al usuario '+email+'?',async function(){
+    var res=await _sb.from('usuarios').delete().eq('email',email);
+    if(res.error){toast('Error: '+res.error.message,'e');return;}
+    toast('Usuario eliminado','s');usrCargarDatos();
   });
 }
 
-function usrReinvitar(tokenViejo,email,nombre,rol,congId){
-  confirmar('Crear nueva invitacion para '+email+'?',function(){
-    _db.collection('invitaciones').doc(tokenViejo).update({usada:true});
-    var congIdFinal=congId||_usr.congId;
-    saCrearInvitacion(email,nombre,congIdFinal,rol).then(function(link){
-      _invLinkActual=link;
+async function usrReinvitar(tokenViejo,email,nombre,rol,congId){
+  confirmar('Crear nueva invitacion para '+email+'?',async function(){
+    await _sb.from('invitaciones').update({usada:true}).eq('token',tokenViejo);
+    var link=await saCrearInvitacion(email,nombre,congId||_usr.cong_id,rol);
+    if(link){
       var linkEl=document.getElementById('usr-inv-link');
       var linkTxt=document.getElementById('usr-inv-link-txt');
       if(linkEl)linkEl.style.display='block';
       if(linkTxt)linkTxt.value=link;
-      toast('Nueva invitacion creada','s');
-      usrCargarDatos();
-    });
+      toast('Nueva invitacion creada','s');usrCargarDatos();
+    }
   });
 }
 
@@ -2961,54 +2874,37 @@ function usrCopiarLinkDirecto(link){
   });
 }
 
-function usrToggleActivo(email,activo){
-  _db.collection('usuarios').doc(email).update({activo:!activo}).then(function(){
-    toast('Usuario '+(activo?'desactivado':'activado'),'s');
-    usrCargarDatos();
+async function usrToggleActivo(email,activo){
+  var res=await _sb.from('usuarios').update({activo:!activo}).eq('email',email);
+  if(res.error){toast('Error','e');return;}
+  toast('Usuario '+(activo?'desactivado':'activado'),'s');usrCargarDatos();
+}
+
+async function usrCancelarInv(token){
+  confirmar('Cancelar esta invitacion?',async function(){
+    await _sb.from('invitaciones').update({usada:true}).eq('token',token);
+    toast('Invitacion cancelada','s');usrCargarDatos();
   });
 }
 
-function usrCancelarInv(token){
-  confirmar('Cancelar esta invitacion?',function(){
-    _db.collection('invitaciones').doc(token).update({usada:true}).then(function(){
-      toast('Invitacion cancelada','s');usrCargarDatos();
-    });
-  });
-}
-
-function invAceptar(){
-  if(!_invPendiente){toast('Error: invitacion no encontrada','e');return;}
-  var inv=_invPendiente.inv;
-  var token=_invPendiente.token;
+async function invAceptar(){
+  if(!_invPendiente)return;
+  var inv=_invPendiente.inv,token=_invPendiente.token;
   var btn=document.getElementById('inv-aceptar-btn');
   if(btn){btn.disabled=true;btn.textContent='Procesando...';}
-  // Solo crear el usuario vinculado a la congregacion
-  _db.collection('usuarios').doc(_usr.email).set({
-    email:_usr.email,
-    nombre:_usr.nombre||inv.nombreInvitado||'',
-    rol:inv.rol||'lector',
-    congId:inv.congId||'',
-    activo:true,
-    creadoEn:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(){
-    return _db.collection('invitaciones').doc(token).update({
-      usada:true,
-      usadaEn:firebase.firestore.FieldValue.serverTimestamp(),
-      usadaPor:_usr.email
-    });
-  }).then(function(){
-    _usr.rol=inv.rol||'lector';
-    _usr.congId=inv.congId||'';
-    _invPendiente=null;
-    var invScreen=document.getElementById('inv-screen');
-    if(invScreen)invScreen.classList.remove('show');
-    window.history.replaceState({},'',window.location.pathname);
-    location.reload();
-  }).catch(function(e){
-    console.error('invAceptar error:',e);
+  var res=await _sb.from('usuarios').upsert({
+    id:_usr.id,email:_usr.email,
+    nombre:_usr.nombre||inv.nombre_invitado||'',
+    rol:inv.rol||'lector',cong_id:inv.cong_id||'',activo:true
+  },{onConflict:'email'});
+  if(res.error){
     if(btn){btn.disabled=false;btn.textContent='Aceptar e ingresar';}
-    toast('Error al activar acceso: '+e.message,'e');
-  });
+    toast('Error: '+res.error.message,'e');return;
+  }
+  await _sb.from('invitaciones').update({usada:true,usada_por:_usr.email}).eq('token',token);
+  _invPendiente=null;
+  window.history.replaceState({},'',window.location.pathname);
+  location.reload();
 }
 
 function invRechazar(){
