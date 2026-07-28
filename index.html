@@ -5,18 +5,21 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Coordinador de Discursos Publicos</title>
 <link rel="stylesheet" href="css/styles.css">
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--sidebar-bg);}
 .login-card{background:#1e293b;border-radius:20px;padding:48px 40px;max-width:400px;width:90%;text-align:center;border:1px solid rgba(255,255,255,.08);}
 .login-logo{font-size:52px;margin-bottom:16px;}
 .login-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:6px;}
-.login-sub{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:32px;line-height:1.6;}
-.login-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px 20px;background:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;}
-.login-btn:hover{background:#f1f5f9;transform:translateY(-1px);}
-.login-err{margin-top:14px;font-size:13px;color:#f87171;min-height:20px;}
+.login-sub{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:28px;line-height:1.6;}
+.login-field{width:100%;padding:12px 14px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.06);color:#fff;font-size:14px;margin-bottom:10px;}
+.login-field::placeholder{color:rgba(255,255,255,.3);}
+.login-field:focus{outline:none;border-color:var(--pr);}
+.login-btn-main{width:100%;padding:13px;background:var(--pr);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:.2s;margin-top:4px;}
+.login-btn-main:hover{background:var(--prd);}
+.login-btn-main:disabled{opacity:.5;cursor:not-allowed;}
+.login-forgot{font-size:12px;color:rgba(255,255,255,.4);cursor:pointer;margin-top:12px;display:block;text-decoration:underline;}
+.login-forgot:hover{color:rgba(255,255,255,.7);}
+.login-err{margin-top:12px;font-size:13px;color:#f87171;min-height:20px;}
 .login-version{font-size:11px;color:rgba(255,255,255,.2);margin-top:20px;}
 </style>
 </head>
@@ -24,57 +27,67 @@ body{display:flex;align-items:center;justify-content:center;min-height:100vh;bac
 <div class="login-card">
   <div class="login-logo">&#128218;</div>
   <div class="login-title">Coordinador de Discursos</div>
-  <div class="login-sub">Accede con tu cuenta Google para coordinar los discursos publicos de tu congregacion</div>
-  <button class="login-btn" onclick="doLogin()">
-    <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-    Continuar con Google
-  </button>
+  <div class="login-sub">Accede con tu email y contraseña</div>
+  <input class="login-field" id="login-email" type="email" placeholder="tu@email.com" autocomplete="email">
+  <input class="login-field" id="login-pass" type="password" placeholder="Contraseña" autocomplete="current-password"
+    onkeydown="if(event.key==='Enter')doLogin()">
+  <button class="login-btn-main" id="login-btn" onclick="doLogin()">Ingresar</button>
+  <span class="login-forgot" onclick="doResetPassword()">Olvidé mi contraseña</span>
   <div class="login-err" id="login-err"></div>
   <div class="login-version">v4.0 — coordinadordiscursos.cl</div>
 </div>
 
-<script src="js/utils.js"></script>
-<script src="js/firebase.js"></script>
-<script>
-firebase.initializeApp({
-  apiKey:"AIzaSyDIx3N3aXVB6JamMw3_9CtGj_46fv2eTik",
-  authDomain:"coordinador-discursos-publicos.firebaseapp.com",
-  projectId:"coordinador-discursos-publicos",
-  storageBucket:"coordinador-discursos-publicos.firebasestorage.app",
-  messagingSenderId:"919110251829",
-  appId:"1:919110251829:web:0f07291d212988a9a0487c"
-});
-var _auth=firebase.auth();
-var _db=firebase.firestore();
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+  window._sb = createClient(
+    'https://drfqhkvppvteqwiycbjd.supabase.co',
+    'sb_publishable_hEs_ro07hCvZXLFm_Gq88A_1kvfvqAE'
+  );
 
-function doLogin(){
-  _auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
-}
+  function loginErr(msg){
+    const el = document.getElementById('login-err');
+    if(el) el.textContent = msg||'';
+  }
 
-_auth.getRedirectResult().catch(function(e){
-  document.getElementById('login-err').textContent='Error al iniciar sesion: '+e.message;
-});
-
-_auth.onAuthStateChanged(function(user){
-  if(!user)return;
-  // Verificar si tiene invitacion
-  var params=new URLSearchParams(window.location.search);
-  var token=params.get('inv');
-  _db.collection('usuarios').doc(user.email).get().then(function(doc){
-    if(doc.exists&&doc.data().activo){
-      // Usuario activo - ir al dashboard
-      window.location.href='app.html'+(token?'?inv='+token:'');
-    }else if(token){
-      // Tiene invitacion - ir al dashboard para procesarla
-      window.location.href='app.html?inv='+token;
-    }else{
-      document.getElementById('login-err').textContent='No tienes acceso. Solicita una invitacion.';
-      _auth.signOut();
+  window.doLogin = async function(){
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    if(!email||!pass){ loginErr('Ingresa tu email y contraseña'); return; }
+    const btn = document.getElementById('login-btn');
+    if(btn){ btn.disabled=true; btn.textContent='Ingresando...'; }
+    loginErr('');
+    const { data, error } = await _sb.auth.signInWithPassword({ email, password: pass });
+    if(error){
+      loginErr('Email o contraseña incorrectos');
+      if(btn){ btn.disabled=false; btn.textContent='Ingresar'; }
+      return;
     }
-  }).catch(function(e){
-    document.getElementById('login-err').textContent='Error de conexion.';
-  });
-});
+    // Verificar acceso
+    const { data: usr, error: e2 } = await _sb.from('usuarios')
+      .select('*').eq('email', email).single();
+    if(e2||!usr||!usr.activo){
+      loginErr('No tienes acceso. Contacta al administrador.');
+      await _sb.auth.signOut();
+      if(btn){ btn.disabled=false; btn.textContent='Ingresar'; }
+      return;
+    }
+    window.location.href = 'app.html';
+  };
+
+  window.doResetPassword = async function(){
+    const email = document.getElementById('login-email').value.trim();
+    if(!email){ loginErr('Ingresa tu email primero'); return; }
+    const { error } = await _sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/index.html'
+    });
+    if(error){ loginErr('Error: ' + error.message); return; }
+    loginErr('');
+    alert('Se envió un email para restablecer tu contraseña. Revisa tu bandeja.');
+  };
+
+  // Si ya tiene sesion, redirigir
+  const { data: { session } } = await _sb.auth.getSession();
+  if(session) window.location.href = 'app.html';
 </script>
 </body>
 </html>
