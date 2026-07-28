@@ -3057,12 +3057,12 @@ function loginErr(msg){
 
 function mostrarLogin(){
   var el = document.getElementById('login-overlay');
-  if(el) el.classList.remove('hidden');
+  if(el){ el.classList.add('show'); el.style.display='flex'; }
 }
 
 function ocultarLogin(){
   var el = document.getElementById('login-overlay');
-  if(el) el.classList.add('hidden');
+  if(el){ el.classList.remove('show'); el.style.display='none'; }
 }
 
 /* ── Auth ── */

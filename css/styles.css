@@ -266,7 +266,8 @@ tbody tr:last-child td{border-bottom:none;}
   #content{padding:16px;}
 }
 /* Login v4 */
-#login-overlay{position:fixed;inset:0;background:var(--sidebar-bg);display:flex;align-items:center;justify-content:center;z-index:9999;}
+#login-overlay{position:fixed;inset:0;background:var(--sidebar-bg);display:none;align-items:center;justify-content:center;z-index:9999;}
+#login-overlay.show{display:flex;}
 #login-overlay.hidden{display:none;}
 .login-card{background:#1e293b;border-radius:20px;padding:48px 40px;max-width:400px;width:90%;text-align:center;border:1px solid rgba(255,255,255,.08);}
 .login-logo{font-size:48px;margin-bottom:16px;}
