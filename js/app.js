@@ -258,7 +258,7 @@ function renderDash(){
   // Hermanos que mas tiempo llevan sin salir
   var hermActivos=D.locales.filter(function(h){return h.estado==='Activo'&&h.puedeAfuera==='si';});
   var hermSinSalir=hermActivos.map(function(h){
-    var ult=ultimaSalidaHermano(h);
+    var ult=ultimaSalidaHermano(h.id);
     return {nombre:h.nombre,dias:ult?diasDesde(ult,refMes()):9999,ultima:ult};
   }).sort(function(a,b){return b.dias-a.dias;}).slice(0,5);
 
