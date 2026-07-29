@@ -281,7 +281,7 @@ function renderDash(){
   }).sort(function(a,b){return b.dias-a.dias;}).slice(0,5);
 
   // Arreglos pendientes
-  var arrPend=(D.arreglos||[]).filter(function(a){return a.estado!=='Confirmado'&&a.estado!=='Cancelado'&&parseInt(a.anio)===parseInt(c.anio);});
+  var arrPend=(D.arreglos||[]).filter(function(a){return a.estado!=='Confirmado'&&a.estado!=='Cancelado';});
 
   // Render stats principales
   var statsEl=document.getElementById('dstats');
