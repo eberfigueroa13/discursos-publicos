@@ -60,6 +60,15 @@
     <div id="content">
 <div class="stit">Historial en nuestra congregacion</div><div class="sdesc">Solo registra discursos dados en nuestra congregacion. Este historial alimenta la regla de no repetir discursos.</div><div class="card"><div class="ctit">Agregar manualmente</div><div class="fgrid"><div class="fg"><label>Fecha</label><input id="hi-f" type="date" placeholder="" ></div><div class="fg"><label>Tipo</label><select id="hi-tp" ><option value="Externo">Externo</option><option value="Local">Local</option></select></div><div class="fg"><label>Congregacion origen</label><input id="hi-c" type="text" placeholder="Congregacion origen o mi congregacion" ></div><div class="fg"><label>Hermano</label><input id="hi-h" type="text" placeholder="Nombre del hermano" ></div><div class="fg"><label>Telefono orador</label><input id="hi-tel" type="text" placeholder="+56 9 ..." ></div><div class="fg"><label>N discurso</label><input id="hi-n" type="number" oninput="autoTitHist()"></div><div class="fg"><label>Titulo</label><input id="hi-t" type="text" placeholder="Se autocompleta..." ></div><div class="fg"><label>Obs.</label><input id="hi-o" type="text" placeholder="Opcional" ></div></div><div class="fa"><button class="btn bp" onclick="agregarHist()">Agregar</button><button class="btn bg" onclick="toggleArea('ia-hi')">Importar historico</button></div><div id="ia-hi" style="display:none;margin-top:14px;"><div class="al ali"><strong>Fecha | Tipo | Congregacion origen | Hermano | Telefono | N discurso | Titulo | Obs.</strong><br>Usa este importador para cargar los ultimos 12 meses dados en nuestra congregacion. Tambien acepta el formato anterior sin telefono. No pegues aqui salidas a otras congregaciones.</div><textarea id="iat-hi" placeholder="2025-07-06	Externo	Congregacion Sur	Juan Perez	+56912345678	12	Titulo del discurso
 2025-07-13	Local	Mi Congregacion	Pedro Soto	+56987654321	45	Titulo del discurso"></textarea><div class="fa"><button class="btn bs bsm" onclick="importarHistMasivo()">Importar historial</button><button class="btn bg bsm" onclick="toggleArea('ia-hi')">Cancelar</button></div></div></div><div class="card"><div class="sr"><input id="bq-hi" placeholder="Buscar..." oninput="renderHist()" style="flex:1"><select id="fhi-a" onchange="renderHist()"><option value="">Todos los anos</option></select></div><div class="fa" style="margin-bottom:10px"><button class="btn bg bsm" onclick="exportarHistCSV()">Exportar CSV</button></div><div class="bbar" id="bbar-hi"><span class="bbar-cnt" id="bcnt-hi"></span><button class="btn bd2 bsm" onclick="bulkDel('hi')">Eliminar</button><button class="btn bg bsm" onclick="bulkClear('hi')">Cancelar</button></div><div class="tw"><table><thead><tr><th class="chk"><input type="checkbox" onchange="selAll('hi',this)"></th><th class="sort" data-t="hi" data-c="fecha" onclick="sortT(this)">Fecha &#8645;</th><th>Tipo</th><th class="sort" data-t="hi" data-c="congregacion" onclick="sortT(this)">Congregacion origen &#8645;</th><th class="sort" data-t="hi" data-c="hermano" onclick="sortT(this)">Hermano &#8645;</th><th>Tel</th><th class="sort" data-t="hi" data-c="numDiscurso" onclick="sortT(this)">N &#8645;</th><th>Titulo</th><th>Obs.</th><th>Acciones</th></tr></thead><tbody id="tb-hi"></tbody></table></div></div>
+
+<div class="card" style="margin-top:16px">
+  <div class="ctit">Reporte de discursos por año</div>
+  <p style="font-size:13px;color:var(--tx3);margin-bottom:12px">Ultima vez que cada discurso activo fue dado en nuestra congregacion, por año.</p>
+  <div id="rpt-hist-wrap" style="overflow-x:auto">
+    <div class="es"><p>Cargando...</p></div>
+  </div>
+</div>
+
     </div>
   </div>
 </div>
@@ -69,7 +78,7 @@
 function initPagina(){
   initSidebar();
   setNavActivo('historial');
-  setPageTitle("Historial");poblarFiltAnio();renderHist();
+  setPageTitle("Historial");poblarFiltAnio();renderHist();renderReporteHistorial();
 }
 </script>
 </body>

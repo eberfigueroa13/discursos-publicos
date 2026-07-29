@@ -1379,6 +1379,71 @@ function poblarFiltAnio(){
   if(v)sel.value=v;
 }
 
+
+function renderReporteHistorial(){
+  var wrap=document.getElementById('rpt-hist-wrap');
+  if(!wrap)return;
+
+  // Obtener años disponibles del historial
+  var anios={};
+  (D.historial||[]).forEach(function(h){
+    if(h.fecha&&h.tipo==='Externo'){
+      var a=parseInt(h.fecha.slice(0,4));
+      if(a>2000) anios[a]=true;
+    }
+  });
+  var cols=Object.keys(anios).map(Number).sort(function(a,b){return a-b;});
+
+  if(!cols.length){
+    wrap.innerHTML='<div class="es"><p>Sin datos en el historial</p></div>';
+    return;
+  }
+
+  // Discursos activos
+  var discs=D.discursos.filter(function(d){return d.estado==='Activo';})
+    .sort(function(a,b){return parseInt(a.numero)-parseInt(b.numero);});
+
+  // Construir mapa: numDiscurso -> año -> ultima fecha
+  var mapa={};
+  discs.forEach(function(d){ mapa[d.numero]={}; });
+
+  (D.historial||[]).forEach(function(h){
+    if(!h.fecha||h.tipo!=='Externo'||!h.numDiscurso)return;
+    var num=parseInt(h.numDiscurso);
+    var anio=parseInt(h.fecha.slice(0,4));
+    if(!mapa[num])return;
+    if(!mapa[num][anio]||h.fecha>mapa[num][anio])
+      mapa[num][anio]=h.fecha;
+  });
+
+  // Render tabla
+  var html='<table style="border-collapse:collapse;font-size:12px;min-width:100%">'
+    +'<thead><tr style="background:var(--sf2)">'
+    +'<th style="padding:8px 10px;text-align:left;border:1px solid var(--bd);white-space:nowrap;position:sticky;left:0;background:var(--sf2)">N°</th>'
+    +'<th style="padding:8px 10px;text-align:left;border:1px solid var(--bd);white-space:nowrap;position:sticky;left:40px;background:var(--sf2)">Titulo</th>';
+  cols.forEach(function(a){
+    html+='<th style="padding:8px 10px;text-align:center;border:1px solid var(--bd);white-space:nowrap">'+a+'</th>';
+  });
+  html+='</tr></thead><tbody>';
+
+  discs.forEach(function(d,idx){
+    var bg=idx%2===0?'':'background:var(--sf2)';
+    html+='<tr style="'+bg+'">'
+      +'<td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600;position:sticky;left:0;background:'+(idx%2===0?'var(--sf)':'var(--sf2)')+'">'+d.numero+'</td>'
+      +'<td style="padding:6px 10px;border:1px solid var(--bd);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;position:sticky;left:40px;background:'+(idx%2===0?'var(--sf)':'var(--sf2)')+'">'+esc(d.titulo)+'</td>';
+    cols.forEach(function(a){
+      var fecha=mapa[d.numero]&&mapa[d.numero][a]?mapa[d.numero][a]:'';
+      var color=fecha?'':'color:var(--tx3)';
+      html+='<td style="padding:6px 10px;border:1px solid var(--bd);text-align:center;white-space:nowrap;'+color+'">'+
+        (fecha?fmtF(fecha):'---')+'</td>';
+    });
+    html+='</tr>';
+  });
+
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
 function renderHist(){
   var q=document.getElementById('bq-hi').value.toLowerCase();var anio=document.getElementById('fhi-a').value;
   var lista=D.historial.filter(function(h){return(!q||h.numDiscurso.toString().includes(q)||h.hermano.toLowerCase().includes(q)||(h.congregacion||'').toLowerCase().includes(q)||(h.titulo||'').toLowerCase().includes(q))&&(!anio||(h.fecha||'').startsWith(anio));});
