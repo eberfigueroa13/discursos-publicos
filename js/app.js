@@ -218,8 +218,10 @@ function sortT(th){
   var tbl=th.closest('table');
   if(tbl)tbl.querySelectorAll('th.sort').forEach(function(el){
     var ek=el.dataset.t+'.'+el.dataset.c;
-    el.innerHTML=el.innerHTML.replace(/\s*[&#9650;&#9660;&#8645;]+$/,'');
-    el.innerHTML+=_st[ek]==='asc'?' &#9650;':_st[ek]==='desc'?' &#9660;':' &#8645;';
+    // Limpiar texto dejando solo el label original sin flechas
+    var txt=el.textContent.replace(/[▲▼⇅\s]+$/,'').trim();
+    var arrow=_st[ek]==='asc'?' ▲':_st[ek]==='desc'?' ▼':' ⇅';
+    el.textContent=txt+arrow;
   });
   var fn={d:renderD,h:renderH,r:renderRep,ce:renderCE,ar:renderArreglos,cm:renderCM,hi:renderHist,sx:renderSalidas};
   if(fn[t])fn[t]();
