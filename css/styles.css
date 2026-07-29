@@ -260,10 +260,16 @@ tbody tr:last-child td{border-bottom:none;}
 #sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;}
 #sidebar-overlay.show{display:block;}
 @media(max-width:900px){
-  #sidebar{transform:translateX(-100%);width:var(--sidebar-width)!important;}
+  #sidebar{transform:translateX(-100%);width:var(--sidebar-width)!important;transition:transform .25s ease;}
   #sidebar.mobile-open{transform:translateX(0);}
   #main{margin-left:0!important;}
   #content{padding:16px;}
+  #topbar-toggle{width:44px;height:44px;padding:10px;}
+  #topbar{padding:0 16px;}
+  #page-title{font-size:14px;}
+  #sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;}
+  #sidebar-overlay.show{display:block;}
+  #sidebar{z-index:200;}
 }
 /* Login v4 */
 #login-overlay{position:fixed;inset:0;background:var(--sidebar-bg);display:none;align-items:center;justify-content:center;z-index:9999;}
