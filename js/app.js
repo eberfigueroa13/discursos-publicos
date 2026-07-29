@@ -581,10 +581,15 @@ function renderH(){
   lista=ordenar(lista,'h','nombre',1);
   var tb=document.getElementById('tb-h');
   if(!lista.length){tb.innerHTML='<tr><td colspan="11"><div class="es"><div class="ic2">&#128101;</div><p>Sin hermanos</p></div></td></tr>';return;}
+  // Calcular y cachear ultimas salidas para sorting
+  lista.forEach(function(h){
+    h.ultLocal=ultimaSalidaLocal(h)||'';
+    h.ultExt=ultimaSalidaExterna(h)||'';
+  });
   tb.innerHTML=lista.map(function(h){
     var sel=_sel.h.indexOf(h.id)>=0;
-    var ultLocal=ultimaSalidaLocal(h);
-    var ultExt=ultimaSalidaExterna(h);
+    var ultLocal=h.ultLocal;
+    var ultExt=h.ultExt;
     return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('h',h.id)+'</td>'
       +'<td><strong>'+esc(h.nombre)+'</strong></td><td>'+h.nombramiento+'</td>'
       +'<td><span class="badge '+(h.puedeAfuera==='si'?'bgn':'bgr')+'">'+(h.puedeAfuera==='si'?'Si':'No')+'</span></td>'
