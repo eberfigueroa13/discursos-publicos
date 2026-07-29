@@ -540,6 +540,39 @@ function importarHMasivo(){
   toast(ok+' importados'+(sk?', '+sk+' omitidos':''),'s');
 }
 
+
+function ultimaSalidaLocal(h){
+  if(!h)return null;
+  var nn=normName(h.nombre||'');
+  var items=[];
+  (D.historial||[]).forEach(function(x){
+    if(x.fecha&&x.tipo==='Local'&&nn&&normName(x.hermano||'')===nn)
+      items.push(x.fecha);
+  });
+  (D.planificacion||[]).forEach(function(p){
+    if(p.fecha&&p.tipo==='Local'&&p._hermanoId===h.id)
+      items.push(p.fecha);
+  });
+  if(!items.length)return null;
+  return items.sort(function(a,b){return b.localeCompare(a);})[0];
+}
+
+function ultimaSalidaExterna(h){
+  if(!h)return null;
+  var nn=normName(h.nombre||'');
+  var items=[];
+  (D.salidasRealizadas||[]).forEach(function(s){
+    if(s.fecha&&(s.hermanoId===h.id||(nn&&normName(s.hermano||'')===nn)))
+      items.push(s.fecha);
+  });
+  (D.historial||[]).forEach(function(x){
+    if(x.fecha&&x.tipo==='Salida'&&nn&&normName(x.hermano||'')===nn)
+      items.push(x.fecha);
+  });
+  if(!items.length)return null;
+  return items.sort(function(a,b){return b.localeCompare(a);})[0];
+}
+
 function renderH(){
   var q=document.getElementById('bq-h').value.toLowerCase();
   var nom=document.getElementById('fh-nom').value;
@@ -547,18 +580,22 @@ function renderH(){
   var lista=D.locales.filter(function(h){return(!q||h.nombre.toLowerCase().includes(q))&&(!nom||h.nombramiento===nom)&&(!af||h.puedeAfuera===af);});
   lista=ordenar(lista,'h','nombre',1);
   var tb=document.getElementById('tb-h');
-  if(!lista.length){tb.innerHTML='<tr><td colspan="9"><div class="es"><div class="ic2">&#128101;</div><p>Sin hermanos</p></div></td></tr>';return;}
+  if(!lista.length){tb.innerHTML='<tr><td colspan="11"><div class="es"><div class="ic2">&#128101;</div><p>Sin hermanos</p></div></td></tr>';return;}
   tb.innerHTML=lista.map(function(h){
     var sel=_sel.h.indexOf(h.id)>=0;
+    var ultLocal=ultimaSalidaLocal(h);
+    var ultExt=ultimaSalidaExterna(h);
     return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('h',h.id)+'</td>'
       +'<td><strong>'+esc(h.nombre)+'</strong></td><td>'+h.nombramiento+'</td>'
       +'<td><span class="badge '+(h.puedeAfuera==='si'?'bgn':'bgr')+'">'+(h.puedeAfuera==='si'?'Si':'No')+'</span></td>'
       +'<td><span class="badge '+(h.puedeLocal==='si'?'bgn':'bgr')+'">'+(h.puedeLocal==='si'?'Si':'No')+'</span></td>'
       +'<td><span class="badge '+(h.estado==='Activo'?'bgn':'bgr')+'">'+h.estado+'</span></td>'
-      +'<td>'+(h.telefono?esc(h.telefono):'---')+'</td><td>'+(nomPrivilegios(h)||'---')+'</td><td>'+(h.obs?esc(h.obs):'---')+'</td>'
+      +'<td style="font-size:12px">'+(ultLocal?fmtF(ultLocal):'<span style="color:var(--tx3)">---</span>')+'</td>'
+      +'<td style="font-size:12px">'+(ultExt?fmtF(ultExt):'<span style="color:var(--tx3)">---</span>')+'</td>'
+      +'<td>'+(h.telefono?esc(h.telefono):'---')+'</td><td>'+(nomPrivilegios(h)||'---')+'</td>'
       +'<td class="ac">'+btnAc('bg','editar','editH',h.id)+btnAc('bd2','x','delH',h.id)+'</td></tr>';
   }).join('');
-  tb.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=_sel.h.indexOf(c.dataset.id)>=0;});
+  tb.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=_sel.h.indexOf(c.dataset.id)>=0;})
 }
 
 function editH(id){
