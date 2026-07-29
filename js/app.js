@@ -1381,67 +1381,85 @@ function poblarFiltAnio(){
 
 
 function renderReporteHistorial(){
-  var wrap=document.getElementById('rpt-hist-wrap');
-  if(!wrap)return;
-
-  // Años disponibles en historial
+  // Años disponibles
   var anios={};
   (D.historial||[]).forEach(function(h){
-    if(h.fecha){
-      var a=parseInt(h.fecha.slice(0,4));
-      if(a>2000) anios[a]=true;
-    }
+    if(h.fecha){var a=parseInt(h.fecha.slice(0,4));if(a>2000)anios[a]=true;}
   });
   var cols=Object.keys(anios).map(Number).sort(function(a,b){return a-b;});
-
-  if(!cols.length){
-    wrap.innerHTML='<div class="es"><p>Sin datos en el historial</p></div>';
-    return;
-  }
-
   // Discursos activos
   var discs=D.discursos.filter(function(d){return d.estado==='Activo';})
     .sort(function(a,b){return parseInt(a.numero)-parseInt(b.numero);});
-
-  // Mapa: numDiscurso(string) -> año -> ultima fecha
+  // Mapa numero -> año -> ultima fecha
   var mapa={};
-  discs.forEach(function(d){ mapa[String(d.numero)]={}; });
-
+  discs.forEach(function(d){mapa[String(d.numero)]={};});
   (D.historial||[]).forEach(function(h){
     if(!h.fecha||!h.numDiscurso)return;
     var num=String(parseInt(h.numDiscurso));
     var anio=parseInt(h.fecha.slice(0,4));
     if(!mapa[num])return;
-    if(!mapa[num][anio]||h.fecha>mapa[num][anio])
-      mapa[num][anio]=h.fecha;
+    if(!mapa[num][anio]||h.fecha>mapa[num][anio])mapa[num][anio]=h.fecha;
   });
+  return {cols:cols,discs:discs,mapa:mapa};
+}
 
-  // Render tabla
-  var html='<table style="border-collapse:collapse;font-size:12px;min-width:100%">'
-    +'<thead><tr style="background:var(--sf2)">'
-    +'<th style="padding:8px 10px;text-align:left;border:1px solid var(--bd);white-space:nowrap">N°</th>'
-    +'<th style="padding:8px 10px;text-align:left;border:1px solid var(--bd);white-space:nowrap">Titulo</th>';
-  cols.forEach(function(a){
-    html+='<th style="padding:8px 10px;text-align:center;border:1px solid var(--bd)">'+a+'</th>';
+function exportarReporteHistorialCSV(){
+  var d=renderReporteHistorial();
+  if(!d.cols.length){toast('Sin datos en el historial','e');return;}
+  var rows=[['N°','Titulo'].concat(d.cols.map(String))];
+  d.discs.forEach(function(disc){
+    var num=String(disc.numero);
+    var row=[disc.numero,disc.titulo];
+    d.cols.forEach(function(a){
+      var f=d.mapa[num]&&d.mapa[num][a]?d.mapa[num][a]:'';
+      row.push(f?fmtF(f):'');
+    });
+    rows.push(row);
   });
+  var csv=rows.map(function(r){
+    return r.map(function(v){
+      var s=String(v||'');
+      return s.indexOf(',')>=0||s.indexOf('"')>=0?'"'+s.replace(/"/g,'""')+'"':s;
+    }).join(',');
+  }).join('\r\n');
+  var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='reporte_discursos_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast('CSV exportado','s');
+}
+
+function exportarReporteHistorialPDF(){
+  var d=renderReporteHistorial();
+  if(!d.cols.length){toast('Sin datos en el historial','e');return;}
+  var html='<html><head><meta charset="utf-8"><title>Reporte Discursos</title>'
+    +'<style>body{font-family:Arial,sans-serif;font-size:10px;margin:20px}'
+    +'table{border-collapse:collapse;width:100%}'
+    +'th,td{border:1px solid #ccc;padding:4px 6px;text-align:left}'
+    +'th{background:#f0f0f0;font-weight:bold}'
+    +'tr:nth-child(even){background:#f9f9f9}'
+    +'h2{font-size:14px;margin-bottom:8px}'
+    +'</style></head><body>'
+    +'<h2>Reporte de discursos por año — '+esc(D.miCongr.nombre||'')+'</h2>'
+    +'<table><thead><tr><th>N°</th><th>Titulo</th>';
+  d.cols.forEach(function(a){html+='<th>'+a+'</th>';});
   html+='</tr></thead><tbody>';
-
-  discs.forEach(function(d,idx){
-    var num=String(d.numero);
-    var bg=idx%2===0?'var(--sf)':'var(--sf2)';
-    html+='<tr style="background:'+bg+'">'
-      +'<td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">'+d.numero+'</td>'
-      +'<td style="padding:6px 10px;border:1px solid var(--bd);white-space:nowrap;max-width:250px;overflow:hidden;text-overflow:ellipsis">'+esc(d.titulo)+'</td>';
-    cols.forEach(function(a){
-      var fecha=mapa[num]&&mapa[num][a]?mapa[num][a]:'';
-      html+='<td style="padding:6px 10px;border:1px solid var(--bd);text-align:center;white-space:nowrap;'+(fecha?'':'color:var(--tx3)')+'">'+
-        (fecha?fmtF(fecha):'---')+'</td>';
+  d.discs.forEach(function(disc){
+    var num=String(disc.numero);
+    html+='<tr><td>'+disc.numero+'</td><td>'+esc(disc.titulo)+'</td>';
+    d.cols.forEach(function(a){
+      var f=d.mapa[num]&&d.mapa[num][a]?fmtF(d.mapa[num][a]):'';
+      html+='<td>'+(f||'---')+'</td>';
     });
     html+='</tr>';
   });
-
-  html+='</tbody></table>';
-  wrap.innerHTML=html;
+  html+='</tbody></table></body></html>';
+  var w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},500);
 }
 
 function renderHist(){

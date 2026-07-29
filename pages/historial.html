@@ -63,9 +63,10 @@
 
 <div class="card" style="margin-top:16px">
   <div class="ctit">Reporte de discursos por año</div>
-  <p style="font-size:13px;color:var(--tx3);margin-bottom:12px">Ultima vez que cada discurso activo fue dado en nuestra congregacion, por año.</p>
-  <div id="rpt-hist-wrap" style="overflow-x:auto">
-    <div class="es"><p>Cargando...</p></div>
+  <p style="font-size:13px;color:var(--tx3);margin-bottom:12px">Exporta un reporte con la ultima vez que cada discurso activo fue dado en nuestra congregacion, organizado por año.</p>
+  <div class="fa">
+    <button class="btn bp" onclick="exportarReporteHistorialPDF()">&#128196; Exportar PDF</button>
+    <button class="btn bg" onclick="exportarReporteHistorialCSV()">&#128202; Exportar Excel/CSV</button>
   </div>
 </div>
 
