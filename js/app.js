@@ -252,123 +252,131 @@ function dsp(el){
 
 function renderDash(){
   topMeta();
-  var c=D.config, mc=D.miCongr, db=c.diasBloqueo||365;
+  var c=D.config, mc=D.miCongr;
   var hoy=new Date().toISOString().slice(0,10);
   var ym=c.anio+'-'+String(c.mes).padStart(2,'0');
+  var isRoot=window.location.pathname.indexOf('/pages/')===-1;
+  var pre=isRoot?'pages/':'';
 
-  // Stats planificacion del mes
+  function nav(href){ window.location = href; }
+
   var planMes=D.planificacion.filter(function(p){return p.fecha&&p.fecha.slice(0,7)===ym;});
   var extMes=planMes.filter(function(p){return p.tipo==='Externo';});
   var sinAsignar=extMes.filter(function(p){return !p.hermano||!p.numDiscurso;}).length;
   var confirmados=extMes.filter(function(p){return p.confirmado==='Si';}).length;
   var proximas=extMes.filter(function(p){return p.fecha>=hoy;}).sort(function(a,b){return a.fecha.localeCompare(b.fecha);}).slice(0,4);
 
-  // Hermanos que mas tiempo llevan sin salir
   var hermActivos=D.locales.filter(function(h){return h.estado==='Activo'&&h.puedeAfuera==='si';});
   var hermSinSalir=hermActivos.map(function(h){
     var ult=ultimaSalidaHermano(h.id);
     var esAnciano=h.nombramiento==='Anciano';
-    var minDias=esAnciano?60:120; // 2 meses ancianos, 4 meses siervos
+    var minDias=esAnciano?60:120;
     var dias=ult?diasDesde(ult,refMes()):9999;
-    return {nombre:h.nombre,nombramiento:h.nombramiento||'',dias:dias,ultima:ult,minDias:minDias,listo:dias>=minDias};
+    return {nombre:h.nombre,nombramiento:h.nombramiento||'',dias:dias,ultima:ult,listo:dias>=minDias};
   }).filter(function(h){return h.listo;}).sort(function(a,b){return b.dias-a.dias;}).slice(0,5);
 
-  // Discursos que hace mas tiempo no se dan
   var discActivos=D.discursos.filter(function(d){return d.estado==='Activo';});
   var discSinDar=discActivos.map(function(d){
     var ult=ultimaVez(d.numero);
     return {numero:d.numero,titulo:d.titulo,dias:ult?diasDesde(ult,refMes()):9999,ultima:ult};
   }).sort(function(a,b){return b.dias-a.dias;}).slice(0,5);
 
-  // Arreglos pendientes
   var arrPend=(D.arreglos||[]).filter(function(a){return a.estado!=='Confirmado'&&a.estado!=='Cancelado';});
 
-  // Render stats principales
   var statsEl=document.getElementById('dstats');
   if(statsEl){
     var stats=[
-      {l:'Mes coordinado',v:nMes(c.mes)+' '+c.anio,cls:''},
-      {l:'Fechas del mes',v:extMes.length,s:confirmados+' confirm. / '+sinAsignar+' sin asignar',cls:sinAsignar>0?'warn':''},
-      {l:'Hermanos activos',v:D.locales.filter(function(h){return h.estado==='Activo';}).length,cls:''},
-      {l:'Discursos activos',v:discActivos.length,cls:''},
-      {l:'Arreglos pendientes',v:arrPend.length,cls:arrPend.length>0?'warn':''},
-      {l:'Historial total',v:D.historial.length,cls:''},
+      {l:'Mes coordinado',v:nMes(c.mes)+' '+c.anio,s:'',w:false,href:pre+'configuracion.html'},
+      {l:'Fechas del mes',v:extMes.length,s:confirmados+' confirm. / '+sinAsignar+' sin asignar',w:sinAsignar>0,href:pre+'planificacion.html'},
+      {l:'Hermanos activos',v:D.locales.filter(function(h){return h.estado==='Activo';}).length,s:'',w:false,href:pre+'hermanos.html'},
+      {l:'Discursos activos',v:discActivos.length,s:'',w:false,href:pre+'discursos.html'},
+      {l:'Arreglos pendientes',v:arrPend.length,s:'',w:arrPend.length>0,href:pre+'arreglos.html'},
     ];
-    statsEl.innerHTML=stats.map(function(s){
-      var fs=typeof s.v==='string'&&s.v.length>8?'15px':'28px';
-      var color=s.cls==='warn'?'color:var(--ye)':'';
-      return '<div class="sc"><div class="sl">'+s.l+'</div>'
-        +'<div class="sv" style="font-size:'+fs+';'+color+'">'+esc(String(s.v))+'</div>'
-        +(s.s?'<div class="ss">'+s.s+'</div>':'')
+    var html='';
+    for(var si=0;si<stats.length;si++){
+      var st=stats[si];
+      var fs=typeof st.v==='string'&&st.v.length>8?'15px':'28px';
+      var col=st.w?'color:var(--ye)':'';
+      html+='<div class="sc" data-href="'+st.href+'" style="cursor:pointer">'
+        +'<div class="sl">'+st.l+'</div>'
+        +'<div class="sv" style="font-size:'+fs+';'+col+'">'+esc(String(st.v))+'</div>'
+        +(st.s?'<div class="ss">'+st.s+'</div>':'')
         +'</div>';
-    }).join('');
+    }
+    statsEl.innerHTML=html;
+    statsEl.querySelectorAll('[data-href]').forEach(function(el){
+      el.addEventListener('click',function(){window.location=el.dataset.href;});
+    });
   }
 
-  // Render info congregacion
   var diEl=document.getElementById('di');
   if(diEl){
-    diEl.innerHTML=
-      // Proximas fechas
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">'
-      +'<div class="card" style="margin:0">'
-      +'<div class="ctit" style="margin-bottom:10px">&#128197; Proximas fechas</div>'
-      +(proximas.length?proximas.map(function(p){
+    // Proximas fechas
+    var htmlProx='<div class="card" data-href="'+pre+'planificacion.html" style="margin:0;cursor:pointer">'
+      +'<div class="ctit" style="margin-bottom:10px">&#128197; Proximas fechas</div>';
+    if(proximas.length){
+      for(var pi=0;pi<proximas.length;pi++){
+        var p=proximas[pi];
         var ok=p.confirmado==='Si',pend=!p.hermano||!p.numDiscurso;
-        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">'
+        htmlProx+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">'
           +'<div style="font-size:12px;font-weight:600;color:var(--pr);width:60px">'+fmtF(p.fecha)+'</div>'
-          +'<div style="flex:1">'
-          +'<div style="font-weight:500">'+(p.hermano?esc(p.hermano):'<span style="color:var(--rd)">Sin asignar</span>')+'</div>'
-          +(p.numDiscurso?'<div style="font-size:11px;color:var(--tx3)">N° '+p.numDiscurso+' '+esc(p.titulo||'')+'</div>':'')
+          +'<div style="flex:1"><div style="font-weight:500">'+(p.hermano?esc(p.hermano):'<span style="color:var(--rd)">Sin asignar</span>')+'</div>'
+          +(p.numDiscurso?'<div style="font-size:11px;color:var(--tx3)">N° '+p.numDiscurso+'</div>':'')
           +'</div>'
-          +'<span style="font-size:11px;padding:2px 6px;border-radius:10px;background:'+(ok?'var(--gnl)':pend?'var(--rdl)':'var(--yel)')
-          +';color:'+(ok?'var(--gn)':pend?'var(--rd)':'var(--ye)')+';">'+(ok?'OK':pend?'Pend.':'Por conf.')+'</span>'
+          +'<span style="font-size:11px;padding:2px 6px;border-radius:10px;background:'+(ok?'var(--gnl)':pend?'var(--rdl)':'var(--yel)')+';color:'+(ok?'var(--gn)':pend?'var(--rd)':'var(--ye)')+';">'+(ok?'OK':pend?'Pend.':'Por conf.')+'</span>'
           +'</div>';
-      }).join(''):'<div style="text-align:center;padding:20px;color:var(--tx3)">Sin fechas proximas</div>')
-      +'</div>'
+      }
+    } else { htmlProx+='<div style="text-align:center;padding:20px;color:var(--tx3)">Sin fechas proximas</div>'; }
+    htmlProx+='</div>';
 
-      // Hermanos sin salir
-      +'<div class="card" style="margin:0">'
-      +'<div class="ctit" style="margin-bottom:10px">&#128652; Sugerencias de salida</div>'
-      +(hermSinSalir.length?hermSinSalir.map(function(h){
-        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">'
+    // Sugerencias de salida
+    var htmlSal='<div class="card" data-href="'+pre+'planificacion.html" style="margin:0;cursor:pointer">'
+      +'<div class="ctit" style="margin-bottom:10px">&#128652; Sugerencias de salida</div>';
+    if(hermSinSalir.length){
+      for(var hi=0;hi<hermSinSalir.length;hi++){
+        var h=hermSinSalir[hi];
+        htmlSal+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px">'
           +'<div style="flex:1"><div style="font-weight:500">'+esc(h.nombre)+'</div>'
-          +'<div style="font-size:11px;color:var(--tx3)">'+esc(h.nombramiento||'')+'</div></div>'
+          +'<div style="font-size:11px;color:var(--tx3)">'+esc(h.nombramiento)+'</div></div>'
           +'<div style="font-size:11px;color:var(--tx3)">'+(h.ultima?'Hace '+h.dias+' dias':'Nunca ha salido')+'</div>'
           +'</div>';
-      }).join(''):'<div style="text-align:center;padding:20px;color:var(--tx3)">Todos al dia</div>')
-      +'</div>'
-      +'</div>'
+      }
+    } else { htmlSal+='<div style="text-align:center;padding:20px;color:var(--tx3)">Todos al dia</div>'; }
+    htmlSal+='</div>';
 
-      // Discursos sin dar
-      +'<div class="card" style="margin:0 0 16px">'
+    // Discursos sin dar
+    var htmlDisc='<div class="card" data-href="'+pre+'historial.html" style="margin:0 0 16px;cursor:pointer">'
       +'<div class="ctit" style="margin-bottom:10px">&#128218; Discursos sin dar hace mas tiempo</div>'
       +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
       +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
-      +'<th style="padding:8px;text-align:left">N°</th>'
-      +'<th style="padding:8px;text-align:left">Titulo</th>'
-      +'<th style="padding:8px;text-align:left">Ultima vez</th>'
-      +'</tr></thead><tbody>'
-      +discSinDar.map(function(d){
-        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px">'
-          +'<td style="padding:8px;font-weight:600">'+d.numero+'</td>'
-          +'<td style="padding:8px">'+esc(d.titulo)+'</td>'
-          +'<td style="padding:8px;color:var(--tx3)">'+(d.ultima?fmtF(d.ultima)+' ('+d.dias+' dias)':'Nunca dado')+'</td>'
-          +'</tr>';
-      }).join('')
-      +'</tbody></table></div>'
-      +'</div>'
+      +'<th style="padding:8px;text-align:left">N°</th><th style="padding:8px;text-align:left">Titulo</th>'
+      +'<th style="padding:8px;text-align:left">Ultima vez</th></tr></thead><tbody>';
+    for(var di=0;di<discSinDar.length;di++){
+      var d=discSinDar[di];
+      htmlDisc+='<tr style="border-bottom:1px solid var(--bd);font-size:13px">'
+        +'<td style="padding:8px;font-weight:600">'+d.numero+'</td>'
+        +'<td style="padding:8px">'+esc(d.titulo)+'</td>'
+        +'<td style="padding:8px;color:var(--tx3)">'+(d.ultima?fmtF(d.ultima)+' ('+d.dias+' dias)':'Nunca dado')+'</td>'
+        +'</tr>';
+    }
+    htmlDisc+='</tbody></table></div></div>';
 
-      // Mi congregacion
-      +'<div class="card" style="margin:0">'
+    // Mi congregacion
+    var htmlCong='<div class="card" data-href="'+pre+'configuracion.html" style="margin:0;cursor:pointer">'
       +'<div class="ctit" style="margin-bottom:10px">&#127968; Mi congregacion</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--tx2)">'
       +(mc.nombre?'<span><strong>'+esc(mc.nombre)+'</strong></span>':'<span style="color:var(--tx3)">No configurada</span>')
       +(mc.direccion?'<span>'+esc(mc.direccion)+'</span>':'')
-      +(mc.dia?'<span>Discurso: '+nomDia(mc.dia)+' '+esc(mc.horario)+'</span>':'')
+      +(mc.dia?'<span>'+nomDia(mc.dia)+' '+esc(mc.horario)+'</span>':'')
       +(mc.circuito?'<span>Circuito: '+esc(mc.circuito)+'</span>':'')
       +(mc.coordNombre?'<span>Coord: '+esc(mc.coordNombre)+' '+esc(mc.coordTel)+'</span>':'')
-      +'</div>'
-      +'</div>';
+      +'</div></div>';
+
+    diEl.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">'+htmlProx+htmlSal+'</div>'+htmlDisc+htmlCong;
+
+    diEl.querySelectorAll('[data-href]').forEach(function(el){
+      el.addEventListener('click',function(){window.location=el.dataset.href;});
+    });
   }
 }
 
