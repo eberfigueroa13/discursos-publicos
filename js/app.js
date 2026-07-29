@@ -1384,10 +1384,10 @@ function renderReporteHistorial(){
   var wrap=document.getElementById('rpt-hist-wrap');
   if(!wrap)return;
 
-  // Obtener años disponibles del historial
+  // Años disponibles en historial
   var anios={};
   (D.historial||[]).forEach(function(h){
-    if(h.fecha&&h.tipo==='Externo'){
+    if(h.fecha){
       var a=parseInt(h.fecha.slice(0,4));
       if(a>2000) anios[a]=true;
     }
@@ -1403,13 +1403,13 @@ function renderReporteHistorial(){
   var discs=D.discursos.filter(function(d){return d.estado==='Activo';})
     .sort(function(a,b){return parseInt(a.numero)-parseInt(b.numero);});
 
-  // Construir mapa: numDiscurso -> año -> ultima fecha
+  // Mapa: numDiscurso(string) -> año -> ultima fecha
   var mapa={};
-  discs.forEach(function(d){ mapa[d.numero]={}; });
+  discs.forEach(function(d){ mapa[String(d.numero)]={}; });
 
   (D.historial||[]).forEach(function(h){
-    if(!h.fecha||h.tipo!=='Externo'||!h.numDiscurso)return;
-    var num=parseInt(h.numDiscurso);
+    if(!h.fecha||!h.numDiscurso)return;
+    var num=String(parseInt(h.numDiscurso));
     var anio=parseInt(h.fecha.slice(0,4));
     if(!mapa[num])return;
     if(!mapa[num][anio]||h.fecha>mapa[num][anio])
@@ -1419,22 +1419,22 @@ function renderReporteHistorial(){
   // Render tabla
   var html='<table style="border-collapse:collapse;font-size:12px;min-width:100%">'
     +'<thead><tr style="background:var(--sf2)">'
-    +'<th style="padding:8px 10px;text-align:left;border:1px solid var(--bd);white-space:nowrap;position:sticky;left:0;background:var(--sf2)">N°</th>'
-    +'<th style="padding:8px 10px;text-align:left;border:1px solid var(--bd);white-space:nowrap;position:sticky;left:40px;background:var(--sf2)">Titulo</th>';
+    +'<th style="padding:8px 10px;text-align:left;border:1px solid var(--bd);white-space:nowrap">N°</th>'
+    +'<th style="padding:8px 10px;text-align:left;border:1px solid var(--bd);white-space:nowrap">Titulo</th>';
   cols.forEach(function(a){
-    html+='<th style="padding:8px 10px;text-align:center;border:1px solid var(--bd);white-space:nowrap">'+a+'</th>';
+    html+='<th style="padding:8px 10px;text-align:center;border:1px solid var(--bd)">'+a+'</th>';
   });
   html+='</tr></thead><tbody>';
 
   discs.forEach(function(d,idx){
-    var bg=idx%2===0?'':'background:var(--sf2)';
-    html+='<tr style="'+bg+'">'
-      +'<td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600;position:sticky;left:0;background:'+(idx%2===0?'var(--sf)':'var(--sf2)')+'">'+d.numero+'</td>'
-      +'<td style="padding:6px 10px;border:1px solid var(--bd);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;position:sticky;left:40px;background:'+(idx%2===0?'var(--sf)':'var(--sf2)')+'">'+esc(d.titulo)+'</td>';
+    var num=String(d.numero);
+    var bg=idx%2===0?'var(--sf)':'var(--sf2)';
+    html+='<tr style="background:'+bg+'">'
+      +'<td style="padding:6px 10px;border:1px solid var(--bd);font-weight:600">'+d.numero+'</td>'
+      +'<td style="padding:6px 10px;border:1px solid var(--bd);white-space:nowrap;max-width:250px;overflow:hidden;text-overflow:ellipsis">'+esc(d.titulo)+'</td>';
     cols.forEach(function(a){
-      var fecha=mapa[d.numero]&&mapa[d.numero][a]?mapa[d.numero][a]:'';
-      var color=fecha?'':'color:var(--tx3)';
-      html+='<td style="padding:6px 10px;border:1px solid var(--bd);text-align:center;white-space:nowrap;'+color+'">'+
+      var fecha=mapa[num]&&mapa[num][a]?mapa[num][a]:'';
+      html+='<td style="padding:6px 10px;border:1px solid var(--bd);text-align:center;white-space:nowrap;'+(fecha?'':'color:var(--tx3)')+'">'+
         (fecha?fmtF(fecha):'---')+'</td>';
     });
     html+='</tr>';
