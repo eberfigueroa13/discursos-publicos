@@ -2647,7 +2647,9 @@ function buildAnexoConfirmacionHTML(data){
   var sal=data.sal;
   var filas=sal.map(function(p){
     var h=data.hermanoPlan(p);
-    var disc=p.numDiscurso&&p.titulo?(esc(p.numDiscurso)+' - '+esc(p.titulo)):'<span class="por-confirmar">Por confirmar</span>';
+    var discObj=p.numDiscurso?D.discursos.find(function(d){return parseInt(d.numero)===parseInt(p.numDiscurso);}):null;
+    var discTit=discObj?discObj.titulo:(p.titulo||'');
+    var disc=p.numDiscurso?(esc(p.numDiscurso)+' - '+esc(discTit||'Sin titulo')):'<span class="por-confirmar">Por confirmar</span>';
     return '<tr>'
       +'<td style="width:16%">'+(p.fecha?fmtF(p.fecha):'Sin fecha')+'</td>'
       +'<td style="width:28%"><strong>'+esc(p.hermano)+'</strong><br><span class="small">'+esc(data.cargoH(h))+'</span></td>'
