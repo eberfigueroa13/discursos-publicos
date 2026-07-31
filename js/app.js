@@ -2991,7 +2991,7 @@ async function saCrearInvitacion(email,nombre,congId,rol){
     creado_por:_usr.email
   });
   if(res.error){toast('Error al crear invitacion: '+res.error.message,'e');return null;}
-  var link=window.location.origin+'/index.html?inv='+token;
+  var link=window.location.origin+'/onboarding.html?inv='+token;
   // Obtener nombre de congregacion
   var congRes=await _sb.from('congregaciones').select('nombre').eq('id',congId).single();
   var congNombre=congRes.data?congRes.data.nombre:'';
@@ -3075,14 +3075,32 @@ async function saCargarDatos(){
   }
 }
 
+
+function compartirWhatsApp(){
+  var linkTxt = document.getElementById('usr-inv-link-txt');
+  if(!linkTxt||!linkTxt.value){toast('Sin link de invitacion','e');return;}
+  var nombre = document.getElementById('usr-inv-nombre').value.trim()||'';
+  var msg = 'Hola'+(nombre?' '+nombre:'')+', has sido invitado al Coordinador de Discursos Publicos.'
+    +'\n\nPara activar tu cuenta, ingresa al siguiente enlace (valido por 48 horas):'
+    +'\n'+linkTxt.value
+    +'\n\nSi tienes dudas, consulta con quien te envio esta invitacion.';
+  var url = 'https://wa.me/?text='+encodeURIComponent(msg);
+  window.open(url,'_blank');
+}
+
 async function usrInvitar(){
   if(!_usr||(_usr.rol!=='admin'&&_usr.rol!=='superadmin')){toast('Sin permisos','e');return;}
   var email=document.getElementById('usr-inv-email').value.trim().toLowerCase();
   var nombre=document.getElementById('usr-inv-nombre').value.trim();
   var rol=document.getElementById('usr-inv-rol').value;
+  // Superadmin puede elegir congregacion, admin usa la suya
+  var congId=_usr.rol==='superadmin'
+    ?(document.getElementById('usr-inv-cong')?document.getElementById('usr-inv-cong').value:_usr.cong_id)
+    :_usr.cong_id;
   if(!email||!nombre){toast('Email y nombre son obligatorios','e');return;}
+  if(!congId){toast('Selecciona una congregacion','e');return;}
   syncBar(true,'Creando invitacion...');
-  var link=await saCrearInvitacion(email,nombre,_usr.cong_id,rol);
+  var link=await saCrearInvitacion(email,nombre,congId,rol);
   syncBar(false);
   if(!link)return;
   var linkEl=document.getElementById('usr-inv-link');
@@ -3114,6 +3132,17 @@ function usrEnviarEmailInvitacion(email,nombre,link,rol){
 async function usrCargarDatos(){
   if(!_usr)return;
   var esSA=_usr.rol==='superadmin';
+  // Poblar selector de congregaciones para superadmin
+  if(esSA){
+    var selCong=document.getElementById('usr-inv-cong');
+    if(selCong){
+      var congRes=await _sb.from('congregaciones').select('id,nombre').eq('activo',true).order('nombre');
+      selCong.innerHTML='<option value="">Seleccionar...</option>'
+        +(congRes.data||[]).map(function(c){
+          return '<option value="'+c.id+'">'+c.nombre+'</option>';
+        }).join('');
+    }
+  }
   // Cargar mapa de congregaciones
   var congRes=await _sb.from('congregaciones').select('id,nombre,circuito');
   var congMap={};

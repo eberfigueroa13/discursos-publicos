@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Activar cuenta — Coordinador de Discursos</title>
+<link rel="stylesheet" href="css/styles.css">
+<style>
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--sidebar-bg);padding:20px;box-sizing:border-box;}
+.ob-wrap{background:#1e293b;border-radius:20px;padding:0;max-width:560px;width:100%;border:1px solid rgba(255,255,255,.08);overflow:hidden;}
+.ob-header{background:#1a2332;padding:24px 32px;text-align:center;border-bottom:1px solid rgba(255,255,255,.08);}
+.ob-header h1{color:#fff;font-size:18px;font-weight:600;margin:0 0 4px}
+.ob-header p{color:rgba(255,255,255,.5);font-size:13px;margin:0}
+.ob-steps{display:flex;padding:16px 32px;gap:0;border-bottom:1px solid rgba(255,255,255,.08);}
+.ob-step{flex:1;text-align:center;position:relative;}
+.ob-step:not(:last-child)::after{content:'';position:absolute;top:14px;left:60%;width:80%;height:2px;background:rgba(255,255,255,.1);}
+.ob-step.done::after{background:var(--pr);}
+.ob-dot{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:rgba(255,255,255,.4);margin:0 auto 6px;position:relative;z-index:1;}
+.ob-step.active .ob-dot{background:var(--pr);color:#fff;}
+.ob-step.done .ob-dot{background:var(--pr);color:#fff;}
+.ob-step-lbl{font-size:11px;color:rgba(255,255,255,.4);}
+.ob-step.active .ob-step-lbl{color:#fff;}
+.ob-body{padding:32px;}
+.ob-field{margin-bottom:16px;}
+.ob-field label{display:block;font-size:13px;color:rgba(255,255,255,.7);margin-bottom:6px;font-weight:500;}
+.ob-field label span{color:#f87171;margin-left:2px;}
+.ob-input{width:100%;padding:11px 14px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.06);color:#fff;font-size:14px;box-sizing:border-box;}
+.ob-input:focus{outline:none;border-color:var(--pr);}
+.ob-input::placeholder{color:rgba(255,255,255,.3);}
+.ob-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff60' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.ob-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.ob-btn{width:100%;padding:13px;background:var(--pr);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;}
+.ob-btn:hover{background:var(--prd);}
+.ob-btn:disabled{opacity:.5;cursor:not-allowed;}
+.ob-btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);margin-top:8px;}
+.ob-btn-ghost:hover{background:rgba(255,255,255,.06);}
+.ob-err{font-size:13px;color:#f87171;margin-top:8px;min-height:20px;}
+.ob-info{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px;font-size:13px;color:rgba(255,255,255,.6);margin-bottom:20px;line-height:1.6;}
+.ob-disc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:320px;overflow-y:auto;padding:4px;}
+.ob-disc-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:8px;cursor:pointer;transition:background .15s;}
+.ob-disc-item:hover{background:rgba(255,255,255,.05);}
+.ob-disc-item.selected{background:rgba(58,110,165,.2);border-color:var(--pr);}
+.ob-disc-item input{margin-top:2px;flex-shrink:0;}
+.ob-disc-num{font-weight:600;font-size:13px;color:var(--pr);min-width:28px;}
+.ob-disc-tit{font-size:12px;color:rgba(255,255,255,.7);line-height:1.4;}
+.ob-search{width:100%;padding:9px 14px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.06);color:#fff;font-size:13px;box-sizing:border-box;margin-bottom:10px;}
+.ob-search::placeholder{color:rgba(255,255,255,.3);}
+.ob-search:focus{outline:none;border-color:var(--pr);}
+.ob-sel-count{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:10px;}
+.pass-hint{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px;}
+.ob-loading{text-align:center;padding:40px;color:rgba(255,255,255,.6);}
+.ob-success{text-align:center;padding:40px 32px;}
+.ob-success .icon{font-size:56px;margin-bottom:16px;}
+.ob-success h2{color:#fff;font-size:20px;margin:0 0 8px;}
+.ob-success p{color:rgba(255,255,255,.6);font-size:14px;margin:0 0 24px;}
+</style>
+</head>
+<body>
+<div class="ob-wrap" id="ob-wrap">
+  <div class="ob-loading" id="ob-loading">&#128218; Verificando invitacion...</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase.min.js"></script>
+<script>
+var _sb = supabase.createClient(
+  'https://drfqhkvppvteqwiycbjd.supabase.co',
+  'sb_publishable_hEs_ro07hCvZXLFm_Gq88A_1kvfvqAE'
+);
+
+var _inv = null;
+var _step = 1;
+var _totalSteps = 3;
+var _esCongNueva = false;
+var _discSeleccionados = [];
+var _discursos = [];
+
+// Leer token de la URL
+var _token = new URLSearchParams(window.location.search).get('inv');
+
+async function init(){
+  if(!_token){
+    mostrarError('Link invalido. Solicita una nueva invitacion.');
+    return;
+  }
+  // Verificar invitacion
+  var res = await _sb.from('invitaciones').select('*').eq('token',_token).single();
+  if(res.error || !res.data){
+    mostrarError('Invitacion no encontrada o expirada.');
+    return;
+  }
+  var inv = res.data;
+  if(inv.usada){
+    mostrarError('Esta invitacion ya fue utilizada.');
+    return;
+  }
+  if(inv.expira_en && new Date() > new Date(inv.expira_en)){
+    mostrarError('Esta invitacion ha expirado. Solicita una nueva.');
+    return;
+  }
+  _inv = inv;
+  // Verificar si la congregacion es nueva (sin datos)
+  var congRes = await _sb.from('congregaciones').select('*').eq('id',inv.cong_id).single();
+  if(congRes.data){
+    var c = congRes.data;
+    _esCongNueva = !c.direccion && !c.horario && !c.circuito;
+  }
+  _totalSteps = _esCongNueva ? 3 : 2;
+  // Cargar discursos si congregacion existente
+  if(!_esCongNueva){
+    var discRes = await _sb.from('discursos').select('*').eq('cong_id',inv.cong_id).eq('estado','Activo').order('numero');
+    _discursos = discRes.data || [];
+  }
+  renderStep();
+}
+
+function mostrarError(msg){
+  document.getElementById('ob-wrap').innerHTML =
+    '<div style="padding:48px 32px;text-align:center">'
+    +'<div style="font-size:48px;margin-bottom:16px">&#9888;</div>'
+    +'<h2 style="color:#fff;font-size:18px;margin:0 0 8px">Link invalido</h2>'
+    +'<p style="color:rgba(255,255,255,.5);font-size:14px">'+msg+'</p>'
+    +'</div>';
+}
+
+function stepsHTML(){
+  var labels = _esCongNueva
+    ? ['Congregacion','Datos personales','Repertorio']
+    : ['Datos personales','Repertorio'];
+  var html = '<div class="ob-steps">';
+  for(var i=0;i<_totalSteps;i++){
+    var cls = _step > i+1 ? 'done' : _step === i+1 ? 'active' : '';
+    var icon = _step > i+1 ? '&#10003;' : (i+1);
+    html += '<div class="ob-step '+cls+'">'
+      +'<div class="ob-dot">'+icon+'</div>'
+      +'<div class="ob-step-lbl">'+labels[i]+'</div>'
+      +'</div>';
+  }
+  return html + '</div>';
+}
+
+function renderStep(){
+  var stepReal = _esCongNueva ? _step : _step + 1;
+  var html = '<div class="ob-header">'
+    +'<h1>&#128218; Activar tu cuenta</h1>'
+    +'<p>Completa los datos para acceder al Coordinador de Discursos</p>'
+    +'</div>'
+    + stepsHTML()
+    +'<div class="ob-body" id="ob-body">';
+
+  if(stepReal === 1){
+    // Datos congregacion
+    html += '<div class="ob-info">Completa los datos de tu congregacion para continuar. Todos los campos son obligatorios.</div>'
+      +'<div class="ob-field"><label>Nombre de la congregacion <span>*</span></label><input class="ob-input" id="cong-nombre" type="text" placeholder="Ej: Los Arcos"></div>'
+      +'<div class="ob-grid">'
+      +'<div class="ob-field"><label>Circuito <span>*</span></label><input class="ob-input" id="cong-circuito" type="text" placeholder="Ej: RM-13"></div>'
+      +'<div class="ob-field"><label>Ciudad <span>*</span></label><input class="ob-input" id="cong-ciudad" type="text" placeholder="Santiago"></div>'
+      +'</div>'
+      +'<div class="ob-field"><label>Direccion del salon <span>*</span></label><input class="ob-input" id="cong-direccion" type="text" placeholder="Av. Ejemplo 123"></div>'
+      +'<div class="ob-grid">'
+      +'<div class="ob-field"><label>Dia de reunion <span>*</span></label><select class="ob-input ob-select" id="cong-dia">'
+      +'<option value="">Seleccionar...</option>'
+      +'<option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option>'
+      +'<option value="3">Miercoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sabado</option>'
+      +'</select></div>'
+      +'<div class="ob-field"><label>Horario <span>*</span></label><input class="ob-input" id="cong-horario" type="text" placeholder="Ej: 16:30 hrs"></div>'
+      +'</div>'
+      +'<div class="ob-err" id="ob-err"></div>'
+      +'<button class="ob-btn" onclick="siguientePaso()">Continuar &rarr;</button>';
+
+  } else if(stepReal === 2){
+    // Datos personales
+    html += '<div class="ob-info">Ingresa tus datos personales. Tu email es <strong style="color:#fff">'+_inv.email+'</strong>.</div>'
+      +'<div class="ob-field"><label>Nombre completo <span>*</span></label><input class="ob-input" id="usr-nombre" type="text" placeholder="Tu nombre completo" value="'+((_inv.nombre_invitado)||'')+'"></div>'
+      +'<div class="ob-field"><label>Telefono <span>*</span></label><input class="ob-input" id="usr-tel" type="tel" placeholder="+56 9 1234 5678"></div>'
+      +'<div class="ob-field"><label>Nombramiento <span>*</span></label><select class="ob-input ob-select" id="usr-nom">'
+      +'<option value="">Seleccionar...</option>'
+      +'<option value="Anciano">Anciano</option>'
+      +'<option value="Siervo Ministerial">Siervo Ministerial</option>'
+      +'<option value="Publicador">Publicador</option>'
+      +'</select></div>'
+      +'<div class="ob-field"><label>Contrasena <span>*</span></label><input class="ob-input" id="usr-pass" type="password" placeholder="Minimo 8 caracteres"><div class="pass-hint">Minimo 8 caracteres, usa letras y numeros</div></div>'
+      +'<div class="ob-field"><label>Confirmar contrasena <span>*</span></label><input class="ob-input" id="usr-pass2" type="password" placeholder="Repite tu contrasena"></div>'
+      +'<div class="ob-err" id="ob-err"></div>'
+      +'<button class="ob-btn" onclick="siguientePaso()">Continuar &rarr;</button>'
+      +(_esCongNueva?'<button class="ob-btn ob-btn-ghost" onclick="anteriorPaso()">Volver</button>':'');
+
+  } else if(stepReal === 3){
+    // Repertorio
+    if(_discursos.length === 0){
+      html += '<div class="ob-info">Tu congregacion no tiene discursos cargados aun. Podras agregar tu repertorio despues de ingresar.</div>'
+        +'<button class="ob-btn" onclick="finalizar()">Activar mi cuenta</button>'
+        +'<button class="ob-btn ob-btn-ghost" onclick="anteriorPaso()">Volver</button>';
+    } else {
+      html += '<div class="ob-info">Selecciona los discursos que tienes en tu repertorio. Puedes agregar o quitar mas adelante.</div>'
+        +'<input class="ob-search" id="disc-search" placeholder="Buscar por numero o titulo..." oninput="filtrarDiscs()">'
+        +'<div class="ob-sel-count" id="disc-count">0 discursos seleccionados</div>'
+        +'<div class="ob-disc-grid" id="disc-grid"></div>'
+        +'<div class="ob-err" id="ob-err"></div>'
+        +'<button class="ob-btn" style="margin-top:16px" onclick="finalizar()">Activar mi cuenta</button>'
+        +'<button class="ob-btn ob-btn-ghost" onclick="anteriorPaso()">Volver</button>';
+    }
+  }
+
+  html += '</div>';
+  document.getElementById('ob-wrap').innerHTML = html;
+
+  if(stepReal === 3 && _discursos.length > 0) renderDiscs('');
+}
+
+function renderDiscs(q){
+  var grid = document.getElementById('disc-grid');
+  if(!grid) return;
+  var lista = q ? _discursos.filter(function(d){
+    return String(d.numero).includes(q) || (d.titulo||'').toLowerCase().includes(q.toLowerCase());
+  }) : _discursos;
+  grid.innerHTML = lista.map(function(d){
+    var sel = _discSeleccionados.indexOf(d.numero) >= 0;
+    return '<div class="ob-disc-item'+(sel?' selected':'')+'" onclick="toggleDisc('+d.numero+')" data-num="'+d.numero+'">'
+      +'<input type="checkbox" '+(sel?'checked':'')+' onclick="event.stopPropagation()">'
+      +'<div><div class="ob-disc-num">'+d.numero+'</div><div class="ob-disc-tit">'+d.titulo+'</div></div>'
+      +'</div>';
+  }).join('');
+  var cnt = document.getElementById('disc-count');
+  if(cnt) cnt.textContent = _discSeleccionados.length + ' discurso(s) seleccionado(s)';
+}
+
+function filtrarDiscs(){
+  var q = document.getElementById('disc-search').value;
+  renderDiscs(q);
+}
+
+function toggleDisc(num){
+  var idx = _discSeleccionados.indexOf(num);
+  if(idx >= 0) _discSeleccionados.splice(idx,1);
+  else _discSeleccionados.push(num);
+  filtrarDiscs();
+}
+
+function obErr(msg){
+  var el = document.getElementById('ob-err');
+  if(el) el.textContent = msg || '';
+}
+
+function siguientePaso(){
+  var stepReal = _esCongNueva ? _step : _step + 1;
+  if(stepReal === 1){
+    var n = document.getElementById('cong-nombre').value.trim();
+    var ci = document.getElementById('cong-circuito').value.trim();
+    var cu = document.getElementById('cong-ciudad').value.trim();
+    var dir = document.getElementById('cong-direccion').value.trim();
+    var dia = document.getElementById('cong-dia').value;
+    var hor = document.getElementById('cong-horario').value.trim();
+    if(!n||!ci||!cu||!dir||!dia||!hor){obErr('Todos los campos son obligatorios');return;}
+    window._datosCong = {nombre:n,circuito:ci,ciudad:cu,direccion:dir,dia:dia,horario:hor};
+    obErr('');
+  } else if(stepReal === 2){
+    var nom = document.getElementById('usr-nombre').value.trim();
+    var tel = document.getElementById('usr-tel').value.trim();
+    var nombramiento = document.getElementById('usr-nom').value;
+    var pass = document.getElementById('usr-pass').value;
+    var pass2 = document.getElementById('usr-pass2').value;
+    if(!nom||!tel||!nombramiento){obErr('Todos los campos son obligatorios');return;}
+    if(pass.length < 8){obErr('La contrasena debe tener al menos 8 caracteres');return;}
+    if(pass !== pass2){obErr('Las contrasenas no coinciden');return;}
+    window._datosUsr = {nombre:nom,telefono:tel,nombramiento:nombramiento,password:pass};
+    obErr('');
+  }
+  _step++;
+  renderStep();
+}
+
+function anteriorPaso(){
+  _step--;
+  renderStep();
+}
+
+async function finalizar(){
+  var btn = document.querySelector('.ob-btn');
+  if(btn){btn.disabled=true;btn.textContent='Activando cuenta...';}
+  obErr('');
+  try {
+    // 1. Crear usuario en Supabase Auth
+    var authRes = await _sb.auth.signUp({
+      email: _inv.email,
+      password: window._datosUsr.password,
+      options: { data: { nombre: window._datosUsr.nombre } }
+    });
+    if(authRes.error) throw new Error(authRes.error.message);
+    var userId = authRes.data.user.id;
+
+    // 2. Actualizar datos de congregacion si es nueva
+    if(_esCongNueva && window._datosCong){
+      await _sb.from('congregaciones').update({
+        nombre: window._datosCong.nombre,
+        circuito: window._datosCong.circuito,
+        ciudad: window._datosCong.ciudad,
+        direccion: window._datosCong.direccion,
+        dia: window._datosCong.dia,
+        horario: window._datosCong.horario
+      }).eq('id', _inv.cong_id);
+    }
+
+    // 3. Guardar usuario en tabla usuarios
+    await _sb.from('usuarios').upsert({
+      id: userId,
+      email: _inv.email,
+      nombre: window._datosUsr.nombre,
+      rol: _inv.rol || 'lector',
+      cong_id: _inv.cong_id,
+      activo: true
+    }, {onConflict:'email'});
+
+    // 4. Guardar hermano
+    var hermId = 'h' + Date.now();
+    await _sb.from('hermanos').insert({
+      id: hermId,
+      cong_id: _inv.cong_id,
+      nombre: window._datosUsr.nombre,
+      nombramiento: window._datosUsr.nombramiento,
+      telefono: window._datosUsr.telefono,
+      puede_afuera: 'si',
+      puede_local: 'si',
+      estado: 'Activo'
+    });
+
+    // 5. Guardar repertorio seleccionado
+    if(_discSeleccionados.length > 0){
+      var reps = _discSeleccionados.map(function(num){
+        var disc = _discursos.find(function(d){return d.numero === num;});
+        return {
+          id: 'r'+Date.now()+num,
+          cong_id: _inv.cong_id,
+          hermano_id: hermId,
+          num_discurso: num,
+          titulo: disc ? disc.titulo : '',
+          puede_afuera: 'si',
+          puede_local: 'si',
+          estado: 'Activo'
+        };
+      });
+      await _sb.from('repertorio').insert(reps);
+    }
+
+    // 6. Marcar invitacion como usada
+    await _sb.from('invitaciones').update({
+      usada: true,
+      usada_en: new Date().toISOString(),
+      usada_por: _inv.email
+    }).eq('token', _token);
+
+    // 7. Mostrar exito
+    document.getElementById('ob-wrap').innerHTML =
+      '<div class="ob-success">'
+      +'<div class="icon">&#127881;</div>'
+      +'<h2>Cuenta activada</h2>'
+      +'<p>Tu cuenta ha sido creada exitosamente. Ya puedes acceder al Coordinador de Discursos.</p>'
+      +'<button class="ob-btn" onclick="window.location.href='index.html'" style="max-width:280px;margin:0 auto">Ir al inicio de sesion</button>'
+      +'</div>';
+
+  } catch(e){
+    obErr('Error: ' + e.message);
+    if(btn){btn.disabled=false;btn.textContent='Activar mi cuenta';}
+  }
+}
+
+init();
+</script>
+</body>
+</html>
