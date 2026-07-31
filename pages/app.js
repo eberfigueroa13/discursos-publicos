@@ -841,34 +841,52 @@ function repUsoHTML(fecha){
   return '<span class="badge '+cls+'">'+fmtF(fecha)+'</span><br><span style="font-size:11px;color:var(--tx3)">'+dias+' dias al 1 de '+nMes(D.config.mes)+adv+'</span>';
 }
 
+
+/* Obtener titulo de discurso siempre desde el catalogo */
+function tituloDisc(num){
+  if(!num)return '';
+  var d=D.discursos.find(function(x){return parseInt(x.numero)===parseInt(num);});
+  return d?d.titulo:'';
+}
 function renderRep(){
   if(!document.getElementById('tb-r'))return;
   var q=(document.getElementById('bq-r').value||'').toLowerCase();
   var hf=document.getElementById('frep-h').value;
   var lista=D.repertorioLocal.filter(function(r){
-      var tit=(r.titulo||'').toLowerCase();
-      return(!hf||r.hermanoId===hf)&&(!q||(r.numDiscurso||'').toString().includes(q)||tit.includes(q));
-    })
-    .map(function(r){
-      var h=D.locales.find(function(x){return x.id===r.hermanoId;});
-      var ultCong=ultimaVez(parseInt(r.numDiscurso));
-      var ultSal=ultimaSalida(parseInt(r.numDiscurso));
-      return Object.assign({},r,{_nombre:h?h.nombre:'---',_ultCong:ultCong,_ultCongDias:ultCong?diasDesde(ultCong,refMes()):Infinity,_ultSal:ultSal,_ultSalDias:ultSal?diasDesde(ultSal,refMes()):Infinity});
+    var tit=tituloDisc(r.numDiscurso).toLowerCase();
+    return(!hf||r.hermanoId===hf)&&(!q||(r.numDiscurso||'').toString().includes(q)||tit.includes(q));
+  }).map(function(r){
+    var h=D.locales.find(function(x){return x.id===r.hermanoId;});
+    var tit=tituloDisc(r.numDiscurso);
+    var ultCong=ultimaVez(parseInt(r.numDiscurso));
+    var ultSal=ultimaSalida(parseInt(r.numDiscurso));
+    return Object.assign({},r,{
+      _nombre:h?h.nombre:'---',
+      _titulo:tit,
+      _ultCong:ultCong,
+      _ultCongDias:ultCong?diasDesde(ultCong,refMes()):Infinity,
+      _ultSal:ultSal,
+      _ultSalDias:ultSal?diasDesde(ultSal,refMes()):Infinity
     });
+  });
   lista=ordenar(lista,'r','_nombre',1);
   var tb=document.getElementById('tb-r');
   if(!lista.length){tb.innerHTML='<tr><td colspan="11"><div class="es"><div class="ic2">&#127897;</div><p>Sin repertorio</p></div></td></tr>';return;}
   tb.innerHTML=lista.map(function(r){
     var sel=_sel.r.indexOf(r.id)>=0;
+    var uc=r._ultCong?fmtF(r._ultCong)+'<br><span style="font-size:11px;color:var(--tx3)">'+r._ultCongDias+' dias</span>':'---';
+    var us=r._ultSal?fmtF(r._ultSal)+'<br><span style="font-size:11px;color:var(--tx3)">'+r._ultSalDias+' dias</span>':'---';
     return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('r',r.id)+'</td>'
-      +'<td>'+esc(r._nombre)+'</td><td><strong>'+esc(r.numDiscurso||'')+'</strong></td><td>'+esc(r.titulo||'---')+'</td>'
-      +'<td><span class="badge '+(r.puedeLocal==='si'?'bgn':'bgr')+'">'+(r.puedeLocal==='si'?'Si':'No')+'</span></td>'
+      +'<td><strong>'+esc(r._nombre)+'</strong></td>'
+      +'<td>'+esc(r.numDiscurso||'')+'</td>'
+      +'<td>'+esc(r._titulo)+'</td>'
       +'<td><span class="badge '+(r.puedeAfuera==='si'?'bgn':'bgr')+'">'+(r.puedeAfuera==='si'?'Si':'No')+'</span></td>'
-      +'<td>'+repUsoHTML(r._ultCong)+'</td>'
-      +'<td>'+repUsoHTML(r._ultSal)+'</td>'
-      +'<td><span class="badge '+(r.estado==='Activo'?'bgn':'bgr')+'">'+esc(r.estado||'')+'</span></td>'
+      +'<td><span class="badge '+(r.puedeLocal==='si'?'bgn':'bgr')+'">'+(r.puedeLocal==='si'?'Si':'No')+'</span></td>'
+      +'<td><span class="badge '+(r.estado==='Activo'?'bgn':'bgr')+'">'+esc(r.estado)+'</span></td>'
+      +'<td>'+uc+'</td>'
+      +'<td>'+us+'</td>'
       +'<td>'+(r.obs?esc(r.obs):'---')+'</td>'
-      +'<td class="ac">'+btnAc('bd2','x','delRep',r.id)+'</td></tr>';
+      +'<td class="ac">'+btnAc('bg','editar','editRep',r.id)+btnAc('bd2','x','delRep',r.id)+'</td></tr>';
   }).join('');
   tb.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=_sel.r.indexOf(c.dataset.id)>=0;});
 }
@@ -2670,7 +2688,11 @@ function buildAnexoConfirmacionHTML(data){
       return r.hermanoId===hId&&r.puedeAfuera==='si'&&r.estado==='Activo'&&esDiscursoActivo(r.numDiscurso);
     }).sort(function(a,b){return a.numDiscurso-b.numDiscurso;});
     var lista=discs.length
-      ?discs.map(function(r){return '<div><strong>'+esc(r.numDiscurso)+'</strong> - '+esc(r.titulo||'Sin titulo')+'</div>';}).join('')
+      ?discs.map(function(r){
+        var dObj=D.discursos.find(function(d){return parseInt(d.numero)===parseInt(r.numDiscurso);});
+        var tit=dObj?dObj.titulo:(r.titulo||'Sin titulo');
+        return '<div><strong>'+esc(r.numDiscurso)+'</strong> - '+esc(tit)+'</div>';
+      }).join('')
       :'<span class="small">Sin discursos para salida</span>';
     return '<tr>'
       +'<td style="width:30%"><strong>'+esc(h.nombre)+'</strong><br><span class="small">'+esc(data.cargoH(h))+'</span><br><span class="small">'+esc(h.telefono||'Sin telefono')+'</span></td>'
@@ -2827,6 +2849,28 @@ function sincronizarTitulosDiscursos(){
       changed=true;
     }
   });
+  /* Actualizar titulos en repertorio */
+  D.repertorioLocal.forEach(function(r){
+    if(!r.numDiscurso)return;
+    var num=parseInt(r.numDiscurso);
+    var disc=D.discursos.find(function(d){return d.numero===num;});
+    if(disc&&disc.titulo&&disc.titulo!==r.titulo){
+      r.titulo=disc.titulo;
+      dbUpsertItem('repertorioLocal',r);
+      changed=true;
+    }
+  });
+  /* Actualizar titulos en salidas */
+  D.salidasRealizadas.forEach(function(s){
+    if(!s.numDiscurso)return;
+    var num=parseInt(s.numDiscurso);
+    var disc=D.discursos.find(function(d){return d.numero===num;});
+    if(disc&&disc.titulo&&disc.titulo!==s.titulo){
+      s.titulo=disc.titulo;
+      dbUpsertItem('salidasRealizadas',s);
+      changed=true;
+    }
+  });
   if(changed)console.log('Titulos sincronizados');
 }
 
@@ -2879,6 +2923,64 @@ async function saCrearCongregacion(){
   );
 }
 
+
+/* ── Resend Email ── */
+var _RESEND_KEY = null;
+
+async function _getResendKey(){
+  if(_RESEND_KEY) return _RESEND_KEY;
+  var res = await _sb.from('configuracion_sistema').select('valor').eq('clave','resend_api_key').single();
+  if(res.data) _RESEND_KEY = res.data.valor;
+  return _RESEND_KEY;
+}
+
+async function enviarEmailInvitacion(email, nombre, link, congNombre, rol){
+  var roles = {superadmin:'Coordinador de Discursos Publicos',admin:'Administrador',
+    coordinador:'Coordinador de Discursos Publicos',lector:'Lector',visor:'Visor'};
+  var rolLabel = roles[rol] || rol;
+  var htmlEmail = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
+    +'<div style="background:#1a2332;padding:24px;text-align:center">'
+    +'<h1 style="color:#fff;font-size:20px;margin:0">&#128218; Coordinador de Discursos</h1>'
+    +'</div>'
+    +'<div style="padding:32px;background:#f8fafc">'
+    +'<h2 style="color:#1a2332;font-size:18px">Hola '+esc(nombre||email)+'</h2>'
+    +'<p style="color:#444;line-height:1.6">Has sido invitado como <strong>'+esc(rolLabel)+'</strong> para la congregación <strong>'+esc(congNombre||'')+'</strong>.</p>'
+    +'<div style="text-align:center;margin:32px 0">'
+    +'<a href="'+link+'" style="background:#3A6EA5;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:600">Aceptar invitación</a>'
+    +'</div>'
+    +'<p style="color:#666;font-size:13px">Este enlace expira en 48 horas. Si no esperabas esta invitación, puedes ignorar este email.</p>'
+    +'<hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">'
+    +'<p style="color:#999;font-size:12px;text-align:center">coordinadordiscursos.cl</p>'
+    +'</div></div>';
+
+  try {
+    var res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + (await _getResendKey()),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'Coordinador de Discursos <noreply@coordinadordiscursos.cl>',
+        to: [email],
+        subject: 'Invitacion al Coordinador de Discursos - ' + (congNombre||''),
+        html: htmlEmail
+      })
+    });
+    var data = await res.json();
+    if(res.ok){
+      console.log('Email enviado:', data.id);
+      return true;
+    } else {
+      console.error('Error Resend:', data);
+      return false;
+    }
+  } catch(e) {
+    console.error('Error enviando email:', e);
+    return false;
+  }
+}
+
 async function saCrearInvitacion(email,nombre,congId,rol){
   var token=uid()+uid();
   var expira=new Date(Date.now()+48*60*60*1000);
@@ -2889,7 +2991,20 @@ async function saCrearInvitacion(email,nombre,congId,rol){
     creado_por:_usr.email
   });
   if(res.error){toast('Error al crear invitacion: '+res.error.message,'e');return null;}
-  return window.location.origin+'/index.html?inv='+token;
+  var link=window.location.origin+'/onboarding.html?inv='+token;
+  // Obtener nombre de congregacion
+  var congRes=await _sb.from('congregaciones').select('nombre').eq('id',congId).single();
+  var congNombre=congRes.data?congRes.data.nombre:'';
+  // Enviar email automatico
+  syncBar(true,'Enviando email...');
+  var emailOk=await enviarEmailInvitacion(email,nombre,link,congNombre,rol);
+  syncBar(false);
+  if(emailOk){
+    toast('Invitacion creada y email enviado a '+email,'s');
+  } else {
+    toast('Invitacion creada pero el email no se pudo enviar. Comparte el link manualmente.','w');
+  }
+  return link;
 }
 
 async function saCargarDatos(){
@@ -2960,20 +3075,48 @@ async function saCargarDatos(){
   }
 }
 
+
+function compartirWhatsApp(){
+  var linkTxt = document.getElementById('usr-inv-link-txt');
+  if(!linkTxt||!linkTxt.value){toast('Sin link de invitacion','e');return;}
+  var nombre = document.getElementById('usr-inv-nombre').value.trim()||'';
+  var msg = 'Hola'+(nombre?' '+nombre:'')+', has sido invitado al Coordinador de Discursos Publicos.'
+    +'\n\nPara activar tu cuenta, ingresa al siguiente enlace (valido por 48 horas):'
+    +'\n'+linkTxt.value
+    +'\n\nSi tienes dudas, consulta con quien te envio esta invitacion.';
+  var url = 'https://wa.me/?text='+encodeURIComponent(msg);
+  window.open(url,'_blank');
+}
+
 async function usrInvitar(){
   if(!_usr||(_usr.rol!=='admin'&&_usr.rol!=='superadmin')){toast('Sin permisos','e');return;}
   var email=document.getElementById('usr-inv-email').value.trim().toLowerCase();
   var nombre=document.getElementById('usr-inv-nombre').value.trim();
+  var tel=document.getElementById('usr-inv-tel').value.trim();
   var rol=document.getElementById('usr-inv-rol').value;
-  if(!email||!nombre){toast('Email y nombre son obligatorios','e');return;}
+  var congId=_usr.rol==='superadmin'
+    ?(document.getElementById('usr-inv-cong')?document.getElementById('usr-inv-cong').value:_usr.cong_id)
+    :_usr.cong_id;
+  if(!email||!nombre||!tel){toast('Nombre, telefono y email son obligatorios','e');return;}
+  if(!congId){toast('Selecciona una congregacion','e');return;}
   syncBar(true,'Creando invitacion...');
-  var link=await saCrearInvitacion(email,nombre,_usr.cong_id,rol);
+  var link=await saCrearInvitacion(email,nombre,congId,rol);
   syncBar(false);
   if(!link)return;
   var linkEl=document.getElementById('usr-inv-link');
   var linkTxt=document.getElementById('usr-inv-link-txt');
   if(linkEl)linkEl.style.display='block';
   if(linkTxt)linkTxt.value=link;
+  // Abrir WhatsApp automaticamente
+  var telLimpio=tel.replace(/[^0-9+]/g,'');
+  var roles={superadmin:'Super Administrador',admin:'Administrador',coordinador:'Coordinador de Discursos Publicos',lector:'Lector',visor:'Visor'};
+  var rolLabel=roles[rol]||rol;
+  var congRes=await _sb.from('congregaciones').select('nombre').eq('id',congId).single();
+  var congNombre=congRes.data?congRes.data.nombre:'';
+  var msg='Estimado/a '+nombre+', ha sido invitado como *'+rolLabel+'* para la congregacion *'+congNombre+'*.'
+    +'\n\nPara activar su cuenta, ingrese al siguiente enlace (valido por 48 horas):\n'+link
+    +'\n\nSi tiene dudas, consulte con quien le envio esta invitacion.';
+  window.open('https://wa.me/'+telLimpio+'?text='+encodeURIComponent(msg),'_blank');
   toast('Invitacion creada!','s');
   usrCargarDatos();
 }
@@ -2999,6 +3142,17 @@ function usrEnviarEmailInvitacion(email,nombre,link,rol){
 async function usrCargarDatos(){
   if(!_usr)return;
   var esSA=_usr.rol==='superadmin';
+  // Poblar selector de congregaciones para superadmin
+  if(esSA){
+    var selCong=document.getElementById('usr-inv-cong');
+    if(selCong){
+      var congRes=await _sb.from('congregaciones').select('id,nombre').eq('activo',true).order('nombre');
+      selCong.innerHTML='<option value="">Seleccionar...</option>'
+        +(congRes.data||[]).map(function(c){
+          return '<option value="'+c.id+'">'+c.nombre+'</option>';
+        }).join('');
+    }
+  }
   // Cargar mapa de congregaciones
   var congRes=await _sb.from('congregaciones').select('id,nombre,circuito');
   var congMap={};

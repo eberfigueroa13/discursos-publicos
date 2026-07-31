@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Invitaciones — Coordinador de Discursos</title>
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">&#128218;</div>
+    <div class="login-title">Coordinador de Discursos</div>
+    <div class="login-sub">Accede con tu email y contrasena</div>
+    <input class="login-field" id="login-email" type="email" placeholder="tu@email.com" autocomplete="email">
+    <input class="login-field" id="login-pass" type="password" placeholder="Contrasena" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn-main" id="login-btn" onclick="doLogin()">Ingresar</button>
+    <span class="login-forgot" onclick="doResetPassword()">Olvide mi contrasena</span>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+<div id="modal-overlay" class="mo"><div id="modal" class="mb"><div class="mt" id="mt"></div><div id="mb"></div><div class="ma" id="ma"></div></div></div>
+<div id="tc"></div>
+<div id="sidebar-overlay"></div>
+<div id="layout">
+  <aside id="sidebar">
+    <div id="sbh"><div class="logo-icon">&#128218;</div><div class="logo-text">Discursos Pub.</div></div>
+    <nav>
+<div class="nav-section">General</div>
+<div class="nav-item" data-page="dashboard" data-label="Dashboard" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='../app.html'">&#128202;<span class="ni-label">Dashboard</span></div>
+<div class="nav-section">Coordinacion</div>
+<div class="nav-item" data-page="planif" data-label="Planificacion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='planificacion.html'">&#128197;<span class="ni-label">Planificacion</span></div>
+<div class="nav-item" data-page="historial" data-label="Historial" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='historial.html'">&#128336;<span class="ni-label">Historial</span></div>
+<div class="nav-item" data-page="salidas" data-label="Salidas" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='salidas.html'">&#128652;<span class="ni-label">Salidas</span></div>
+<div class="nav-item" data-page="arreglos" data-label="Arreglos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='arreglos.html'">&#129309;<span class="ni-label">Arreglos</span></div>
+<div class="nav-item" data-page="reporte" data-label="Reportes" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='reportes.html'">&#128196;<span class="ni-label">Reportes</span></div>
+<div class="nav-section">Datos</div>
+<div class="nav-item" data-page="hermanos" data-label="Hermanos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='hermanos.html'">&#128101;<span class="ni-label">Hermanos</span></div>
+<div class="nav-item" data-page="repertorio" data-label="Repertorio" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='repertorio.html'">&#127897;<span class="ni-label">Repertorio</span></div>
+<div class="nav-item" data-page="discursos" data-label="Discursos" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='discursos.html'">&#128218;<span class="ni-label">Discursos</span></div>
+<div class="nav-item" data-page="congregaciones" data-label="Congregaciones" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='congregaciones.html'">&#127968;<span class="ni-label">Congregaciones</span></div>
+<div class="nav-item" data-page="carga" data-label="Carga mensual" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='carga.html'">&#128203;<span class="ni-label">Carga mensual</span></div>
+<div class="nav-item" data-page="privilegios" data-label="Privilegios" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='privilegios.html'">&#127894;<span class="ni-label">Privilegios</span></div>
+<div class="nav-section">Sistema</div>
+<div class="nav-item" data-page="config" data-label="Configuracion" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='configuracion.html'">&#9881;<span class="ni-label">Configuracion</span></div>
+<div class="nav-item" data-page="respaldo" data-label="Respaldo" data-roles="superadmin,admin,coordinador,lector,visor" onclick="window.location='respaldo.html'">&#128190;<span class="ni-label">Respaldo</span></div>
+<div class="nav-section">Admin</div>
+<div class="nav-item" data-page="superadmin" data-label="Usuarios" data-roles="superadmin,admin" onclick="window.location='admin.html'">&#128737;<span class="ni-label">Usuarios</span></div>
+<div class="nav-item active" data-page="invitaciones" data-label="Invitaciones" data-roles="superadmin,admin" onclick="window.location='invitaciones.html'">&#128231;<span class="ni-label">Invitaciones</span></div>
+
+    </nav>
+    <div id="sb-user" onclick="doLogout()"></div>
+  </aside>
+  <div id="main">
+    <div id="topbar">
+      <button id="topbar-toggle"><span></span><span></span><span></span></button>
+      <div id="page-title">Invitaciones</div>
+      <div id="sync-indicator" class="sync-indicator"><div class="sync-dot"></div><span class="sync-label">Sincronizando...</span></div>
+      <div id="page-meta"></div>
+    </div>
+    <div id="content">
+
+<div class="card">
+  <div class="ctit" style="margin-bottom:12px">Filtros</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <input id="bq-inv" class="search-input" placeholder="Buscar por email o nombre..." oninput="renderInvitaciones()" style="flex:1;min-width:200px">
+    <select id="fil-inv-estado" onchange="renderInvitaciones()" style="padding:7px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px">
+      <option value="">Todos los estados</option>
+      <option value="pendiente">Pendientes</option>
+      <option value="usada">Usadas</option>
+      <option value="expirada">Expiradas</option>
+    </select>
+    <select id="fil-inv-rol" onchange="renderInvitaciones()" style="padding:7px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px">
+      <option value="">Todos los roles</option>
+      <option value="superadmin">Super Admin</option>
+      <option value="admin">Admin</option>
+      <option value="coordinador">Coordinador</option>
+      <option value="lector">Lector</option>
+      <option value="visor">Visor</option>
+    </select>
+    <select id="fil-inv-cong" onchange="renderInvitaciones()" style="padding:7px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px">
+      <option value="">Todas las congregaciones</option>
+    </select>
+    <button class="btn bg bsm" onclick="limpiarFiltrosInv()">Limpiar</button>
+  </div>
+</div>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div class="ctit" style="margin:0">Invitaciones</div>
+    <div id="inv-count" style="font-size:13px;color:var(--tx3)"></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="sort" data-col="email" onclick="sortInv('email')">Email &#8645;</th>
+          <th class="sort" data-col="nombre" onclick="sortInv('nombre')">Nombre &#8645;</th>
+          <th class="sort" data-col="rol" onclick="sortInv('rol')">Rol &#8645;</th>
+          <th class="sort" data-col="cong" onclick="sortInv('cong')">Congregacion &#8645;</th>
+          <th class="sort" data-col="estado" onclick="sortInv('estado')">Estado &#8645;</th>
+          <th class="sort" data-col="creado" onclick="sortInv('creado')">Creada &#8645;</th>
+          <th class="sort" data-col="expira" onclick="sortInv('expira')">Expira &#8645;</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tb-inv"></tbody>
+    </table>
+  </div>
+</div>
+
+    </div>
+  </div>
+</div>
+<script src="../js/supabase.min.js"></script>
+<script src="../js/app.js"></script>
+<script>
+var _invData = [];
+var _congMap = {};
+var _invSort = {col:'creado', dir:-1};
+
+async function initPagina(){
+  initSidebar();
+  setNavActivo('invitaciones');
+  setPageTitle('Invitaciones');
+  aplicarRol();
+  await cargarInvitaciones();
+}
+
+async function cargarInvitaciones(){
+  syncBar(true,'Cargando invitaciones...');
+  var esSA = _usr && _usr.rol === 'superadmin';
+  // Cargar congregaciones para el filtro
+  var congRes = await _sb.from('congregaciones').select('id,nombre').order('nombre');
+  _congMap = {};
+  (congRes.data||[]).forEach(function(c){ _congMap[c.id] = c.nombre; });
+  var sel = document.getElementById('fil-inv-cong');
+  if(sel){
+    sel.innerHTML = '<option value="">Todas las congregaciones</option>'
+      + (congRes.data||[]).map(function(c){
+        return '<option value="'+c.id+'">'+c.nombre+'</option>';
+      }).join('');
+  }
+  // Cargar invitaciones
+  var q = esSA
+    ? _sb.from('invitaciones').select('*').order('creado_en',{ascending:false})
+    : _sb.from('invitaciones').select('*').eq('cong_id',_usr.cong_id).order('creado_en',{ascending:false});
+  var res = await q;
+  _invData = res.data || [];
+  syncBar(false);
+  renderInvitaciones();
+}
+
+function getEstado(inv){
+  if(inv.usada) return 'usada';
+  if(inv.expira_en && new Date() > new Date(inv.expira_en)) return 'expirada';
+  return 'pendiente';
+}
+
+function renderInvitaciones(){
+  var q = (document.getElementById('bq-inv').value||'').toLowerCase();
+  var filEst = document.getElementById('fil-inv-estado').value;
+  var filRol = document.getElementById('fil-inv-rol').value;
+  var filCong = document.getElementById('fil-inv-cong').value;
+  var roles = {superadmin:'Super Admin',admin:'Admin',coordinador:'Coordinador',lector:'Lector',visor:'Visor'};
+  var estLabels = {pendiente:'Pendiente',usada:'Usada',expirada:'Expirada'};
+  var estCls = {pendiente:'bgn',usada:'bbl',expirada:'bgr'};
+
+  var lista = _invData.filter(function(inv){
+    var estado = getEstado(inv);
+    if(filEst && estado !== filEst) return false;
+    if(filRol && inv.rol !== filRol) return false;
+    if(filCong && inv.cong_id !== filCong) return false;
+    if(q){
+      var hay = (inv.email||'').toLowerCase().includes(q)
+        || (inv.nombre_invitado||'').toLowerCase().includes(q);
+      if(!hay) return false;
+    }
+    return true;
+  });
+
+  // Ordenar
+  lista.sort(function(a,b){
+    var va,vb;
+    if(_invSort.col==='email'){ va=a.email||''; vb=b.email||''; }
+    else if(_invSort.col==='nombre'){ va=a.nombre_invitado||''; vb=b.nombre_invitado||''; }
+    else if(_invSort.col==='rol'){ va=a.rol||''; vb=b.rol||''; }
+    else if(_invSort.col==='cong'){ va=_congMap[a.cong_id]||''; vb=_congMap[b.cong_id]||''; }
+    else if(_invSort.col==='estado'){ va=getEstado(a); vb=getEstado(b); }
+    else if(_invSort.col==='expira'){ va=a.expira_en||''; vb=b.expira_en||''; }
+    else { va=a.creado_en||''; vb=b.creado_en||''; }
+    return va < vb ? _invSort.dir : va > vb ? -_invSort.dir : 0;
+  });
+
+  var cnt = document.getElementById('inv-count');
+  if(cnt) cnt.textContent = lista.length + ' de ' + _invData.length + ' invitaciones';
+
+  var tb = document.getElementById('tb-inv');
+  if(!lista.length){
+    tb.innerHTML = '<tr><td colspan="8"><div class="es"><p>Sin invitaciones</p></div></td></tr>';
+    return;
+  }
+
+  tb.innerHTML = lista.map(function(inv){
+    var estado = getEstado(inv);
+    var esPend = estado === 'pendiente';
+    var creado = inv.creado_en ? new Date(inv.creado_en).toLocaleDateString('es-CL') : '---';
+    var expira = inv.expira_en ? new Date(inv.expira_en).toLocaleDateString('es-CL') : '---';
+    var congNombre = _congMap[inv.cong_id] || inv.cong_id || '---';
+    return '<tr>'
+      +'<td>'+esc(inv.email||'')+'</td>'
+      +'<td>'+esc(inv.nombre_invitado||'---')+'</td>'
+      +'<td><span class="badge bbl">'+esc(roles[inv.rol]||inv.rol||'')+'</span></td>'
+      +'<td style="font-size:12px">'+esc(congNombre)+'</td>'
+      +'<td><span class="badge '+estCls[estado]+'">'+estLabels[estado]+'</span></td>'
+      +'<td style="font-size:12px">'+creado+'</td>'
+      +'<td style="font-size:12px">'+expira+'</td>'
+      +'<td style="white-space:nowrap">'
+      +(esPend?'<button class="btn bg bsm" onclick="reenviarInvWA(''+inv.token+'',''+esc(inv.email)+'',''+esc(inv.nombre_invitado||'')+'',''+esc(inv.cong_id)+'',''+esc(inv.rol)+'')">&#128241; WA</button> ':'')
+      +(esPend?'<button class="btn bg bsm" onclick="cancelarInv(''+inv.id+'')">Cancelar</button> ':'')
+      +'<button class="btn bd2 bsm" onclick="eliminarInv(''+inv.id+'')">Eliminar</button>'
+      +'</td></tr>';
+  }).join('');
+}
+
+function sortInv(col){
+  if(_invSort.col === col) _invSort.dir *= -1;
+  else { _invSort.col = col; _invSort.dir = 1; }
+  document.querySelectorAll('th.sort').forEach(function(th){
+    var txt = th.textContent.replace(/[▲▼↕]/g,'').trim();
+    th.textContent = txt + (th.dataset.col === col ? (_invSort.dir===1?' ▲':' ▼') : ' ↕');
+  });
+  renderInvitaciones();
+}
+
+function limpiarFiltrosInv(){
+  document.getElementById('bq-inv').value='';
+  document.getElementById('fil-inv-estado').value='';
+  document.getElementById('fil-inv-rol').value='';
+  document.getElementById('fil-inv-cong').value='';
+  renderInvitaciones();
+}
+
+async function cancelarInv(id){
+  confirmar('Cancelar esta invitacion? El link dejara de funcionar.',async function(){
+    await _sb.from('invitaciones').update({usada:true}).eq('id',id);
+    toast('Invitacion cancelada','s');
+    cargarInvitaciones();
+  });
+}
+
+async function eliminarInv(id){
+  confirmar('Eliminar definitivamente esta invitacion?',async function(){
+    await _sb.from('invitaciones').delete().eq('id',id);
+    toast('Invitacion eliminada','s');
+    cargarInvitaciones();
+  });
+}
+
+async function reenviarInvWA(token,email,nombre,congId,rol){
+  var link = window.location.origin+'/onboarding.html?inv='+token;
+  var congNombre = _congMap[congId]||congId||'';
+  var roles = {superadmin:'Super Administrador',admin:'Administrador',coordinador:'Coordinador de Discursos Publicos',lector:'Lector',visor:'Visor'};
+  var rolLabel = roles[rol]||rol;
+  var msg = 'Estimado/a '+nombre+', ha sido invitado como *'+rolLabel+'* para la congregacion *'+congNombre+'*.'
+    +'\n\nPara activar su cuenta, ingrese al siguiente enlace (valido hasta su fecha de expiracion):\n'+link
+    +'\n\nSi tiene dudas, consulte con quien le envio esta invitacion.';
+  openM('Reenviar por WhatsApp',
+    '<div class="fg"><label>Telefono WhatsApp del invitado</label><input id="wa-tel-reenv" type="tel" placeholder="+56 9 1234 5678"></div>',
+    [{l:'Cancelar',c:'bg',fn:closeM},{l:'&#128241; Abrir WhatsApp',c:'bp',fn:function(){
+      var tel = document.getElementById('wa-tel-reenv').value.replace(/[^0-9+]/g,'');
+      if(!tel){toast('Ingresa el telefono','e');return;}
+      window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg),'_blank');
+      closeM();
+    }}]
+  );
+}
+</script>
+</body>
+</html>
