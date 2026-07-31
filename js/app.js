@@ -516,7 +516,12 @@ function editD(id){
       d.estado=document.getElementById('ed-e').value;d.obs=document.getElementById('ed-o').value.trim();
       sincronizarDiscursosInactivos(true);
       dbUpsertItem('discursos',d);
-      sincronizarTitulosDiscursos();renderD();renderRep();renderCM();renderPlan();closeM();toast('Actualizado','s');
+      sincronizarTitulosDiscursos();
+      if(typeof renderD==='function'&&document.getElementById('tb-d'))renderD();
+      if(typeof renderRep==='function'&&document.getElementById('tb-r'))renderRep();
+      if(typeof renderCM==='function'&&document.getElementById('tb-cm'))renderCM();
+      if(typeof renderPlan==='function'&&document.getElementById('tb-pe'))renderPlan();
+      closeM();toast('Actualizado','s');
     }}]);
 }
 
@@ -839,6 +844,7 @@ function repUsoHTML(fecha){
 }
 
 function renderRep(){
+  if(!document.getElementById('tb-r'))return;
   var q=(document.getElementById('bq-r').value||'').toLowerCase();
   var hf=document.getElementById('frep-h').value;
   var lista=D.repertorioLocal.filter(function(r){
@@ -1011,6 +1017,7 @@ function importarCEMasivo(){
 }
 
 function renderCE(){
+  if(!document.getElementById('tb-ce'))return;
   var q=document.getElementById('bq-ce').value.toLowerCase();
   var lista=D.congregaciones.filter(function(c){return !q||c.nombre.toLowerCase().includes(q);});
   lista=ordenar(lista,'ce','nombre',1);
@@ -1202,6 +1209,7 @@ function arreglosFiltradosAnio(){
 }
 
 function renderArreglos(){
+  if(!document.getElementById('tb-ar'))return;
   D.arreglos=(D.arreglos||[]).map(normalizarArreglo);
   poblarDatalistAr();poblarAnioArreglos();
   var lista=arreglosFiltradosAnio();
@@ -1312,6 +1320,7 @@ function importarCMMasivo(){
 function limpiarCM(){confirmar('Limpiar toda la carga mensual?',function(){D.cargaMensual=[];dbSaveArray('cargaMensual');renderCM();toast('Limpiada','s');});}
 
 function renderCM(){
+  if(!document.getElementById('tb-cm'))return;
   var q=document.getElementById('bq-cm').value.toLowerCase();
   var lista=D.cargaMensual.filter(function(cm){return !q||cm.congregacion.toLowerCase().includes(q)||cm.hermano.toLowerCase().includes(q)||cm.numDiscurso.toString().includes(q);});
   lista=ordenar(lista,'cm','hermano',1);
@@ -1477,6 +1486,7 @@ function exportarReporteHistorialPDF(){
 }
 
 function renderHist(){
+  if(!document.getElementById('tb-hi'))return;
   var q=document.getElementById('bq-hi').value.toLowerCase();var anio=document.getElementById('fhi-a').value;
   var lista=D.historial.filter(function(h){return(!q||h.numDiscurso.toString().includes(q)||h.hermano.toLowerCase().includes(q)||(h.congregacion||'').toLowerCase().includes(q)||(h.titulo||'').toLowerCase().includes(q))&&(!anio||(h.fecha||'').startsWith(anio));});
   var c=getSC('hi');
@@ -1549,6 +1559,7 @@ function poblarFiltAnioSal(){
 }
 
 function renderSalidas(){
+  if(!document.getElementById('tb-sx'))return;
   var q=(document.getElementById('bq-sx')?document.getElementById('bq-sx').value.toLowerCase():'');var anio=(document.getElementById('fsx-a')?document.getElementById('fsx-a').value:'');
   var lista=D.salidasRealizadas.filter(function(s){return(!q||(s.numDiscurso||'').toString().includes(q)||(s.hermano||'').toLowerCase().includes(q)||(s.congregacion||'').toLowerCase().includes(q)||(s.titulo||'').toLowerCase().includes(q))&&(!anio||(s.fecha||'').startsWith(anio));});
   var c=getSC('sx');
@@ -1705,6 +1716,7 @@ function _doGenerar(){
 }
 
 function renderPlan(){
+  if(!document.getElementById('tb-pe'))return;
   sincronizarDiscursosInactivos(false);
   var sel=document.getElementById('pl-salidas');if(sel)sel.value=D.config.habraSalidasMes||'no';
   var scsel=document.getElementById('pl-sc');if(scsel)scsel.value=D.config.habraSCMes||'no';
@@ -2371,6 +2383,7 @@ function agregarPriv(){
 }
 
 function renderPrivilegios(){
+  if(!document.getElementById('tb-priv'))return;
   var tb=document.getElementById('tb-priv');if(!tb)return;
   if(!D.privilegios.length){
     tb.innerHTML='<tr><td colspan="3"><div class="es"><div class="ic2">&#127894;</div><p>Sin privilegios. Agrega uno arriba.</p></div></td></tr>';
