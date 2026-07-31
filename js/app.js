@@ -2925,7 +2925,14 @@ async function saCrearCongregacion(){
 
 
 /* ── Resend Email ── */
-var _RESEND_KEY = 're_95HEP3ni_6aj7Q3jAYHMewDg53TSJj9Yc';
+var _RESEND_KEY = null;
+
+async function _getResendKey(){
+  if(_RESEND_KEY) return _RESEND_KEY;
+  var res = await _sb.from('configuracion_sistema').select('valor').eq('clave','resend_api_key').single();
+  if(res.data) _RESEND_KEY = res.data.valor;
+  return _RESEND_KEY;
+}
 
 async function enviarEmailInvitacion(email, nombre, link, congNombre, rol){
   var roles = {superadmin:'Coordinador de Discursos Publicos',admin:'Administrador',
@@ -2950,7 +2957,7 @@ async function enviarEmailInvitacion(email, nombre, link, congNombre, rol){
     var res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + _RESEND_KEY,
+        'Authorization': 'Bearer ' + (await _getResendKey()),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
