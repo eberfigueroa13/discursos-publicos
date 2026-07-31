@@ -1574,16 +1574,31 @@ function pasarPlanAHistoriales(lista){
     if(p.tipo==='Salida'||p.tipo==='Local'){
       var numS=parseInt(p.numDiscurso);if(!numS||!esDiscursoActivo(numS))return;
       var yaS=D.salidasRealizadas.find(function(s){return s.fecha===p.fecha&&s.numDiscurso==numS&&s.hermano===p.hermano&&s.congregacion===p.congregacion;});
-      if(!yaS){D.salidasRealizadas.push({id:uid(),fecha:p.fecha,congregacion:p.congregacion,hermano:p.hermano,hermanoId:p._hermanoId||'',telefono:p.telefono||telefonoParaPlan(p),numDiscurso:numS,titulo:p.titulo,obs:p.obs||''});res.salidas++;}
+      if(!yaS){
+        var newS={id:uid(),fecha:p.fecha,congregacion:p.congregacion,hermano:p.hermano,hermanoId:p._hermanoId||'',telefono:p.telefono||telefonoParaPlan(p),numDiscurso:numS,titulo:p.titulo,obs:p.obs||''};
+        D.salidasRealizadas.push(newS);
+        dbUpsertItem('salidasRealizadas',newS);
+        res.salidas++;
+      }
     }else if(esSC(p)){
       var numSC=parseInt(p.numDiscurso)||'';
       var yaSC=D.historial.find(function(h){return h.fecha===p.fecha&&h.tipo==='Superintendente de Circuito'&&h.hermano===p.hermano&&h.titulo===p.titulo;});
-      if(!yaSC){D.historial.push({id:uid(),fecha:p.fecha,tipo:'Superintendente de Circuito',congregacion:'Superintendente de Circuito',hermano:p.hermano,telefono:D.config.scTel||p.telefono||'',numDiscurso:numSC,titulo:p.titulo,obs:p.obs||''});res.internos++;}
+      if(!yaSC){
+        var newSC={id:uid(),fecha:p.fecha,tipo:'Superintendente de Circuito',congregacion:'Superintendente de Circuito',hermano:p.hermano,telefono:D.config.scTel||p.telefono||'',numDiscurso:numSC,titulo:p.titulo,obs:p.obs||''};
+        D.historial.push(newSC);
+        dbUpsertItem('historial',newSC);
+        res.internos++;
+      }
     }else{
       var num=parseInt(p.numDiscurso);if(!num||!esDiscursoActivo(num))return;
       var tipo=p._origen==='Local'?'Local':'Externo';
       var ya=D.historial.find(function(h){return h.fecha===p.fecha&&h.numDiscurso==num&&h.hermano===p.hermano;});
-      if(!ya){D.historial.push({id:uid(),fecha:p.fecha,tipo:tipo,congregacion:p.congregacion,hermano:p.hermano,telefono:p.telefono||telefonoParaPlan(p),numDiscurso:num,titulo:p.titulo,obs:p.obs||''});res.internos++;}
+      if(!ya){
+        var newH={id:uid(),fecha:p.fecha,tipo:tipo,congregacion:p.congregacion,hermano:p.hermano,telefono:p.telefono||telefonoParaPlan(p),numDiscurso:num,titulo:p.titulo,obs:p.obs||''};
+        D.historial.push(newH);
+        dbUpsertItem('historial',newH);
+        res.internos++;
+      }
     }
   });
   return res;
