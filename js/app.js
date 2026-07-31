@@ -2923,6 +2923,57 @@ async function saCrearCongregacion(){
   );
 }
 
+
+/* ── Resend Email ── */
+var _RESEND_KEY = 're_95HEP3ni_6aj7Q3jAYHMewDg53TSJj9Yc';
+
+async function enviarEmailInvitacion(email, nombre, link, congNombre, rol){
+  var roles = {superadmin:'Coordinador de Discursos Publicos',admin:'Administrador',
+    coordinador:'Coordinador de Discursos Publicos',lector:'Lector',visor:'Visor'};
+  var rolLabel = roles[rol] || rol;
+  var htmlEmail = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">'
+    +'<div style="background:#1a2332;padding:24px;text-align:center">'
+    +'<h1 style="color:#fff;font-size:20px;margin:0">&#128218; Coordinador de Discursos</h1>'
+    +'</div>'
+    +'<div style="padding:32px;background:#f8fafc">'
+    +'<h2 style="color:#1a2332;font-size:18px">Hola '+esc(nombre||email)+'</h2>'
+    +'<p style="color:#444;line-height:1.6">Has sido invitado como <strong>'+esc(rolLabel)+'</strong> para la congregación <strong>'+esc(congNombre||'')+'</strong>.</p>'
+    +'<div style="text-align:center;margin:32px 0">'
+    +'<a href="'+link+'" style="background:#3A6EA5;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:600">Aceptar invitación</a>'
+    +'</div>'
+    +'<p style="color:#666;font-size:13px">Este enlace expira en 48 horas. Si no esperabas esta invitación, puedes ignorar este email.</p>'
+    +'<hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">'
+    +'<p style="color:#999;font-size:12px;text-align:center">coordinadordiscursos.cl</p>'
+    +'</div></div>';
+
+  try {
+    var res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + _RESEND_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'Coordinador de Discursos <noreply@coordinadordiscursos.cl>',
+        to: [email],
+        subject: 'Invitacion al Coordinador de Discursos - ' + (congNombre||''),
+        html: htmlEmail
+      })
+    });
+    var data = await res.json();
+    if(res.ok){
+      console.log('Email enviado:', data.id);
+      return true;
+    } else {
+      console.error('Error Resend:', data);
+      return false;
+    }
+  } catch(e) {
+    console.error('Error enviando email:', e);
+    return false;
+  }
+}
+
 async function saCrearInvitacion(email,nombre,congId,rol){
   var token=uid()+uid();
   var expira=new Date(Date.now()+48*60*60*1000);
@@ -2933,7 +2984,20 @@ async function saCrearInvitacion(email,nombre,congId,rol){
     creado_por:_usr.email
   });
   if(res.error){toast('Error al crear invitacion: '+res.error.message,'e');return null;}
-  return window.location.origin+'/index.html?inv='+token;
+  var link=window.location.origin+'/index.html?inv='+token;
+  // Obtener nombre de congregacion
+  var congRes=await _sb.from('congregaciones').select('nombre').eq('id',congId).single();
+  var congNombre=congRes.data?congRes.data.nombre:'';
+  // Enviar email automatico
+  syncBar(true,'Enviando email...');
+  var emailOk=await enviarEmailInvitacion(email,nombre,link,congNombre,rol);
+  syncBar(false);
+  if(emailOk){
+    toast('Invitacion creada y email enviado a '+email,'s');
+  } else {
+    toast('Invitacion creada pero el email no se pudo enviar. Comparte el link manualmente.','w');
+  }
+  return link;
 }
 
 async function saCargarDatos(){
