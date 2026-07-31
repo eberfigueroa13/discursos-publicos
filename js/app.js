@@ -501,7 +501,7 @@ function editD(id){
       d.numero=num;d.titulo=document.getElementById('ed-t').value.trim();
       d.estado=document.getElementById('ed-e').value;d.obs=document.getElementById('ed-o').value.trim();
       sincronizarDiscursosInactivos(true);
-      dbSaveArray('discursos');
+      dbUpsertItem('discursos',d);
       sincronizarTitulosDiscursos();renderD();renderRep();renderCM();renderPlan();closeM();toast('Actualizado','s');
     }}]);
 }
