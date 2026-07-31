@@ -285,11 +285,9 @@ function renderDash(){
   var hermActivos=D.locales.filter(function(h){return h.estado==='Activo'&&h.puedeAfuera==='si';});
   var hermSinSalir=hermActivos.map(function(h){
     var ult=ultimaSalidaHermano(h.id);
-    var esAnciano=h.nombramiento==='Anciano';
-    var minDias=esAnciano?60:120;
     var dias=ult?diasDesde(ult,refMes()):9999;
-    return {nombre:h.nombre,nombramiento:h.nombramiento||'',dias:dias,ultima:ult,listo:dias>=minDias};
-  }).filter(function(h){return h.listo;}).sort(function(a,b){return b.dias-a.dias;}).slice(0,5);
+    return {nombre:h.nombre,nombramiento:h.nombramiento||'',dias:dias,ultima:ult};
+  }).sort(function(a,b){return b.dias-a.dias;}).slice(0,6);
 
   var discActivos=D.discursos.filter(function(d){return d.estado==='Activo';});
   var discSinDar=discActivos.map(function(d){
@@ -1789,22 +1787,31 @@ function hermanoProgramadoSalidaMes(h){return !!asignacionMesHermano(h,'');}
 function sugerenciasSalidas(){
   var lista=[];
   D.locales.filter(function(h){return h.estado==='Activo'&&h.puedeAfuera==='si';}).forEach(function(h){
+    // Excluir si ya tiene asignacion en el mes configurado
     var mesAsignado=asignacionMesHermano(h,'');
     if(mesAsignado)return;
-    var reps=D.repertorioLocal.filter(function(r){return r.hermanoId===h.id&&r.estado==='Activo'&&r.puedeAfuera==='si'&&esDiscursoActivo(r.numDiscurso);}).sort(function(a,b){return a.numDiscurso-b.numDiscurso;});
+    // Debe tener repertorio disponible para salir
+    var reps=D.repertorioLocal.filter(function(r){
+      return r.hermanoId===h.id&&r.estado==='Activo'&&r.puedeAfuera==='si'&&esDiscursoActivo(r.numDiscurso);
+    }).sort(function(a,b){return a.numDiscurso-b.numDiscurso;});
     if(!reps.length)return;
     var ult=ultimaAsignacionHermano(h,'');
     var dias=ult?diasDesde(ult.fecha,refMes()):Infinity;
-    var lim=limiteSalidaDias(h);
-    if(!ult||cumpleRotacionSalida(h,ult.fecha)){
-      lista.push({h:h,ultima:ult?ult.fecha:null,origen:ult?ult.origen:'',dias:dias,limite:lim,limiteMeses:limiteSalidaMeses(h),discursos:reps.map(function(r){return r.numDiscurso;}).join(' - '),rec:!ult?'Prioridad alta':'Deberia salir'});
-    }
+    lista.push({
+      h:h,
+      ultima:ult?ult.fecha:null,
+      origen:ult?ult.origen:'',
+      dias:dias,
+      discursos:reps.map(function(r){return r.numDiscurso;}).join(' - '),
+      rec:!ult?'Nunca ha salido':'Hace '+dias+' dias'
+    });
   });
+  // Ordenar por mas tiempo sin salir y retornar top 6
   return lista.sort(function(a,b){
     if(a.dias===Infinity&&b.dias!==Infinity)return -1;
     if(b.dias===Infinity&&a.dias!==Infinity)return 1;
     return b.dias-a.dias;
-  });
+  }).slice(0,6);
 }
 
 function renderSugSalidas(){
