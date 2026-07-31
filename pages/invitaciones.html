@@ -207,6 +207,10 @@ function renderInvitaciones(){
     var creado = inv.creado_en ? new Date(inv.creado_en).toLocaleDateString('es-CL') : '---';
     var expira = inv.expira_en ? new Date(inv.expira_en).toLocaleDateString('es-CL') : '---';
     var congNombre = _congMap[inv.cong_id] || inv.cong_id || '---';
+    var acciones = '';
+    if(esPend) acciones += '<button class="btn bg bsm inv-wa-btn" data-token="'+inv.token+'" data-email="'+esc(inv.email)+'" data-nombre="'+esc(inv.nombre_invitado||'')+'" data-congid="'+esc(inv.cong_id)+'" data-rol="'+esc(inv.rol)+'">&#128241; WA</button> ';
+    if(esPend) acciones += '<button class="btn bg bsm inv-cancel-btn" data-id="'+inv.id+'">Cancelar</button> ';
+    acciones += '<button class="btn bd2 bsm inv-del-btn" data-id="'+inv.id+'">Eliminar</button>';
     return '<tr>'
       +'<td>'+esc(inv.email||'')+'</td>'
       +'<td>'+esc(inv.nombre_invitado||'---')+'</td>'
@@ -215,12 +219,20 @@ function renderInvitaciones(){
       +'<td><span class="badge '+estCls[estado]+'">'+estLabels[estado]+'</span></td>'
       +'<td style="font-size:12px">'+creado+'</td>'
       +'<td style="font-size:12px">'+expira+'</td>'
-      +'<td style="white-space:nowrap">'
-      +(esPend?'<button class="btn bg bsm" onclick="reenviarInvWA(''+inv.token+'',''+esc(inv.email)+'',''+esc(inv.nombre_invitado||'')+'',''+esc(inv.cong_id)+'',''+esc(inv.rol)+'')">&#128241; WA</button> ':'')
-      +(esPend?'<button class="btn bg bsm" onclick="cancelarInv(''+inv.id+'')">Cancelar</button> ':'')
-      +'<button class="btn bd2 bsm" onclick="eliminarInv(''+inv.id+'')">Eliminar</button>'
-      +'</td></tr>';
+      +'<td style="white-space:nowrap">'+acciones+'</td></tr>';
   }).join('');
+
+  tb.querySelectorAll('.inv-wa-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      reenviarInvWA(btn.dataset.token,btn.dataset.email,btn.dataset.nombre,btn.dataset.congid,btn.dataset.rol);
+    });
+  });
+  tb.querySelectorAll('.inv-cancel-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){ cancelarInv(btn.dataset.id); });
+  });
+  tb.querySelectorAll('.inv-del-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){ eliminarInv(btn.dataset.id); });
+  });
 }
 
 function sortInv(col){
