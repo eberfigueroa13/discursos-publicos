@@ -841,34 +841,52 @@ function repUsoHTML(fecha){
   return '<span class="badge '+cls+'">'+fmtF(fecha)+'</span><br><span style="font-size:11px;color:var(--tx3)">'+dias+' dias al 1 de '+nMes(D.config.mes)+adv+'</span>';
 }
 
+
+/* Obtener titulo de discurso siempre desde el catalogo */
+function tituloDisc(num){
+  if(!num)return '';
+  var d=D.discursos.find(function(x){return parseInt(x.numero)===parseInt(num);});
+  return d?d.titulo:'';
+}
 function renderRep(){
   if(!document.getElementById('tb-r'))return;
   var q=(document.getElementById('bq-r').value||'').toLowerCase();
   var hf=document.getElementById('frep-h').value;
   var lista=D.repertorioLocal.filter(function(r){
-      var tit=(r.titulo||'').toLowerCase();
-      return(!hf||r.hermanoId===hf)&&(!q||(r.numDiscurso||'').toString().includes(q)||tit.includes(q));
-    })
-    .map(function(r){
-      var h=D.locales.find(function(x){return x.id===r.hermanoId;});
-      var ultCong=ultimaVez(parseInt(r.numDiscurso));
-      var ultSal=ultimaSalida(parseInt(r.numDiscurso));
-      return Object.assign({},r,{_nombre:h?h.nombre:'---',_ultCong:ultCong,_ultCongDias:ultCong?diasDesde(ultCong,refMes()):Infinity,_ultSal:ultSal,_ultSalDias:ultSal?diasDesde(ultSal,refMes()):Infinity});
+    var tit=tituloDisc(r.numDiscurso).toLowerCase();
+    return(!hf||r.hermanoId===hf)&&(!q||(r.numDiscurso||'').toString().includes(q)||tit.includes(q));
+  }).map(function(r){
+    var h=D.locales.find(function(x){return x.id===r.hermanoId;});
+    var tit=tituloDisc(r.numDiscurso);
+    var ultCong=ultimaVez(parseInt(r.numDiscurso));
+    var ultSal=ultimaSalida(parseInt(r.numDiscurso));
+    return Object.assign({},r,{
+      _nombre:h?h.nombre:'---',
+      _titulo:tit,
+      _ultCong:ultCong,
+      _ultCongDias:ultCong?diasDesde(ultCong,refMes()):Infinity,
+      _ultSal:ultSal,
+      _ultSalDias:ultSal?diasDesde(ultSal,refMes()):Infinity
     });
+  });
   lista=ordenar(lista,'r','_nombre',1);
   var tb=document.getElementById('tb-r');
   if(!lista.length){tb.innerHTML='<tr><td colspan="11"><div class="es"><div class="ic2">&#127897;</div><p>Sin repertorio</p></div></td></tr>';return;}
   tb.innerHTML=lista.map(function(r){
     var sel=_sel.r.indexOf(r.id)>=0;
+    var uc=r._ultCong?fmtF(r._ultCong)+'<br><span style="font-size:11px;color:var(--tx3)">'+r._ultCongDias+' dias</span>':'---';
+    var us=r._ultSal?fmtF(r._ultSal)+'<br><span style="font-size:11px;color:var(--tx3)">'+r._ultSalDias+' dias</span>':'---';
     return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('r',r.id)+'</td>'
-      +'<td>'+esc(r._nombre)+'</td><td><strong>'+esc(r.numDiscurso||'')+'</strong></td><td>'+esc(r.titulo||'---')+'</td>'
-      +'<td><span class="badge '+(r.puedeLocal==='si'?'bgn':'bgr')+'">'+(r.puedeLocal==='si'?'Si':'No')+'</span></td>'
+      +'<td><strong>'+esc(r._nombre)+'</strong></td>'
+      +'<td>'+esc(r.numDiscurso||'')+'</td>'
+      +'<td>'+esc(r._titulo)+'</td>'
       +'<td><span class="badge '+(r.puedeAfuera==='si'?'bgn':'bgr')+'">'+(r.puedeAfuera==='si'?'Si':'No')+'</span></td>'
-      +'<td>'+repUsoHTML(r._ultCong)+'</td>'
-      +'<td>'+repUsoHTML(r._ultSal)+'</td>'
-      +'<td><span class="badge '+(r.estado==='Activo'?'bgn':'bgr')+'">'+esc(r.estado||'')+'</span></td>'
+      +'<td><span class="badge '+(r.puedeLocal==='si'?'bgn':'bgr')+'">'+(r.puedeLocal==='si'?'Si':'No')+'</span></td>'
+      +'<td><span class="badge '+(r.estado==='Activo'?'bgn':'bgr')+'">'+esc(r.estado)+'</span></td>'
+      +'<td>'+uc+'</td>'
+      +'<td>'+us+'</td>'
       +'<td>'+(r.obs?esc(r.obs):'---')+'</td>'
-      +'<td class="ac">'+btnAc('bd2','x','delRep',r.id)+'</td></tr>';
+      +'<td class="ac">'+btnAc('bg','editar','editRep',r.id)+btnAc('bd2','x','delRep',r.id)+'</td></tr>';
   }).join('');
   tb.querySelectorAll('input[type=checkbox]').forEach(function(c){c.checked=_sel.r.indexOf(c.dataset.id)>=0;});
 }
@@ -2670,7 +2688,11 @@ function buildAnexoConfirmacionHTML(data){
       return r.hermanoId===hId&&r.puedeAfuera==='si'&&r.estado==='Activo'&&esDiscursoActivo(r.numDiscurso);
     }).sort(function(a,b){return a.numDiscurso-b.numDiscurso;});
     var lista=discs.length
-      ?discs.map(function(r){return '<div><strong>'+esc(r.numDiscurso)+'</strong> - '+esc(r.titulo||'Sin titulo')+'</div>';}).join('')
+      ?discs.map(function(r){
+        var dObj=D.discursos.find(function(d){return parseInt(d.numero)===parseInt(r.numDiscurso);});
+        var tit=dObj?dObj.titulo:(r.titulo||'Sin titulo');
+        return '<div><strong>'+esc(r.numDiscurso)+'</strong> - '+esc(tit)+'</div>';
+      }).join('')
       :'<span class="small">Sin discursos para salida</span>';
     return '<tr>'
       +'<td style="width:30%"><strong>'+esc(h.nombre)+'</strong><br><span class="small">'+esc(data.cargoH(h))+'</span><br><span class="small">'+esc(h.telefono||'Sin telefono')+'</span></td>'
@@ -2824,6 +2846,28 @@ function sincronizarTitulosDiscursos(){
     if(disc&&disc.titulo&&disc.titulo!==h.titulo){
       h.titulo=disc.titulo;
       dbUpsertItem('historial',h);
+      changed=true;
+    }
+  });
+  /* Actualizar titulos en repertorio */
+  D.repertorioLocal.forEach(function(r){
+    if(!r.numDiscurso)return;
+    var num=parseInt(r.numDiscurso);
+    var disc=D.discursos.find(function(d){return d.numero===num;});
+    if(disc&&disc.titulo&&disc.titulo!==r.titulo){
+      r.titulo=disc.titulo;
+      dbUpsertItem('repertorioLocal',r);
+      changed=true;
+    }
+  });
+  /* Actualizar titulos en salidas */
+  D.salidasRealizadas.forEach(function(s){
+    if(!s.numDiscurso)return;
+    var num=parseInt(s.numDiscurso);
+    var disc=D.discursos.find(function(d){return d.numero===num;});
+    if(disc&&disc.titulo&&disc.titulo!==s.titulo){
+      s.titulo=disc.titulo;
+      dbUpsertItem('salidasRealizadas',s);
       changed=true;
     }
   });
