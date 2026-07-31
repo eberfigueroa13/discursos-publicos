@@ -86,8 +86,9 @@
 <div class="card" data-roles="superadmin,admin">
   <div class="ctit">Invitar usuario</div>
   <div class="fgrid">
+    <div class="fg"><label>Nombre *</label><input id="usr-inv-nombre" type="text" placeholder="Nombre completo"></div>
+    <div class="fg"><label>Telefono WhatsApp *</label><input id="usr-inv-tel" type="tel" placeholder="+56 9 1234 5678"></div>
     <div class="fg"><label>Email *</label><input id="usr-inv-email" type="email" placeholder="correo@email.com"></div>
-    <div class="fg"><label>Nombre *</label><input id="usr-inv-nombre" type="text"></div>
     <div class="fg"><label>Rol</label>
       <select id="usr-inv-rol">
         <option value="coordinador">Coordinador</option>
@@ -100,13 +101,13 @@
       <select id="usr-inv-cong"><option value="">Seleccionar...</option></select>
     </div>
   </div>
-  <div class="fa"><button class="btn bp" onclick="usrInvitar()">Crear invitacion</button></div>
+  <div class="fa"><button class="btn bp" onclick="usrInvitar()">&#128241; Crear y enviar por WhatsApp</button></div>
   <div id="usr-inv-link" style="display:none;margin-top:12px" class="al ali">
-    <strong>Link de invitacion:</strong>
+    <strong>Link generado:</strong>
     <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
       <input id="usr-inv-link-txt" type="text" readonly style="flex:1;font-size:12px;background:var(--sf2);padding:6px;border:1px solid var(--bd);border-radius:6px">
       <button class="btn bg bsm" onclick="navigator.clipboard.writeText(document.getElementById('usr-inv-link-txt').value).then(function(){toast('Copiado!','s')})">Copiar</button>
-      <button class="btn bp bsm" onclick="compartirWhatsApp()">&#128241; WhatsApp</button>
+      <button class="btn bp bsm" onclick="compartirWhatsApp()">&#128241; Reenviar WhatsApp</button>
     </div>
   </div>
 </div>

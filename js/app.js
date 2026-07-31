@@ -3092,12 +3092,12 @@ async function usrInvitar(){
   if(!_usr||(_usr.rol!=='admin'&&_usr.rol!=='superadmin')){toast('Sin permisos','e');return;}
   var email=document.getElementById('usr-inv-email').value.trim().toLowerCase();
   var nombre=document.getElementById('usr-inv-nombre').value.trim();
+  var tel=document.getElementById('usr-inv-tel').value.trim();
   var rol=document.getElementById('usr-inv-rol').value;
-  // Superadmin puede elegir congregacion, admin usa la suya
   var congId=_usr.rol==='superadmin'
     ?(document.getElementById('usr-inv-cong')?document.getElementById('usr-inv-cong').value:_usr.cong_id)
     :_usr.cong_id;
-  if(!email||!nombre){toast('Email y nombre son obligatorios','e');return;}
+  if(!email||!nombre||!tel){toast('Nombre, telefono y email son obligatorios','e');return;}
   if(!congId){toast('Selecciona una congregacion','e');return;}
   syncBar(true,'Creando invitacion...');
   var link=await saCrearInvitacion(email,nombre,congId,rol);
@@ -3107,6 +3107,16 @@ async function usrInvitar(){
   var linkTxt=document.getElementById('usr-inv-link-txt');
   if(linkEl)linkEl.style.display='block';
   if(linkTxt)linkTxt.value=link;
+  // Abrir WhatsApp automaticamente
+  var telLimpio=tel.replace(/[^0-9+]/g,'');
+  var roles={superadmin:'Super Administrador',admin:'Administrador',coordinador:'Coordinador de Discursos Publicos',lector:'Lector',visor:'Visor'};
+  var rolLabel=roles[rol]||rol;
+  var congRes=await _sb.from('congregaciones').select('nombre').eq('id',congId).single();
+  var congNombre=congRes.data?congRes.data.nombre:'';
+  var msg='Estimado/a '+nombre+', ha sido invitado como *'+rolLabel+'* para la congregacion *'+congNombre+'*.'
+    +'\n\nPara activar su cuenta, ingrese al siguiente enlace (valido por 48 horas):\n'+link
+    +'\n\nSi tiene dudas, consulte con quien le envio esta invitacion.';
+  window.open('https://wa.me/'+telLimpio+'?text='+encodeURIComponent(msg),'_blank');
   toast('Invitacion creada!','s');
   usrCargarDatos();
 }
