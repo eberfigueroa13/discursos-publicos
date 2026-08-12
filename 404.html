@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Página no encontrada — Coordinador de Discursos</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1621;
+      --surface:   #1a2332;
+      --border:    #253347;
+      --azul:      #3a6ea5;
+      --azul-vivo: #4d8fd1;
+      --texto:     #e2e8f0;
+      --muted:     #64748b;
+      --blanco:    #ffffff;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--texto);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+    }
+
+    .icon {
+      font-size: 64px;
+      line-height: 1;
+      margin-bottom: 24px;
+      display: block;
+      filter: drop-shadow(0 0 16px rgba(74,143,209,0.35));
+    }
+
+    .code {
+      font-size: 80px;
+      font-weight: 800;
+      letter-spacing: -4px;
+      color: var(--azul-vivo);
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--blanco);
+      margin-bottom: 12px;
+    }
+
+    p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 0 28px;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: background 0.18s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: var(--azul);
+      color: var(--blanco);
+    }
+    .btn-primary:hover { background: var(--azul-vivo); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: var(--border);
+      color: var(--texto);
+    }
+
+    .logo {
+      margin-top: 36px;
+      font-size: 12px;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="icon">📭</span>
+    <div class="code">404</div>
+    <h1>Página no encontrada</h1>
+    <p>La dirección que buscas no existe o fue movida.<br>Verifica el link o regresa al inicio.</p>
+    <div class="divider"></div>
+    <div class="actions">
+      <a href="/discursos-publicos/" class="btn btn-primary">
+        🏠 Ir al inicio
+      </a>
+      <a href="javascript:history.back()" class="btn btn-secondary">
+        ← Volver atrás
+      </a>
+    </div>
+    <div class="logo">Coordinador de Discursos Públicos</div>
+  </div>
+</body>
+</html>
