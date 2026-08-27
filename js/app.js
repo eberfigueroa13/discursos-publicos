@@ -42,7 +42,6 @@ var _COL={
   privilegios:'privilegios',
   arreglos:'arreglos'
 };
-var _invLinkActual='';
 var _invPendiente=null;
 /* Firebase removido — usando Supabase */
 
@@ -3106,11 +3105,6 @@ function usrCopiarLink(){
   navigator.clipboard.writeText(txt.value).then(function(){toast('Link copiado!','s');}).catch(function(){txt.select();document.execCommand('copy');toast('Link copiado!','s');});
 }
 
-function usrCompartirWhatsApp(){
-  if(!_invLinkActual)return;
-  var msg='Hola! Te invito a unirte al Coordinador de Discursos de nuestra congregacion. Accede con tu cuenta Google usando este link (expira en 48 horas):\n'+_invLinkActual;
-  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
-}
 
 
 async function usrCargarDatos(){
