@@ -522,8 +522,6 @@ function delD(id){
 
 function agregarH(){
   var n=document.getElementById('h-n').value.trim();if(!n){toast('Nombre obligatorio','e');return;}
-  var privSelecs=[];
-  document.querySelectorAll('.priv-chk:checked').forEach(function(chk){privSelecs.push(chk.dataset.id);});
   var privSelecs=[];document.querySelectorAll('.priv-chk-add:checked').forEach(function(chk){privSelecs.push(chk.dataset.id);});
   D.locales.push({id:uid(),nombre:n,nombramiento:document.getElementById('h-nom').value,
     puedeAfuera:document.getElementById('h-af').value,puedeLocal:document.getElementById('h-lo').value,
