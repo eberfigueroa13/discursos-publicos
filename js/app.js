@@ -480,19 +480,23 @@ function importarDMasivo(){
   toast(ok+' importados'+(sk?', '+sk+' omitidos':''),'s');
 }
 
+function ultFechaLocalDisc(num){
+  var h=D.historial.filter(function(x){return (x.tipo==='Local'||x.tipo==='Superintendente de Circuito')&&parseInt(x.numDiscurso)===num;});
+  return h.sort(function(a,b){return b.fecha.localeCompare(a.fecha);})[0].fecha;
+}
 function renderD(){
   var q=document.getElementById('bq-d').value.toLowerCase();
   var est=document.getElementById('fe-d').value;
   var lista=D.discursos.filter(function(d){return(!q||d.numero.toString().includes(q)||d.titulo.toLowerCase().includes(q))&&(!est||d.estado===est);});
   lista=ordenar(lista,'d','numero',1);
   var tb=document.getElementById('tb-d');
-  if(!lista.length){tb.innerHTML='<tr><td colspan="6"><div class="es"><div class="ic2">&#128218;</div><p>Sin discursos</p></div></td></tr>';return;}
+  if(!lista.length){tb.innerHTML='<tr><td colspan="7"><div class="es"><div class="ic2">&#128218;</div><p>Sin discursos</p></div></td></tr>';return;}
   tb.innerHTML=lista.map(function(d){
     var sel=_sel.d.indexOf(d.id)>=0;
     return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('d',d.id)+'</td>'
       +'<td><strong>'+d.numero+'</strong></td><td>'+esc(d.titulo)+'</td>'
       +'<td><span class="badge '+(d.estado==='Activo'?'bgn':'bgr')+'">'+d.estado+'</span></td>'
-      +'<td>'+(d.obs?esc(d.obs):'---')+'</td>'
+      +'<td>'+(d.obs?esc(d.obs):'---')+'</td>'+'<td>'+ultFechaLocalDisc(d.numero)+'</td>'
       +'<td class="ac">'+btnAc('bg','editar','editD',d.id)+btnAc('bd2','x','delD',d.id)+'</td></tr>';
   }).join('');
   // restaurar estado checkboxes
