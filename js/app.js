@@ -1393,8 +1393,40 @@ function telefonoParaPlan(p){return telefonoOrador(p.congregacion,p.hermano,p.nu
 
 function autoTitHist(){var d=discursoCat(parseInt(document.getElementById('hi-n').value));document.getElementById('hi-t').value=(d&&d.estado!=='Inactivo')?d.titulo:'';}
 
+function poblarSelHist(){
+  var selC=document.getElementById('hi-c');
+  var selH=document.getElementById('hi-h');
+  if(selC){
+    var vc=selC.value;
+    selC.innerHTML='<option value="">-- Seleccionar --</option>'
+      +D.congregaciones.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre);}).map(function(c){return '<option value="'+esc(c.nombre)+'">'+esc(c.nombre)+'</option>';}).join('');
+    if(vc)selC.value=vc;
+  }
+  if(selH){
+    var vh=selH.value;
+    selH.innerHTML='<option value="">-- Seleccionar --</option>'
+      +D.locales.filter(function(h){return h.estado==='Activo';}).slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre);}).map(function(h){return '<option value="'+esc(h.nombre)+'">'+esc(h.nombre)+'</option>';}).join('');
+    if(vh)selH.value=vh;
+  }
+}
+function poblarSelSalidas(){
+  var selC=document.getElementById('sx-c');
+  var selH=document.getElementById('sx-h');
+  if(selC){
+    var vc=selC.value;
+    selC.innerHTML='<option value="">-- Seleccionar --</option>'
+      +D.congregaciones.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre);}).map(function(c){return '<option value="'+esc(c.nombre)+'">'+esc(c.nombre)+'</option>';}).join('');
+    if(vc)selC.value=vc;
+  }
+  if(selH){
+    var vh=selH.value;
+    selH.innerHTML='<option value="">-- Seleccionar --</option>'
+      +D.locales.filter(function(h){return h.estado==='Activo';}).slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre);}).map(function(h){return '<option value="'+esc(h.id)+'">'+esc(h.nombre)+'</option>';}).join('');
+    if(vh)selH.value=vh;
+  }
+}
 function agregarHist(){
-  var f=document.getElementById('hi-f').value,num=parseInt(document.getElementById('hi-n').value),h=document.getElementById('hi-h').value.trim();
+  var f=document.getElementById('hi-f').value,num=parseInt(document.getElementById('hi-n').value),h=(document.getElementById('hi-h').options[document.getElementById('hi-h').selectedIndex]||{text:''}).text.trim()||document.getElementById('hi-h').value.trim();
   if(!f||!num||!h){toast('Fecha, N y hermano obligatorios','e');return;}
   var tel=document.getElementById('hi-tel')?document.getElementById('hi-tel').value.trim():'';
   var tipo=document.getElementById('hi-tp').value,cong=document.getElementById('hi-c').value.trim();
@@ -1494,6 +1526,7 @@ function exportarReporteHistorialPDF(){
 }
 
 function renderHist(){
+  poblarSelHist();
   if(!document.getElementById('tb-hi'))return;
   var q=document.getElementById('bq-hi').value.toLowerCase();var anio=document.getElementById('fhi-a').value;
   var lista=D.historial.filter(function(h){return(!q||h.numDiscurso.toString().includes(q)||h.hermano.toLowerCase().includes(q)||(h.congregacion||'').toLowerCase().includes(q)||(h.titulo||'').toLowerCase().includes(q))&&(!anio||(h.fecha||'').startsWith(anio));});
@@ -1538,7 +1571,7 @@ function importarHistMasivo(){
 function autoTitSX(){var d=discursoCat(parseInt(document.getElementById('sx-n').value));document.getElementById('sx-t').value=(d&&d.estado!=='Inactivo')?d.titulo:'';}
 
 function agregarSalidaHist(){
-  var f=document.getElementById('sx-f').value,num=parseInt(document.getElementById('sx-n').value),h=document.getElementById('sx-h').value.trim();
+  var f=document.getElementById('sx-f').value,num=parseInt(document.getElementById('sx-n').value),h=(document.getElementById('sx-h').options[document.getElementById('sx-h').selectedIndex]||{text:''}).text.trim()||document.getElementById('sx-h').value.trim();
   if(!f||!num||!h){toast('Fecha, N y hermano obligatorios','e');return;}
   D.salidasRealizadas.push({id:uid(),fecha:f,congregacion:document.getElementById('sx-c').value.trim(),hermano:h,numDiscurso:num,titulo:document.getElementById('sx-t').value.trim(),obs:document.getElementById('sx-o').value.trim()});
   dbSaveArray('salidasRealizadas');renderSalidas();poblarFiltAnioSal();toast('Salida agregada','s');
@@ -1567,6 +1600,7 @@ function poblarFiltAnioSal(){
 }
 
 function renderSalidas(){
+  poblarSelSalidas();
   if(!document.getElementById('tb-sx'))return;
   var q=(document.getElementById('bq-sx')?document.getElementById('bq-sx').value.toLowerCase():'');var anio=(document.getElementById('fsx-a')?document.getElementById('fsx-a').value:'');
   var lista=D.salidasRealizadas.filter(function(s){return(!q||(s.numDiscurso||'').toString().includes(q)||(s.hermano||'').toLowerCase().includes(q)||(s.congregacion||'').toLowerCase().includes(q)||(s.titulo||'').toLowerCase().includes(q))&&(!anio||(s.fecha||'').startsWith(anio));});
