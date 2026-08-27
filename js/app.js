@@ -68,6 +68,11 @@ function nMes(n){return['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Jul
 
 function nomDia(d){return['Domingo','Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'][parseInt(d)]||'';}
 
+function selDia(id,val){
+  var dias=['Domingo','Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'];
+  return '<select id="'+id+'">'+dias.map(function(d,i){return '<option value="'+i+'" '+(val===String(i)?'selected':'')+'>'+d+'</option>';}).join('')+'</select>';
+}
+
 function esc(v){return(v||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function sep(txt){return txt.split(/\t|;|,(?!\d)/).map(function(s){return s.trim();});}
@@ -1044,7 +1049,7 @@ function editCE(id){
     +'<div class="fg"><label>Nombre</label><input id="ece-n" value="'+esc(c.nombre)+'"></div>'
     +'<div class="fg"><label>Estado</label><select id="ece-e"><option '+(c.estado==='Activa'?'selected':'')+'>Activa</option><option '+(c.estado==='Inactiva'?'selected':'')+'>Inactiva</option></select></div>'
     +'<div class="fg"><label>Direccion</label><input id="ece-d" value="'+esc(c.direccion||'')+'"></div>'
-    +'<div class="fg"><label>Dia discurso</label><select id="ece-dia"><option value="0" '+(c.dia==='0'?'selected':'')+'>Domingo</option><option value="1" '+(c.dia==='1'?'selected':'')+'>Lunes</option><option value="2" '+(c.dia==='2'?'selected':'')+'>Martes</option><option value="3" '+(c.dia==='3'?'selected':'')+'>Miercoles</option><option value="4" '+(c.dia==='4'?'selected':'')+'>Jueves</option><option value="5" '+(c.dia==='5'?'selected':'')+'>Viernes</option><option value="6" '+(c.dia==='6'?'selected':'')+'>Sabado</option></select></div>'
+    +'<div class="fg"><label>Dia discurso</label>'+selDia('ece-dia',c.dia)+'</div>'
     +'<div class="fg"><label>Horario</label><input id="ece-h" value="'+esc(c.horario||'')+'"></div>'
     +'<div class="fg"><label>Coord. nombre</label><input id="ece-cn" value="'+esc(c.coordNombre||'')+'"></div>'
     +'<div class="fg"><label>Coord. tel</label><input id="ece-ct" value="'+esc(c.coordTel||'')+'"></div>'
@@ -1236,7 +1241,7 @@ function editArreglo(id){
     +'<div class="fg"><label>Congregación</label><input id="ear-c" value="'+esc(a.congregacion)+'"></div>'
     +'<div class="fg"><label>Estado</label><select id="ear-e"><option '+(a.estado==='Conversado'?'selected':'')+'>Conversado</option><option '+(a.estado==='Confirmado'?'selected':'')+'>Confirmado</option><option '+(a.estado==='Pendiente datos'?'selected':'')+'>Pendiente datos</option><option '+(a.estado==='Cancelado'?'selected':'')+'>Cancelado</option><option '+(a.estado==='Cerrado'?'selected':'')+'>Cerrado</option></select></div>'
     +'<div class="fg"><label>Dirección</label><input id="ear-d" value="'+esc(a.direccion||'')+'"></div>'
-    +'<div class="fg"><label>Día</label><select id="ear-dia"><option value="0" '+(a.dia==='0'?'selected':'')+'>Domingo</option><option value="1" '+(a.dia==='1'?'selected':'')+'>Lunes</option><option value="2" '+(a.dia==='2'?'selected':'')+'>Martes</option><option value="3" '+(a.dia==='3'?'selected':'')+'>Miércoles</option><option value="4" '+(a.dia==='4'?'selected':'')+'>Jueves</option><option value="5" '+(a.dia==='5'?'selected':'')+'>Viernes</option><option value="6" '+(a.dia==='6'?'selected':'')+'>Sábado</option></select></div>'
+    +'<div class="fg"><label>Día</label>'+selDia('ear-dia',a.dia)+'</div>'
     +'<div class="fg"><label>Horario</label><input id="ear-h" value="'+esc(a.horario||'')+'"></div>'
     +'<div class="fg"><label>Coordinador</label><input id="ear-cn" value="'+esc(a.coordNombre||'')+'"></div>'
     +'<div class="fg"><label>Teléfono</label><input id="ear-ct" value="'+esc(a.coordTel||'')+'"></div>'
