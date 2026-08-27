@@ -414,7 +414,7 @@ function guardarMC(){
 
 function poblarSelCE(){
   var sel=document.getElementById('cfg-ce');if(!sel)return;var v=D.config.congregacionExternaMes;
-  sel.innerHTML='<option value="">-- Seleccionar --</option>'+D.congregaciones.filter(function(c){return c.estado==='Activa';}).map(function(c){return '<option value="'+esc(c.nombre)+'" '+(v===c.nombre?'selected':'')+'>'+esc(c.nombre)+'</option>';}).join('');
+  sel.innerHTML='<option value="">-- Seleccionar --</option>'+D.congregaciones.map(function(c){return '<option value="'+esc(c.nombre)+'" '+(v===c.nombre?'selected':'')+'>'+esc(c.nombre)+'</option>';}).join('');
 }
 
 function plantillaDefault(){
@@ -1296,7 +1296,7 @@ function exportarArreglosCSV(){
 function poblarSelCMCong(){
   ['cm-c','cm-pc'].forEach(function(sid){
     var sel=document.getElementById(sid);if(!sel)return;var v=sel.value;
-    sel.innerHTML='<option value="">-- Seleccionar --</option>'+D.congregaciones.filter(function(c){return c.estado==='Activa';}).map(function(c){return '<option value="'+esc(c.nombre)+'">'+esc(c.nombre)+'</option>';}).join('');
+    sel.innerHTML='<option value="">-- Seleccionar --</option>'+D.congregaciones.map(function(c){return '<option value="'+esc(c.nombre)+'">'+esc(c.nombre)+'</option>';}).join('');
     if(v)sel.value=v;
   });
 }
@@ -3468,7 +3468,7 @@ function _toRow(dKey, item){
     discursos: function(d){ return {id:d.id,cong_id:cid,numero:d.numero,titulo:d.titulo||'',estado:d.estado||'Activo',obs:d.obs||''}; },
     locales: function(h){ return {id:h.id,cong_id:cid,nombre:h.nombre||'',nombramiento:h.nombramiento||'',telefono:h.telefono||'',puede_afuera:h.puedeAfuera||'si',puede_local:h.puedeLocal||'si',estado:h.estado||'Activo',obs:h.obs||'',privilegios:JSON.stringify(h.privilegios||[])}; },
     repertorioLocal: function(r){ return {id:r.id,cong_id:cid,hermano_id:r.hermanoId||null,num_discurso:r.numDiscurso||null,titulo:r.titulo||'',puede_afuera:r.puedeAfuera||'si',puede_local:r.puedeLocal||'si',estado:r.estado||'Activo',obs:r.obs||''}; },
-    congregaciones: function(c){ return {id:c.id,cong_id:cid,nombre:c.nombre||'',direccion:c.direccion||'',dia:c.dia||'0',horario:c.horario||'',coord_nombre:c.coordNombre||'',coord_tel:c.coordTel||'',coord_email:c.coordEmail||'',obs:c.obs||''}; },
+    congregaciones: function(c){ return {id:c.id,cong_id:cid,nombre:c.nombre||'',estado:c.estado||'Activa',direccion:c.direccion||'',dia:c.dia||'0',horario:c.horario||'',coordNombre:c.coord_nombre||'',coordTel:c.coord_tel||'',coordEmail:c.coord_email||'',obs:c.obs||''}; },
     privilegios: function(p){ return {id:p.id,cong_id:cid,nombre:p.nombre||''}; },
     planificacion: function(p){ return {id:p.id,cong_id:cid,tipo:p.tipo||'',origen:p._origen||'',hermano_id:p._hermanoId||null,fecha:p.fecha||'',congregacion:p.congregacion||'',hermano:p.hermano||'',num_discurso:p.numDiscurso?String(p.numDiscurso):'',titulo:p.titulo||'',confirmado:p.confirmado||'Por confirmar',obs:p.obs||''}; },
     historial: function(h){ return {id:h.id,cong_id:cid,fecha:h.fecha||'',tipo:h.tipo||'',congregacion:h.congregacion||'',hermano:h.hermano||'',hermano_id:h.hermanoId||null,telefono:h.telefono||'',num_discurso:h.numDiscurso?String(h.numDiscurso):'',titulo:h.titulo||'',obs:h.obs||''}; },
