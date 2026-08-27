@@ -3263,7 +3263,7 @@ function invRechazar(){
   var invScreen=document.getElementById('inv-screen');
   if(invScreen)invScreen.classList.remove('show');
   window.history.replaceState({},'',window.location.pathname);
-  _auth.signOut();
+  _sb.auth.signOut();
   location.reload();
 }
 
@@ -3330,7 +3330,7 @@ async function doLogin(){
 async function doLogout(){
   if(!confirm('Cerrar sesion?')) return;
   await _sb.auth.signOut();
-  window.location.href = '/index.html';
+  window.location.href = '/discursos-publicos/index.html';
 }
 
 async function doResetPassword(){
