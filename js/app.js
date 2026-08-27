@@ -1056,7 +1056,7 @@ function editCE(id){
       c.horario=document.getElementById('ece-h').value.trim();c.coordNombre=document.getElementById('ece-cn').value.trim();
       c.coordTel=document.getElementById('ece-ct').value.trim();c.coordEmail=document.getElementById('ece-ce').value.trim();
       c.obs=document.getElementById('ece-o').value.trim();
-      dbSaveArray('congregaciones');renderCE();poblarSelCE();poblarSelCMCong();closeM();toast('Actualizado','s');
+      dbUpsertItem('congregaciones',c);renderCE();poblarSelCE();poblarSelCMCong();closeM();toast('Actualizado','s');
     }}]);
 }
 
