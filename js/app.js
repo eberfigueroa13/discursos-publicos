@@ -2760,7 +2760,7 @@ function importarCompleto(){
     var reader=new FileReader();
     reader.onload=function(ev){
       confirmar('Importar y reemplazar TODOS los datos de esta congregacion?',function(){
-        dbImportarJSON(ev.target.result);
+        try{var d=JSON.parse(ev.target.result);impCompleto(d);}catch(e){toast('JSON invalido','e');}
       });
     };
     reader.readAsText(file);
