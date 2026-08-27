@@ -481,8 +481,10 @@ function importarDMasivo(){
 }
 
 function ultFechaLocalDisc(num){
-  var h=D.historial.filter(function(x){return (x.tipo==='Local'||x.tipo==='Superintendente de Circuito')&&parseInt(x.numDiscurso)===num;});
-  return h.sort(function(a,b){return b.fecha.localeCompare(a.fecha);})[0].fecha;
+  var h=(D.historial||[]).filter(function(x){return (x.tipo==='Local'||x.tipo==='Superintendente de Circuito')&&parseInt(x.numDiscurso)===parseInt(num);});
+  if(!h.length)return '---';
+  var s=h.filter(function(x){return x.fecha;}).sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
+  return s.length?s[0].fecha:'---';
 }
 function renderD(){
   var q=document.getElementById('bq-d').value.toLowerCase();
