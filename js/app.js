@@ -552,7 +552,7 @@ function ultimaSalidaLocal(h){
   var nn=normName(h.nombre||'');
   var items=[];
   (D.historial||[]).forEach(function(x){
-    if(x.fecha&&x.tipo==='Local'&&nn&&normName(x.hermano||'')===nn)
+    if(x.fecha&&x.tipo==='Local'&&(x.hermanoId===h.id||(nn&&normName(x.hermano||'')===nn)))
       items.push(x.fecha);
   });
   (D.planificacion||[]).forEach(function(p){
