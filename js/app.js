@@ -1982,7 +1982,7 @@ function pSD(el){
   var p=D.planificacion.find(function(x){return x.id===el.dataset.id;});if(!p)return;
   var n=parseInt(el.value)||'';
   if(n&&esDiscursoInactivo(n)){toast('Este discurso esta inactivo y no puede programarse.','e');p.numDiscurso='';p.titulo='';dbSaveArray('planificacion');renderPlan();return;}
-  p.numDiscurso=n;var r=D.repertorioLocal.find(function(r){return r.hermanoId===p._hermanoId&&r.numDiscurso===parseInt(el.value)&&esDiscursoActivo(r.numDiscurso);});p.titulo=r?r.titulo:'';dbSaveArray('repertorioLocal');renderPlan();
+  p.numDiscurso=n;var r=D.repertorioLocal.find(function(r){return r.hermanoId===p._hermanoId&&r.numDiscurso===parseInt(el.value)&&esDiscursoActivo(r.numDiscurso);});var dcs=discursoCat(n);p.titulo=(r&&r.titulo)?r.titulo:(dcs?dcs.titulo:'');dbSaveArray('planificacion');renderPlan();
 }
 
 function valPlan(){
