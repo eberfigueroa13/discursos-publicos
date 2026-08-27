@@ -1959,9 +1959,9 @@ function pED(el){
   if(n&&esDiscursoInactivo(n)){toast('Este discurso esta inactivo y no puede programarse.','e');p.numDiscurso='';p.titulo='';dbSaveArray('planificacion');renderPlan();return;}
   p.numDiscurso=n;
   if(p._origen==='Local'){
-    var r=D.repertorioLocal.find(function(r){return r.hermanoId===p._hermanoId&&r.numDiscurso===parseInt(el.value)&&esDiscursoActivo(r.numDiscurso);});p.titulo=r?r.titulo:'';p.telefono=telefonoOrador(p.congregacion,p.hermano,p.numDiscurso,'Local');
+    var r=D.repertorioLocal.find(function(r){return r.hermanoId===p._hermanoId&&r.numDiscurso===parseInt(el.value)&&esDiscursoActivo(r.numDiscurso);});var dc=discursoCat(n);p.titulo=(r&&r.titulo)?r.titulo:(dc?dc.titulo:'');p.telefono=telefonoOrador(p.congregacion,p.hermano,p.numDiscurso,'Local');
   }else{
-    var cm=D.cargaMensual.find(function(c){return c.congregacion===p.congregacion&&c.hermano===p.hermano&&c.numDiscurso===parseInt(el.value)&&esDiscursoActivo(c.numDiscurso);});p.titulo=cm?cm.titulo:'';p.telefono=cm&&cm.telefono?cm.telefono:telefonoOrador(p.congregacion,p.hermano,p.numDiscurso,'Externo');
+    var cm=D.cargaMensual.find(function(c){return c.congregacion===p.congregacion&&c.hermano===p.hermano&&c.numDiscurso===parseInt(el.value)&&esDiscursoActivo(c.numDiscurso);});var dc2=discursoCat(n);p.titulo=(cm&&cm.titulo)?cm.titulo:(dc2?dc2.titulo:'');p.telefono=cm&&cm.telefono?cm.telefono:telefonoOrador(p.congregacion,p.hermano,p.numDiscurso,'Externo');
   }
   dbSaveArray('planificacion');renderPlan();
 }
