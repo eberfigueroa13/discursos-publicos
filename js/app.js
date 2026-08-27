@@ -1647,7 +1647,7 @@ function uniq(arr){var o={},r=[];arr.forEach(function(v){v=(v||'').trim();if(v&&
 
 function congsCarga(){return uniq(D.cargaMensual.filter(function(c){return esDiscursoActivo(c.numDiscurso);}).map(function(c){return c.congregacion;})).sort(function(a,b){return a.localeCompare(b);});}
 
-function congsDestino(){return D.congregaciones.filter(function(c){return c.estado!=='Inactiva';}).map(function(c){return c.nombre;}).sort(function(a,b){return a.localeCompare(b);});}
+function congsDestino(){return D.congregaciones.filter(function(c){return c.estado==='Activa';}).map(function(c){return c.nombre;}).sort(function(a,b){return a.localeCompare(b);});}
 
 function optionList(vals,sel,ph){
   var html='<option value="">'+(ph||'-- Seleccionar --')+'</option>';
@@ -3168,61 +3168,6 @@ async function usrCargarDatos(){
       });
       el.querySelectorAll('.usr-del-btn').forEach(function(btn){
         btn.addEventListener('click',function(){var tr=btn.closest('tr');usrEliminar(tr.dataset.email);});
-      });
-    }
-  }
-  // Invitaciones pendientes
-  var qInv=esSA
-    ?_sb.from('invitaciones').select('*').eq('usada',false).order('creado_en',{ascending:false}).limit(50)
-    :_sb.from('invitaciones').select('*').eq('cong_id',_usr.cong_id).eq('usada',false);
-  var res2=await qInv;
-  var el2=document.getElementById('usr-lista-inv');
-  if(el2){
-    var ahora=new Date();
-    var pend=(res2.data||[]).filter(function(d){
-      var exp=d.expira_en?new Date(d.expira_en):null;
-      return !exp||ahora<=exp;
-    });
-    if(!pend.length){
-      el2.innerHTML='<div class="es"><p>Sin invitaciones pendientes</p></div>';
-    } else {
-      var rows2=pend.map(function(d){
-        var exp=d.expira_en?new Date(d.expira_en).toLocaleDateString('es-CL'):'---';
-        return '<tr style="border-bottom:1px solid var(--bd);font-size:13px" data-token="'+d.token+'" data-email="'+esc(d.email||'')+'" data-nombre="'+esc(d.nombre_invitado||'')+'" data-rol="'+esc(d.rol||'')+'" data-congid="'+esc(d.cong_id||'')+'">'
-          +(esSA?'<td style="padding:8px;font-size:11px">'+esc(d.cong_id||'')+'</td>':'')
-          +'<td style="padding:8px">'+esc(d.email||'')+'</td>'
-          +'<td style="padding:8px">'+esc(d.nombre_invitado||'')+'</td>'
-          +'<td style="padding:8px"><span class="badge bbl">'+esc(d.rol||'')+'</span></td>'
-          +'<td style="padding:8px">'+exp+'</td>'
-          +'<td style="padding:8px;white-space:nowrap">'
-          +'<button class="btn bg bsm inv-copy-btn">Copiar link</button> '
-          +'<button class="btn bd2 bsm inv-cancel-btn">Cancelar</button>'
-          +'</td></tr>';
-      }).join('');
-      el2.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
-        +'<thead><tr style="font-size:12px;color:var(--tx3);border-bottom:2px solid var(--bd)">'
-        +(esSA?'<th style="padding:8px;text-align:left">Congr.</th>':'')
-        +'<th style="padding:8px;text-align:left">Email</th>'
-        +'<th style="padding:8px;text-align:left">Nombre</th>'
-        +'<th style="padding:8px;text-align:left">Rol</th>'
-        +'<th style="padding:8px;text-align:left">Expira</th>'
-        +'<th style="padding:8px;text-align:left">Acciones</th>'
-        +'</tr></thead><tbody>'+rows2+'</tbody></table></div>';
-      el2.querySelectorAll('.inv-copy-btn').forEach(function(btn){
-        btn.addEventListener('click',function(){
-          var tr=btn.closest('tr');
-          var link=window.location.origin+'/index.html?inv='+tr.dataset.token;
-          navigator.clipboard.writeText(link).then(function(){toast('Link copiado!','s');});
-        });
-      });
-      el2.querySelectorAll('.inv-cancel-btn').forEach(function(btn){
-        btn.addEventListener('click',function(){
-          var tr=btn.closest('tr');
-          confirmar('Cancelar esta invitacion?',async function(){
-            await _sb.from('invitaciones').update({usada:true}).eq('token',tr.dataset.token);
-            toast('Invitacion cancelada','s');usrCargarDatos();
-          });
-        });
       });
     }
   }
