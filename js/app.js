@@ -401,7 +401,7 @@ function guardarMC(){
 
 function poblarSelCE(){
   var sel=document.getElementById('cfg-ce');if(!sel)return;var v=D.config.congregacionExternaMes;
-  sel.innerHTML='<option value="">-- Seleccionar --</option>'+D.congregaciones.map(function(c){return '<option value="'+esc(c.nombre)+'" '+(v===c.nombre?'selected':'')+'>'+esc(c.nombre)+'</option>';}).join('');
+  sel.innerHTML='<option value="">-- Seleccionar --</option>'+D.congregaciones.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre);}).map(function(c){return '<option value="'+esc(c.nombre)+'" '+(v===c.nombre?'selected':'')+'>'+esc(c.nombre)+'</option>';}).join('');
 }
 
 function plantillaDefault(){
@@ -1151,7 +1151,7 @@ function avanzarFormArregloDespuesGuardar(mes,anio){
 
 function poblarDatalistAr(){
   var dl=document.getElementById('ar-congs');if(!dl)return;
-  dl.innerHTML=D.congregaciones.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre);}).map(function(c){return '<option value="'+esc(c.nombre)+'"></option>';}).join('');
+  dl.innerHTML=D.congregaciones.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre)}).map(function(c){return '<option value="'+esc(c.nombre)+'"></option>';}).join('');
 }
 
 function poblarAnioArreglos(){
@@ -1288,7 +1288,7 @@ function exportarArreglosCSV(){
 function poblarSelCMCong(){
   ['cm-c','cm-pc'].forEach(function(sid){
     var sel=document.getElementById(sid);if(!sel)return;var v=sel.value;
-    sel.innerHTML='<option value="">-- Seleccionar --</option>'+D.congregaciones.map(function(c){return '<option value="'+esc(c.nombre)+'">'+esc(c.nombre)+'</option>';}).join('');
+    sel.innerHTML='<option value="">-- Seleccionar --</option>'+D.congregaciones.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre);}).map(function(c){return '<option value="'+esc(c.nombre)+'">'+esc(c.nombre)+'</option>';}).join('');
     if(v)sel.value=v;
   });
 }
@@ -3310,6 +3310,7 @@ function loginErr(msg){
 function mostrarLogin(){
   var el = document.getElementById('login-overlay');
   if(el){ el.classList.add('show'); el.style.display='flex'; }
+  else { window.location.href = 'https://coordinadordiscursos.cl'; }
 }
 
 function ocultarLogin(){
@@ -3333,9 +3334,10 @@ async function doLogin(){
 }
 
 async function doLogout(){
-  if(!confirm('Cerrar sesion?')) return;
-  await _sb.auth.signOut();
-  window.location.href = '/discursos-publicos/index.html';
+  confirmar('Cerrar sesion?', async function(){
+    await _sb.auth.signOut();
+    window.location.href = 'https://coordinadordiscursos.cl';
+  });
 }
 
 async function doResetPassword(){
