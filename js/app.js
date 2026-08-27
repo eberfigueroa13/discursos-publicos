@@ -1394,20 +1394,36 @@ function telefonoParaPlan(p){return telefonoOrador(p.congregacion,p.hermano,p.nu
 function autoTitHist(){var d=discursoCat(parseInt(document.getElementById('hi-n').value));document.getElementById('hi-t').value=(d&&d.estado!=='Inactivo')?d.titulo:'';}
 
 function poblarSelHist(){
+  onChangeTipoHist();
+}
+function onChangeTipoHist(){
+  var tipo=(document.getElementById('hi-tp')||{value:'Externo'}).value;
   var selC=document.getElementById('hi-c');
   var selH=document.getElementById('hi-h');
-  if(selC){
-    var vc=selC.value;
-    selC.innerHTML='<option value="">-- Seleccionar --</option>'
-      +D.congregaciones.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre);}).map(function(c){return '<option value="'+esc(c.nombre)+'">'+esc(c.nombre)+'</option>';}).join('');
-    if(vc)selC.value=vc;
-  }
-  if(selH){
-    var vh=selH.value;
+  if(!selC||!selH)return;
+  if(tipo==='Local'){
+    selC.innerHTML='<option value="'+esc(D.miCongr.nombre)+'">'+esc(D.miCongr.nombre||'Mi Congregacion')+'</option>';
+    selC.disabled=true;
     selH.innerHTML='<option value="">-- Seleccionar --</option>'
       +D.locales.filter(function(h){return h.estado==='Activo';}).slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre);}).map(function(h){return '<option value="'+esc(h.nombre)+'">'+esc(h.nombre)+'</option>';}).join('');
-    if(vh)selH.value=vh;
+    selH.disabled=false;
+  }else{
+    selC.innerHTML='<option value="">-- Seleccionar --</option>'
+      +D.congregaciones.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre);}).map(function(c){return '<option value="'+esc(c.nombre)+'">'+esc(c.nombre)+'</option>';}).join('');
+    selC.disabled=false;
+    selH.innerHTML='<option value="">-- Seleccionar --</option>';
+    selH.disabled=true;
   }
+}
+function onChangeCongHist(){
+  var cong=(document.getElementById('hi-c')||{value:''}).value;
+  var tipo=(document.getElementById('hi-tp')||{value:'Externo'}).value;
+  var selH=document.getElementById('hi-h');
+  if(!selH||tipo==='Local')return;
+  var hermanos=cong?uniq(D.cargaMensual.filter(function(cm){return cm.congregacion===cong;}).map(function(cm){return cm.hermano;})).sort(function(a,b){return a.localeCompare(b);}):[];
+  selH.innerHTML='<option value="">-- Seleccionar --</option>'
+    +hermanos.map(function(h){return '<option value="'+esc(h)+'">'+esc(h)+'</option>';}).join('');
+  selH.disabled=hermanos.length===0;
 }
 function poblarSelSalidas(){
   var selC=document.getElementById('sx-c');
@@ -2241,9 +2257,9 @@ function exportarPlanCSV(){
 
 function loadReporteOpts(){
   var m=document.getElementById('rpt-m'),a=document.getElementById('rpt-a');
-  // Solo setear valor si el elemento existe y no tiene valor previo
-  if(m&&!m.value){m.value=D.config.mes||new Date().getMonth()+1;}
-  if(a&&!a.value){a.value=D.config.anio||new Date().getFullYear();}
+  
+  if(m)m.value=D.config.mes||new Date().getMonth()+1;
+  if(a)a.value=D.config.anio||new Date().getFullYear();
 }
 
 function reporteMesRows(){
