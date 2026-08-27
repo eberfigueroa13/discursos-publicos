@@ -3344,7 +3344,9 @@ function loginErr(msg){
 function mostrarLogin(){
   var el = document.getElementById('login-overlay');
   if(el){ el.classList.add('show'); el.style.display='flex'; }
-  else { window.location.href = 'https://coordinadordiscursos.cl'; }
+  else if(window.location.pathname.indexOf('pages/')>=0){
+    window.location.href = 'https://coordinadordiscursos.cl';
+  }
 }
 
 function ocultarLogin(){
