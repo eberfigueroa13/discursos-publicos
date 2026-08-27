@@ -44,24 +44,7 @@ var _COL={
 };
 var _invLinkActual='';
 var _invPendiente=null;
-var _fbMode={
-  /* 'blob' = JSON unico en Firestore (actual)
-     'col'  = coleccion separada en Firestore (futuro) */
-  discursos:'blob',
-  locales:'blob',
-  repertorioLocal:'blob',
-  congregaciones:'blob',
-  cargaMensual:'blob',
-  planificacion:'blob',
-  historial:'blob',
-  salidasRealizadas:'blob',
-  privilegios:'blob',
-  arreglos:'blob',
-  miCongr:'blob',
-  config:'blob'
-};
-var _fbUnsubscribe=null;
-var _navOriginal=null;
+/* Firebase removido — usando Supabase */
 
 /* ── Funciones de la aplicación ── */
 
@@ -2210,7 +2193,6 @@ function exportarPlanXLSX(){
   var blob=zipStore(files),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='programa_'+nMes(c.mes)+'_'+c.anio+'.xlsx';a.click();toast('Excel generado','s');
 }
 
-function add(vals,bold){rows.push({vals:vals,bold:!!bold});}
 
 function exportarPlanCSV(){
   var datos=planMesRows();
@@ -2453,16 +2435,6 @@ function poblarPrivChksAdd(){
   }).join('');
 }
 
-function plantillaDefault(){
-  return 'ARREGLO DE CONFERENCIAS CON {{congregacionDestino}}\n\nA: {{coordDestNombre}}\n\nEstimado hermano {{coordDestNombre}}:\n\nJunto con saludarle y esperando que se encuentre bien, es un agrado para nosotros contar con la oportunidad de realizar el arreglo de conferencias con su congregacion para el mes de {{mes}}. En armonia con lo anterior, compartimos los datos necesarios para contactarnos ante cualquier consulta o inquietud:\n\n- Congregacion {{miCongr}} - Circuito {{circuito}}\n- Direccion del Salon del Reino: {{direccion}}\n- Horario de reunion: {{dia}} {{horario}}\n- Coordinador de discursos publicos: {{coordNombre}}, {{coordTel}}, {{coordEmail}}\n- Contacto de Audio y Video: {{avNombre}}, {{avTel}}, {{avEmail}}\n- Google Maps del Salon: {{mapsSalon}}\n\nTodas las semanas tenemos el arreglo de hospitalidad con los hermanos que nos visitan. Por esta razon, les pedimos que indiquen a los hermanos que nos visitaran si podran quedarse a la hospitalidad, a mas tardar el miercoles de cada semana, para que los hermanos de cada grupo puedan hacer los arreglos correspondientes.\n\nEn la siguiente pagina (Anexo 1) encontrara el detalle de los conferenciantes y los bosquejos de discursos publicos disponibles para exponerlos en su congregacion.\n\nSe despide afectuosamente,';
-}
-
-function resetPlantillaCarta(){
-  D.config.plantillaCarta=plantillaDefault();
-  dbSaveDoc('config');
-  var el=document.getElementById('cfg-carta');if(el)el.value=D.config.plantillaCarta;
-  toast('Plantilla restaurada','s');
-}
 
 function aplicarMarcadores(texto,ce){
   var c=D.config,mc=D.miCongr;
@@ -3140,11 +3112,6 @@ function usrCompartirWhatsApp(){
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 
-function usrEnviarEmailInvitacion(email,nombre,link,rol){
-  // Placeholder para integracion con servicio de email
-  // Se implementara con Zoho Mail o EmailJS cuando este configurado
-  console.log('Email invitacion pendiente de configurar para:',email);
-}
 
 async function usrCargarDatos(){
   if(!_usr)return;
