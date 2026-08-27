@@ -2343,18 +2343,18 @@ function limpTodo(){
     }}]);
 }
 
+function exportarCSV(cols, filas, nombre){
+  var csv=[cols.join(';')].concat(filas.map(function(fila){return fila.map(function(v){return '"'+(v||'').toString().replace(/"/g,'""')+'"';}).join(';');})).join('\r\n');
+  var b=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nombre+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV exportado','s');
+}
 function exportarHistCSV(){
-  var cols=['Fecha','Tipo','Congregacion','Hermano','Telefono','N','Titulo','Obs.'];
-  var filas=D.historial.filter(function(h){return h.tipo==='Superintendente de Circuito'||esDiscursoActivo(h.numDiscurso);}).slice().sort(function(a,b){return new Date(b.fecha)-new Date(a.fecha);}).map(function(h){return [h.fecha,h.tipo,h.congregacion,h.hermano,h.telefono||telefonoParaHist(h),h.numDiscurso,h.titulo,h.obs].map(function(v){return '"'+(v||'').toString().replace(/"/g,'""')+'"';}).join(';');});
-  var csv=[cols.join(';')].concat(filas).join('\r\n');
-  var b=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='historial_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV exportado','s');
+  var filas=D.historial.filter(function(h){return h.tipo==='Superintendente de Circuito'||esDiscursoActivo(h.numDiscurso);}).slice().sort(function(a,b){return new Date(b.fecha)-new Date(a.fecha);}).map(function(h){return [h.fecha,h.tipo,h.congregacion,h.hermano,h.telefono||telefonoParaHist(h),h.numDiscurso,h.titulo,h.obs];});
+  exportarCSV(['Fecha','Tipo','Congregacion','Hermano','Telefono','N','Titulo','Obs.'],filas,'historial');
 }
 
 function exportarSalidasCSV(){
-  var cols=['Fecha','Congregacion destino','Hermano local','N','Titulo','Obs.'];
-  var filas=D.salidasRealizadas.filter(function(s){return esDiscursoActivo(s.numDiscurso);}).slice().sort(function(a,b){return new Date(b.fecha)-new Date(a.fecha);}).map(function(s){return [s.fecha,s.congregacion,s.hermano,s.numDiscurso,s.titulo,s.obs].map(function(v){return '"'+(v||'').toString().replace(/"/g,'""')+'"';}).join(';');});
-  var csv=[cols.join(';')].concat(filas).join('\r\n');
-  var b=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='salidas_realizadas_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV de salidas exportado','s');
+  var filas=D.salidasRealizadas.filter(function(s){return esDiscursoActivo(s.numDiscurso);}).slice().sort(function(a,b){return new Date(b.fecha)-new Date(a.fecha);}).map(function(s){return [s.fecha,s.congregacion,s.hermano,s.numDiscurso,s.titulo,s.obs];});
+  exportarCSV(['Fecha','Congregacion destino','Hermano local','N','Titulo','Obs.'],filas,'salidas_realizadas');
 }
 
 function renderGuia(){
