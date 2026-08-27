@@ -1838,8 +1838,8 @@ function usarSugSalida(el){
   if(!haySalidasPlan())D.config.habraSalidasMes='si';
   var cong=D.config.congregacionExternaMes||'';
   var fecha=cong?fechaSugeridaDestino(cong,''):'';
-  D.planificacion.push({id:uid(),tipo:'Salida',_origen:'Local',_hermanoId:h.id,fecha:fecha,congregacion:cong,hermano:h.nombre,numDiscurso:'',titulo:'',confirmado:'Por confirmar',obs:''});
-  dbSaveArray('planificacion');renderPlan();toast('Hermano agregado a salidas. Selecciona el discurso.','s');
+  var nsp={id:uid(),tipo:'Salida',_origen:'Local',_hermanoId:h.id,fecha:fecha,congregacion:cong,hermano:h.nombre,numDiscurso:'',titulo:'',confirmado:'Por confirmar',obs:''};
+  D.planificacion.push(nsp);dbUpsertItem('planificacion',nsp);renderPlan();toast('Hermano agregado a salidas. Selecciona el discurso.','s');
 }
 
 function renderPlanSal(lista){
@@ -1906,7 +1906,7 @@ function agregarFE(){
   renderPlan();
 }
 
-function agregarFS(){if(!haySalidasPlan()){D.config.habraSalidasMes='si';}D.planificacion.push({id:uid(),tipo:'Salida',_origen:'Local',_hermanoId:'',fecha:'',congregacion:D.config.congregacionExternaMes||'',hermano:'',numDiscurso:'',titulo:'',confirmado:'Por confirmar',obs:''});dbSaveArray('planificacion');renderPlan();}
+function agregarFS(){if(!haySalidasPlan()){D.config.habraSalidasMes='si';}var nfs={id:uid(),tipo:'Salida',_origen:'Local',_hermanoId:'',fecha:'',congregacion:D.config.congregacionExternaMes||'',hermano:'',numDiscurso:'',titulo:'',confirmado:'Por confirmar',obs:''};D.planificacion.push(nfs);dbUpsertItem('planificacion',nfs);renderPlan();}
 
 function pOrig(el){
   var p=D.planificacion.find(function(x){return x.id===el.dataset.id;});if(!p)return;
@@ -1917,13 +1917,13 @@ function pOrig(el){
     p.tipo='Externo';p._origen=el.value;p.hermano='';p._hermanoId='';p.numDiscurso='';p.titulo='';
     p.congregacion=el.value==='Local'?D.miCongr.nombre||'':'';
   }
-  dbSaveDoc('config');renderPlan();
+  dbUpsertItem('planificacion',p);renderPlan();
 }
 
 function pCongExt(el){
   var p=D.planificacion.find(function(x){return x.id===el.dataset.id;});if(!p)return;
   p.congregacion=el.value;p.hermano='';p._hermanoId='';p.numDiscurso='';p.titulo='';p._origen='Externo';
-  dbSaveArray('planificacion');renderPlan();
+  dbUpsertItem('planificacion',p);renderPlan();
 }
 
 function pEH(el){
@@ -1932,39 +1932,39 @@ function pEH(el){
   if(val.substring(0,2)==='L:'){p._hermanoId=val.substring(2);p._origen='Local';var h=D.locales.find(function(x){return x.id===p._hermanoId;});p.hermano=h?h.nombre:'';p.telefono=h?h.telefono||'':'';p.congregacion=D.miCongr.nombre||'';}
   else if(val.substring(0,2)==='E:'){p.hermano=val.substring(2);p._hermanoId='';p._origen='Externo';p.telefono=telefonoOrador(p.congregacion,p.hermano,p.numDiscurso,'Externo');}
   else{p.hermano='';p.telefono='';p._hermanoId='';}
-  dbSaveDoc('miCongr');renderPlan();
+  dbUpsertItem('planificacion',p);renderPlan();
 }
 
 function pED(el){
   var p=D.planificacion.find(function(x){return x.id===el.dataset.id;});if(!p)return;
   var n=parseInt(el.value)||'';
-  if(n&&esDiscursoInactivo(n)){toast('Este discurso esta inactivo y no puede programarse.','e');p.numDiscurso='';p.titulo='';dbSaveArray('planificacion');renderPlan();return;}
+  if(n&&esDiscursoInactivo(n)){toast('Este discurso esta inactivo y no puede programarse.','e');p.numDiscurso='';p.titulo='';dbUpsertItem('planificacion',p);renderPlan();return;}
   p.numDiscurso=n;
   if(p._origen==='Local'){
     var r=D.repertorioLocal.find(function(r){return r.hermanoId===p._hermanoId&&r.numDiscurso===parseInt(el.value)&&esDiscursoActivo(r.numDiscurso);});var dc=discursoCat(n);p.titulo=(r&&r.titulo)?r.titulo:(dc?dc.titulo:'');p.telefono=telefonoOrador(p.congregacion,p.hermano,p.numDiscurso,'Local');
   }else{
     var cm=D.cargaMensual.find(function(c){return c.congregacion===p.congregacion&&c.hermano===p.hermano&&c.numDiscurso===parseInt(el.value)&&esDiscursoActivo(c.numDiscurso);});var dc2=discursoCat(n);p.titulo=(cm&&cm.titulo)?cm.titulo:(dc2?dc2.titulo:'');p.telefono=cm&&cm.telefono?cm.telefono:telefonoOrador(p.congregacion,p.hermano,p.numDiscurso,'Externo');
   }
-  dbSaveArray('planificacion');renderPlan();
+  dbUpsertItem('planificacion',p);renderPlan();
 }
 
 function pSDest(el){
   var p=D.planificacion.find(function(x){return x.id===el.dataset.id;});if(!p)return;
   p.congregacion=el.value;
   if(!p.fecha)p.fecha=fechaSugeridaDestino(p.congregacion,p.id);
-  dbSaveArray('planificacion');renderPlan();
+  dbUpsertItem('planificacion',p);renderPlan();
 }
 
 function pSH(el){
   var p=D.planificacion.find(function(x){return x.id===el.dataset.id;});if(!p)return;
-  p._hermanoId=el.value;var h=D.locales.find(function(x){return x.id===el.value;});p.hermano=h?h.nombre:'';p.telefono=h?h.telefono||'':'';p.numDiscurso='';p.titulo='';dbSaveArray('planificacion');renderPlan();
+  p._hermanoId=el.value;var h=D.locales.find(function(x){return x.id===el.value;});p.hermano=h?h.nombre:'';p.telefono=h?h.telefono||'':'';p.numDiscurso='';p.titulo='';dbUpsertItem('planificacion',p);renderPlan();
 }
 
 function pSD(el){
   var p=D.planificacion.find(function(x){return x.id===el.dataset.id;});if(!p)return;
   var n=parseInt(el.value)||'';
-  if(n&&esDiscursoInactivo(n)){toast('Este discurso esta inactivo y no puede programarse.','e');p.numDiscurso='';p.titulo='';dbSaveArray('planificacion');renderPlan();return;}
-  p.numDiscurso=n;var r=D.repertorioLocal.find(function(r){return r.hermanoId===p._hermanoId&&r.numDiscurso===parseInt(el.value)&&esDiscursoActivo(r.numDiscurso);});var dcs=discursoCat(n);p.titulo=(r&&r.titulo)?r.titulo:(dcs?dcs.titulo:'');dbSaveArray('planificacion');renderPlan();
+  if(n&&esDiscursoInactivo(n)){toast('Este discurso esta inactivo y no puede programarse.','e');p.numDiscurso='';p.titulo='';dbUpsertItem('planificacion',p);renderPlan();return;}
+  p.numDiscurso=n;var r=D.repertorioLocal.find(function(r){return r.hermanoId===p._hermanoId&&r.numDiscurso===parseInt(el.value)&&esDiscursoActivo(r.numDiscurso);});var dcs=discursoCat(n);p.titulo=(r&&r.titulo)?r.titulo:(dcs?dcs.titulo:'');dbUpsertItem('planificacion',p);renderPlan();
 }
 
 function valPlan(){
