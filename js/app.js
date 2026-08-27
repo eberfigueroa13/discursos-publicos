@@ -490,6 +490,7 @@ function renderD(){
   var q=document.getElementById('bq-d').value.toLowerCase();
   var est=document.getElementById('fe-d').value;
   var lista=D.discursos.filter(function(d){return(!q||d.numero.toString().includes(q)||d.titulo.toLowerCase().includes(q))&&(!est||d.estado===est);});
+  lista=lista.map(function(d){return Object.assign({},d,{ultLocal:ultFechaLocalDisc(d.numero)});});
   lista=ordenar(lista,'d','numero',1);
   var tb=document.getElementById('tb-d');
   if(!lista.length){tb.innerHTML='<tr><td colspan="7"><div class="es"><div class="ic2">&#128218;</div><p>Sin discursos</p></div></td></tr>';return;}
@@ -498,7 +499,7 @@ function renderD(){
     return '<tr class="'+(sel?'sel-row':'')+'"><td class="chk">'+chkBox('d',d.id)+'</td>'
       +'<td><strong>'+d.numero+'</strong></td><td>'+esc(d.titulo)+'</td>'
       +'<td><span class="badge '+(d.estado==='Activo'?'bgn':'bgr')+'">'+d.estado+'</span></td>'
-      +'<td>'+(d.obs?esc(d.obs):'---')+'</td>'+'<td>'+ultFechaLocalDisc(d.numero)+'</td>'
+      +'<td>'+(d.obs?esc(d.obs):'---')+'</td>'+'<td>'+(d.ultLocal||'---')+'</td>'
       +'<td class="ac">'+btnAc('bg','editar','editD',d.id)+btnAc('bd2','x','delD',d.id)+'</td></tr>';
   }).join('');
   // restaurar estado checkboxes
